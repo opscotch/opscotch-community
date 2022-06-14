@@ -1,0 +1,17 @@
+{
+  "data": {
+    "hosts": {
+      "elastic": {
+        "host": "http://mockserver",
+        "whitelist": [
+          [
+            "GET",
+            "/_ml/.*"
+          ]
+        ]
+      }
+    }
+  }
+}
+
+

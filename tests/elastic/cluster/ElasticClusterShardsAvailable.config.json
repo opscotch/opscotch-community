@@ -1,0 +1,63 @@
+{
+  "configVersionId": "234",
+  "routes": [
+    {
+      "name": "Elastic Cluster Available Shards",
+      "comment" : "Requires Cluster Monitoring privilege",
+      "steps": [
+        {
+          "timer": "fixedRate=true&period=60000",
+          "enabled": true,
+          "type": "scripted",
+          "routeName": "elastic-cluster-used-shards",
+          "urlGenerator": {
+            "resource": "/general/standard-url-generator.js",
+            "data": {
+              "path": "/_cluster/stats",
+              "host-ref": "elastic"
+            }
+          },
+          "resultsProcessor": {
+            "resource" : "/general/standard-json-resultsprocessor.js",
+            "data" : {
+              "max" : {
+                "indices.shards.total" : "elastic-used-shards"
+              },
+              "processroute" : "elastic-cluster-shard-limit"
+            }
+          }
+        },
+        {
+          "enabled": true,
+          "type": "scripted",
+          "routeName": "elastic-cluster-shard-limit",
+          "comment" : "sets the passed property to the route, clears the body for the next http call",
+          "payloadGenerator": {
+            "script": "context.setProperty(\"elastic-used-shards\", JSON.parse(context.getMessageBodyAsString())[\"elastic-used-shards\"]); context.setMessage(null);",
+            "data" :{}
+          },
+          "urlGenerator": {
+            "resource": "/general/standard-url-generator.js",
+            "data": {
+              "path": "/_cluster/settings?include_defaults",
+              "host-ref": "elastic"
+            }
+          },
+          "resultsProcessor": {
+            "resource" : "/elastic/cluster/available-shards.js",
+            "data" : {
+              
+            }
+          }
+        }
+
+        
+      ],
+      "data" : {
+        "ad" : {
+          "elastic-cluster-shards-available" : [ "MEAN_LOW" ]
+        }
+      }
+    }
+  ]
+}

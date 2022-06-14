@@ -1,0 +1,63 @@
+{
+  "configVersionId": "234",
+  "data": {
+    "hosts": {
+      "elastic": {
+        "host": "http://mockserver",
+        "whitelist": [
+          [
+            "GET",
+            "/_ml/.*"
+          ]
+        ]
+      }
+    }
+  },
+  "routes": [
+    {
+      "name": "Get jobs with closed status",
+      "comment" : "add data.excludeJobs to exclude jobs (comma separator)",
+      "steps": [
+        {
+          "debug": true,
+          "enabled": true,
+          "type": "scripted",
+          "routeName": "get-jobs-details",
+          "timer": "fixedRate=true&period=600000",
+          "urlGenerator": {
+            "resource": "/general/standard-url-generator.js",
+            "data": {
+              "path": "/_ml/anomaly_detectors/_all",
+              "host-ref": "elastic"
+            }
+          },
+          "resultsProcessor": {
+            "resource": "/elastic/ml/get-jobs-details.js",
+            "data": {
+              "excludeJobs" : "test,Test",
+              "processroute": "get-jobs-details-sender"
+            }
+          }
+        },
+        {
+          "comment": "This little quirk allows the above step to process the metric but not send it, so that we can reuse the above code",
+          "type": "scripted",
+          "routeName": "get-jobs-details-sender",
+          "resultsProcessor": {
+            "resource": "/general/standard-send-metric.js",
+            "data": {}
+          }
+        }
+      ],
+      "data": {
+        "ad": {
+          "elastic-ml-stopped-job": [
+            "NON_ZERO"
+          ]
+        }
+      }
+    }
+  ]
+}
+
+

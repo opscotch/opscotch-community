@@ -1,0 +1,26 @@
+{
+    "data": {
+        "hosts": {
+            "login.microsoftonline.com": {
+                "host": "http://mockserver",
+                "whitelist": [
+                    [
+                        "POST",
+                        "/.*/oauth2/.*"
+                    ]
+                ],
+                "o365SendEmailRefreshToken" : "aRefreshToken",
+                "o365SendEmailClientId" : "aClientId"
+            },
+            "graph.microsoft.com": {
+                "host": "http://mockserver",
+                "whitelist": [
+                    [
+                        "POST",
+                        "/v1.0/me/sendMail"
+                    ]
+                ]
+            }
+        }
+    }
+}

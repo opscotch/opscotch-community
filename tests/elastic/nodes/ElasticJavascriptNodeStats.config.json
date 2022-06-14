@@ -1,0 +1,86 @@
+{
+  "routes": [
+    {
+      "name": "Elastic Node Stats",
+      "comments" : "Requires Cluster Monitor privilege",
+      "steps": [
+        {
+          "debug": true,
+          "enabled": true,
+          "type": "scripted",
+          "routeName": "elastic-cluster-node-stats",
+          "urlGenerator": {
+            "resource": "/general/standard-url-generator.js",
+            "data": {
+              "path": "/_nodes/stats?format=json",
+              "host-ref": "elastic"
+            }
+          },
+          "resultsProcessor": {
+            "resource": "/general/standard-forwarder.js",
+            "data": {
+              "processroute": "elastic-node-stats-process"
+            }
+          },
+          "timer": "fixedRate=true&period=60000"
+        },
+        {
+          "debug": true,
+          "enabled": true,
+          "type": "scripted-split-aggregate",
+          "routeName": "elastic-node-stats-process",
+          "splitGenerator": {
+            "resource": "/general/standard-json-dict-values-aggregator-split.js",
+            "data": {
+              "path": "nodes"
+            }
+          },
+          "resultsProcessor": {
+            "resource": "/general/standard-json-resultsprocessor.js",
+            "data": {
+              "prefix": "elastic-node-stats-",
+              "deltasum": {
+                "indices.docs.count": "docs-count",
+                "indices.indexing.index_failed": "index-failed",
+                "jvm.gc.collectors.old.collection_count": "jvm-gc-collectors-old-collection-count"
+              },
+              "truecount": {
+                "indices.indexing.is_throttled": "is-throttled"
+              },
+              "sum": {
+                "indices.merges.current": "indices-merges-count",
+                "indices.translog.uncommitted_operations": "indices-translog-uncommitted-operations",
+                "jvm.mem.heap_used_percent": "jvm-heap-used-percent"
+              },
+              "max" : {
+                "os.cpu.percent" : "os-max-cpu-percent"
+              },
+              "min" : {
+                "os.mem.free_percent" : "os-min-memory-free-percent",
+                "fs.total.available_in_bytes" : "fs-min-free-bytes"
+              },
+              "metadata" : {
+                "ad_p" : "1m"
+              }
+            }
+          },
+          "persistenceFile": "persistence.data"
+        }
+      ],
+      "data" : {
+        "ad" : {
+          "elastic-node-stats-docs-count" : [ "MEAN_LOW" ],
+          "elastic-node-stats-index-failed" : [ "NON_ZERO" ],
+          "elastic-node-stats-jvm-gc-collectors-old-collection-count" : [ "MEAN_HIGH" ],
+          "elastic-node-stats-jvm-heap-used-percent" : [ "MEAN_HIGH" ],
+          "elastic-node-stats-is-throttled" : [ "NON_ZERO" ],
+          "elastic-node-stats-indices-merges-count" : [ "MEAN_HIGH" ],
+          "elastic-node-stats-indices-translog-uncommitted-operations" : [ "MEAN_HIGH" ],
+          "elastic-node-stats-os-max-cpu-percent" : [ "MEAN_HIGH" ],
+          "elastic-node-stats-os-min-memory-free-percent" : [ "MEAN_LOW" ],
+          "elastic-node-stats-fs-min-free-bytes" : [ "MEAN_LOW" ]
+        }
+      }
+    }
+  ]
+}

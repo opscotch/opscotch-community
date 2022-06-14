@@ -1,0 +1,45 @@
+{
+  "configVersionId": "234",
+  "routes": [
+    {
+      "name": "Elastic Cluster Health Stats",
+      "comment" : "Requires Cluster Monitoring privilege",
+      "steps": [
+        {
+          "enabled": true,
+          "type": "scripted",
+          "routeName": "elastic-cluster-health-stats",
+          "urlGenerator": {
+            "resource": "/general/standard-url-generator.js",
+            "data": {
+              "path": "/_cluster/health",
+              "host-ref": "elastic"
+            }
+          },
+          "resultsProcessor": {
+            "resource": "/general/standard-json-resultsprocessor.js",
+            "data": {
+              "prefix": "elastic-cluster-",
+              "sum": {
+                "number_of_nodes": "number-of-nodes",
+                "active_primary_shards": "active-primary-shards",
+                "active_shards_percent_as_number": "active-shards-percent"
+              },
+              "metadata" : {
+                "ad_p" : "1m"
+              }
+            }
+          },
+          "timer": "fixedRate=true&period=60000"
+        }
+      ],
+      "data" : {
+        "ad" : {
+          "elastic-cluster-number-of-nodes" : [ "MEAN_LOW" ],
+          "elastic-cluster-active-primary-shards" : [ "MEAN_LOW" ],
+          "elastic-cluster-active-shards-percent" : [ "MEAN_LOW" ]
+        }
+      }
+    }
+  ]
+}

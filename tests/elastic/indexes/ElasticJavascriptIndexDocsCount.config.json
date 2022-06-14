@@ -1,0 +1,39 @@
+{
+  "configVersionId":"234",
+  "routes": [
+    {
+      "name": "Get index docs count diff",
+      "steps": [
+        {
+          "type": "scripted",
+          "routeName": "get-index-docs-count-diff",
+          "timer": "fixedRate=true&period=600000",
+          "urlGenerator" : {
+            "resource" : "/general/standard-url-generator.js",
+            "data": {
+              "path": "/_cat/indices?format=json&bytes=kb",
+              "host-ref": "elastic"
+            }
+          },
+          "resultsProcessor" : {
+            "resource" : "/elastic/scripts/indexes/index-docscount-resultprocessor.js",
+            "data": {
+              "prefix": "doc-count-diff-",
+              "processroute" : "get-index-docs-count-diff-sender"
+            }
+          },
+          "persistenceFile": "persistence.data"
+        },
+        {
+          "comment" : "This little quirk allows the above step to process the metric but not send it, so that we can reuse the above code",
+          "type": "scripted",
+          "routeName": "get-index-docs-count-diff-sender",
+          "resultsProcessor": {
+            "resource": "/general/standard-send-metric.js",
+            "data" :{}
+          }
+        }
+      ]
+    }
+  ]
+}

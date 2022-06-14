@@ -1,0 +1,44 @@
+[
+  {
+    "index" : "index_name_1-2021.11.04",
+    "status" : "open",
+    "docs.count" : "1500",
+    "store.size" : "113723",
+    "pri.store.size" : "56861"
+  },
+  {
+    "index" : "index_name_1-2021.11.05",
+    "status" : "open",
+    "docs.count" : "2000",
+    "store.size" : "3000",
+    "pri.store.size" : "90000"
+  },
+{
+    "index" : "index_name_2-2021.10.07",
+    "status" : "open",
+    "docs.count" : "2000",
+    "store.size" : "5000",
+    "pri.store.size" : "60000"
+  },
+{
+    "index" : "index_name_1-2021.11.03",
+    "status" : "open",
+    "docs.count" : "1000",
+    "store.size" : "3000",
+    "pri.store.size" : "70000"
+},
+  {
+    "index" : "index_name_3-2021.10.08",
+    "status" : "open",
+    "docs.count" : "2000",
+    "store.size" : "4000",
+    "pri.store.size" : "80000"
+  },
+  {
+    "index" : "closed_index-2021.10.08",
+    "status" : "close",
+    "docs.count" : null,
+    "store.size" : null,
+    "pri.store.size" : null
+  }
+]

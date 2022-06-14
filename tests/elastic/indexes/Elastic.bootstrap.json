@@ -1,0 +1,20 @@
+{
+  "data": {
+    "hosts": {
+      "elastic": {
+        "host": "http://mockserver",
+        "headers": {
+          "Content-Type": "application/json;charset=UTF-8",
+          "Accept": "application/json, text/plain, */*",
+          "Authorization": "Basic abcd"
+        },
+        "whitelist": [
+          ["GET", "/_settings"], 
+          ["GET", "/_ilm/policy"],
+          ["GET", "/_cat/.*"],
+          ["GET", "/.*/_stats"]
+        ]
+      }
+    }
+  }
+}

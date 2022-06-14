@@ -1,0 +1,23 @@
+{
+    "enabled": true,
+    "fromDirectory": "/elastic/cluster/",
+    "testThisRoute": "get-master-eligible-nodes",
+    "useThisTestConfigFile": "ElasticClusterMasterNodes.config.json",
+    "useThisTestBootstrapFile" : "Elastic.bootstrap.json",
+    "mockEndpointResponses": [
+      {
+        "whenThisIsCalled": "http://mockserver/_cat/nodes?h=name,role&format=JSON",
+        "returnThisFile": "ElasticClusterMasterNodes.response.json"
+      },
+      {
+        "whenThisIsCalled": "http://mockserver/_cluster/settings?include_defaults=true",
+        "returnThisFile": "ElasticClusterMasterNodesPersistentSettings.response.json"
+      }
+    ],
+    "theseMetricsShouldHaveBeenSent": [
+      {
+        "key": "elastic-cluster-master-eligible-nodes",
+        "value": 0
+      }
+    ]
+  }

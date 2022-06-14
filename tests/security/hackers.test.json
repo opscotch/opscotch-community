@@ -1,0 +1,24 @@
+{
+  "fromDirectory": "/security/",
+  "testThisRoute": "hack",
+  "useThisTestConfigFile": "hackers.config.json",
+  "theseMetricsShouldHaveBeenSent": [
+    {
+      "key" : "im-still-alive",
+      "value" : 1.0
+    },
+    {
+      "key" : "systemexit",
+      "value" : 1.0
+    },
+    {
+      "key" : "processbuilder",
+      "value" : 1.0
+    },
+    {
+      "key" : "runtime",
+      "value" : 1.0
+    }
+  ],
+  "mockEndpointResponses" : []
+}

@@ -1,0 +1,16 @@
+{
+    "response": {
+        "periods": [
+            {
+                "contract_id": "86",
+                "id": "691",
+                "on_budget": 1
+            }
+        ]
+    },
+    "meta": {
+        "message": "Everything executed as expected.",
+        "more_info": "https://api.accelo.com/docs/#status-codes",
+        "status": "ok"
+    }
+}

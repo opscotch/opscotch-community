@@ -1,0 +1,20 @@
+{
+  "fromDirectory": "/elastic/indexes/",
+  "testThisRoute": "get-old-indexes-count",
+  "useThisTestConfigFile": "ElasticJavascriptOldIndexes.config.json",
+  "useThisTestBootstrapFile" : "Elastic.bootstrap.json",
+  "timestampOverride" : 1635788500100 ,
+  "mockEndpointResponses": [
+    {
+      "whenThisIsCalled": "http://mockserver/_cat/indices?h=index&format=json",
+      "returnThisFile": "/elastic/indexes/ElasticJavascriptOldIndexes.response.json"
+    }
+  ],
+  "theseMetricsShouldHaveBeenSent": [
+    {
+      "key": "elastic-indexes-beyond-expiry",
+      "value": 3
+    }
+    
+  ]
+}

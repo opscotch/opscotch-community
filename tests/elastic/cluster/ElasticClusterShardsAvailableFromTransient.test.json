@@ -1,0 +1,23 @@
+{
+    "enabled": true,
+    "fromDirectory": "/elastic/cluster/",
+    "testThisRoute": "elastic-cluster-used-shards",
+    "useThisTestConfigFile": "ElasticClusterShardsAvailable.config.json",
+    "useThisTestBootstrapFile" : "Elastic.bootstrap.json",
+    "mockEndpointResponses": [
+      {
+        "whenThisIsCalled": "http://mockserver/_cluster/settings?include_defaults",
+        "returnThisFile": "ElasticClusterStatsShardsTransientSettings.response.json"
+      },
+      {
+        "whenThisIsCalled": "http://mockserver/_cluster/stats",
+        "returnThisFile": "ElasticClusterStatsShards.response.json"
+      }
+    ],
+    "theseMetricsShouldHaveBeenSent": [
+      {
+        "key": "elastic-cluster-shards-available",
+        "value": 2832.0
+      }
+    ]
+  }

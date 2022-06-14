@@ -1,0 +1,41 @@
+{
+  "configVersionId":"234",
+  "routes": [ 
+    {
+      "name": "Get index docs out of band",
+      "steps": [
+        {
+          "debug": true,
+          "enabled": true,
+          "type": "scripted",
+          "routeName": "get-index-docs-out-of-band",
+          "timer": "fixedRate=true&period=600000",
+          "urlGenerator" : {
+            "resource" : "/general/standard-url-generator.js",
+            "data": {
+              "path": "/_cat/indices?format=json&bytes=kb",
+              "host-ref": "elastic"
+            }
+          },
+          "resultsProcessor" : {
+            "resource" : "/elastic/scripts/indexes/index-outofband-resultprocessor.js",
+            "data": {
+              "prefix": "out-of-band-",
+              "processroute" : "get-index-docs-out-of-band-sender"
+            }
+          }, 
+          "persistenceFile": "persistence.data" 
+        },
+        {
+          "comment" : "This little quirk allows the above step to process the metric but not send it, so that we can reuse the above code",
+          "type": "scripted",
+          "routeName": "get-index-docs-out-of-band-sender",
+          "resultsProcessor": {
+            "resource": "/general/standard-send-metric.js",
+            "data" :{}
+          }
+        }
+      ]
+    }
+  ]
+}

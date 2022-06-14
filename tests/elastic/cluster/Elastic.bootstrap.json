@@ -1,0 +1,19 @@
+{
+    "data": {
+        "hosts": {
+            "elastic": {
+                "host": "http://mockserver",
+                "whitelist": [
+                    [
+                        "GET",
+                        "/_cluster/.*"
+                    ],
+                    [
+                        "GET",
+                        "/_cat/.*"
+                    ]
+                ]
+            }
+        }
+    }
+}

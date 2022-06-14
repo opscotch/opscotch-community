@@ -1,0 +1,10 @@
+#! This is an annoying comment that elastic puts in!!
+{
+    "defaults": {
+        "discovery": {
+            "zen": {
+                "minimum_master_nodes": "-1"
+            }
+        }
+    }
+}

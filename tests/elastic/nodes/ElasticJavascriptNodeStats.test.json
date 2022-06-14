@@ -1,0 +1,85 @@
+{
+  "enabled": true,
+  "fromDirectory": "/elastic/nodes/",
+  "testThisRoute": "elastic-cluster-node-stats",
+  "useThisTestConfigFile": "ElasticJavascriptNodeStats.config.json",
+  "useThisTestBootstrapFile" : "Elastic.bootstrap.json",
+  "mockEndpointResponses": [
+    {
+      "whenThisIsCalled": "http://mockserver/_nodes/stats?format=json",
+      "returnThisFile": "ElasticJavascriptNodeStats.response.json"
+    }
+  ],
+  "theseMetricsShouldHaveBeenSent": [
+    {
+     "key": "elastic-node-stats-docs-count",
+      "value": 5057.0,
+      "dimensionMap" : {
+        "ad_p" : "1m"
+      }
+    },
+    {
+      "key": "elastic-node-stats-index-failed",
+      "value": 1000.0,
+      "dimensionMap" : {
+        "ad_p" : "1m"
+      }
+    },
+    {
+      "key": "elastic-node-stats-jvm-gc-collectors-old-collection-count",
+      "value": 200.0,
+      "dimensionMap" : {
+        "ad_p" : "1m"
+      }
+    },
+    {
+      "key": "elastic-node-stats-jvm-heap-used-percent",
+      "value": 34.0,
+      "dimensionMap" : {
+        "ad_p" : "1m"
+      }
+    },
+    {
+      "key": "elastic-node-stats-is-throttled",
+      "value": 1.0,
+      "dimensionMap" : {
+        "ad_p" : "1m"
+      }
+    },
+    {
+      "key": "elastic-node-stats-indices-merges-count",
+      "value": 23.0,
+      "dimensionMap" : {
+        "ad_p" : "1m"
+      }
+    },
+    {
+      "key": "elastic-node-stats-indices-translog-uncommitted-operations",
+      "value": 65.0,
+      "dimensionMap" : {
+        "ad_p" : "1m"
+      }
+    },
+    {
+      "key": "elastic-node-stats-os-max-cpu-percent",
+      "value": 11.0,
+      "dimensionMap" : {
+        "ad_p" : "1m"
+      }
+    },
+    {
+      "key": "elastic-node-stats-os-min-memory-free-percent",
+      "value": 1.0,
+      "dimensionMap" : {
+        "ad_p" : "1m"
+      }
+    },
+    {
+      "key": "elastic-node-stats-fs-min-free-bytes",
+      "value": 15802863616.0,
+      "dimensionMap" : {
+        "ad_p" : "1m"
+      }
+    }
+  ]
+}

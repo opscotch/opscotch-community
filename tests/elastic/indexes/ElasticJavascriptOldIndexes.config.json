@@ -1,0 +1,44 @@
+{
+  "configVersionId":"234",
+  "routes": [
+    {
+      "name": "Get number of old indexes",
+      "comment" : "set days-old with max days of index age",
+      "steps": [
+        {
+          "type": "scripted",
+          "routeName": "get-old-indexes-count",
+          "timer": "fixedRate=true&period=600000",
+          "urlGenerator" : {
+            "resource" : "/general/standard-url-generator.js",
+            "data": {
+              "path": "/_cat/indices?h=index&format=json",
+              "host-ref": "elastic"
+            }
+          },
+          "resultsProcessor" : {
+            "resource" : "/elastic/scripts/indexes/old-indexes-count.js",
+            "data": {
+              "days-old": "30",
+              "processroute" : "get-old-indexes-count-sender"
+            }
+          }
+        },
+        {
+          "comment" : "This little quirk allows the above step to process the metric but not send it, so that we can reuse the above code",
+          "type": "scripted",
+          "routeName": "get-old-indexes-count-sender",
+          "resultsProcessor": {
+            "resource": "/general/standard-send-metric.js",
+            "data" :{}
+          } 
+        }
+      ],
+      "data" : {
+        "ad" : {
+          "elastic-indexes-beyond-expiry" : [ "NON_ZERO" ]
+        }
+      }
+    }
+  ]
+}

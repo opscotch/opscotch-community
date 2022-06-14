@@ -1,0 +1,66 @@
+{
+    "configVersionId": "234",
+    "routes": [
+        {
+            "name": "Get number of  master eligible nodes",
+            "steps": [
+                {
+                    "type": "scripted",
+                    "routeName": "get-master-eligible-nodes",
+                    "timer": "fixedRate=true&period=600000",
+                    "urlGenerator": {
+                        "resource": "/general/standard-url-generator.js",
+                        "data": {
+                            "path": "/_cat/nodes?h=name,role&format=JSON",
+                            "host-ref": "elastic"
+                        }
+                    },
+                    "resultsProcessor": {
+                        "resource": "/elastic/cluster/master-nodes-count.js",
+                        "data": {
+                            "processroute": "get-minimum-master-nodes"
+                        }
+                    }
+                },
+                {
+                    "enabled": true,
+                    "type": "scripted",
+                    "routeName": "get-minimum-master-nodes",
+                    "payloadGenerator": {
+                        "script": "context.setProperty(\"master-eligible-nodes\", JSON.parse(context.getMessageBodyAsString())[\"master-eligible-nodes\"]); context.setMessage(null);",
+                        "data": {}
+                    },
+                    "urlGenerator": {
+                        "resource": "/general/standard-url-generator.js",
+                        "data": {
+                            "path": "/_cluster/settings?include_defaults=true",
+                            "host-ref": "elastic"
+                        }
+                    },
+                    "resultsProcessor": {
+                        "resource": "/elastic/cluster/minimum-master-nodes.js",
+                        "data": {
+                            "processroute": "get-master-eligible-nodes-sender"
+                        }
+                    }
+                },
+                {
+                    "comment": "This little quirk allows the above step to process the metric but not send it, so that we can reuse the above code",
+                    "type": "scripted",
+                    "routeName": "get-master-eligible-nodes-sender",
+                    "resultsProcessor": {
+                        "resource": "/general/standard-send-metric.js",
+                        "data": {}
+                    }
+                }
+            ],
+            "data": {
+                "ad": {
+                    "elastic-cluster-master-eligible-nodes": [
+                        "NON_ZERO"
+                    ]
+                }
+            }
+        }
+    ]
+}

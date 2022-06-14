@@ -1,0 +1,26 @@
+{
+  "configVersionId": "234",
+  "routes": [
+    {
+      "name": "Elastic index count",
+      "comment" : "Requires Cluster Monitor, '*' index 'view_index_metadata', '*' index 'monitor'", 
+      "steps": [
+        {
+          "type": "scripted",
+          "routeName": "elastic-index-count",
+          "urlGenerator": {
+            "resource": "/general/standard-url-generator.js",
+            "data": {
+              "path": "/_cat/indices",
+              "host-ref": "elastic"
+            }
+          },
+          "resultsProcessor": {
+            "resource": "/elastic/scripts/indexes/index-count-resultprocessor.js"
+          },
+          "timer": "fixedRate=true&period=60000"
+        }
+      ]
+    }
+  ]
+}

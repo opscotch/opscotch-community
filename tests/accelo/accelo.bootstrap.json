@@ -1,0 +1,15 @@
+{
+    "data": {
+        "hosts": {
+            "accelo": {
+                "host": "http://mockserver",
+                "whitelist": [
+                    [
+                        "GET",
+                        "/contracts.*"
+                    ]
+                ]
+            }
+        }
+    }
+}

@@ -1,0 +1,22 @@
+[
+    {
+        "name": "Node1",
+        "role": "di"
+    },
+    {
+        "name": "Node2",
+        "role": "lt"
+    },
+    {
+        "name": "Node3",
+        "role": "dim"
+    },
+    {
+        "name": "Node4",
+        "role": "m"
+    },
+    {
+        "name": "Node5",
+        "role": "dm"
+    }
+]

@@ -1,0 +1,52 @@
+{
+  "fromDirectory": "/elastic/indexes/",
+  "testThisRoute": "get-index-docs-count-diff",
+  "useThisTestConfigFile": "ElasticJavascriptIndexDocsCount.config.json",
+  "useThisTestBootstrapFile" : "Elastic.bootstrap.json",
+  "mockEndpointResponses": [
+    {
+      "whenThisIsCalled": "http://mockserver/_cat/indices?format=json&bytes=kb",
+      "returnThisFile": "/elastic/indexes/ElasticJavascriptIndexDocsCount.response.json"
+    }
+  ],
+  "theseMetricsShouldHaveBeenSent": [
+    {
+      "key": "doc-count-diff-index_name_2",
+      "value": 2000
+    },
+    {
+      "key": "doc-count-diff-index_name_1",
+      "value": 2000
+     },
+     {
+       "key": "doc-count-diff-index_name_3",
+        "value": 2000
+     }
+     ,
+     {
+      "key": "ingest-size-diff-index_name_2",
+      "value": 60000
+    },
+    {
+      "key": "ingest-size-diff-index_name_1",
+      "value": 90000
+     },
+     {
+       "key": "ingest-size-diff-index_name_3",
+        "value": 80000
+     }
+     ,
+     {
+      "key": "store-size-diff-index_name_2",
+      "value": 5000
+    },
+    {
+      "key": "store-size-diff-index_name_1",
+      "value": 3000
+     },
+     {
+       "key": "store-size-diff-index_name_3",
+        "value": 4000
+     }
+  ]
+}

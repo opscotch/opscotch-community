@@ -1,0 +1,26 @@
+{
+  "configVersionId": "234",
+  "routes": [
+    {
+      "name": "hashed items",
+      "steps": [
+        {
+          "enabled": true,
+          "type": "scripted",
+          "routeName": "hashed-items",
+          "urlGenerator": {
+            "resource": "/general/standard-url-generator.js",
+            "data": {
+              "path": "/hashme",
+              "host-ref": "mockserver"
+            }
+          },
+          "resultsProcessor": {
+            "script": "context.getMessageBodyAsString().split(\"\\n\").forEach(item => context.sendMetric(\"index:\" + context.hash(item.split(\" \")[2])+\"-doc-count\", parseInt(item.split(\" \")[6])));"
+          },
+          "timer": "fixedRate=true&period=60000"
+        }
+      ]
+    }
+  ]
+}

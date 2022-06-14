@@ -1,0 +1,23 @@
+{
+    "enabled": true,
+    "fromDirectory": "/elastic/ml/",
+    "testThisRoute": "get-jobs-details",
+    "useThisTestConfigFile": "ElasticMLJobsStatus.config.json",
+    "useThisTestBootstrapFile" : "Elastic.bootstrap.json",
+    "mockEndpointResponses": [
+        {
+            "whenThisIsCalled": "http://mockserver/_ml/anomaly_detectors/_all",
+            "returnThisFile": "ElasticMLJobsStatus.response.json"
+        }
+    ],
+    "theseMetricsShouldHaveBeenSent": [
+        {
+            "key": "elastic-ml-stopped-job",
+            "value": 2,
+            "dimensionMap": {
+                "ad": "ad_nonz",
+                "Jobs": "Job_id_2 Job_id_3 "
+            }
+        }
+    ]
+}

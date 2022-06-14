@@ -1,0 +1,14 @@
+{
+  "fromDirectory": "/slack/",
+  "testThisRoute": "test-trigger",
+  "useThisTestConfigFile": "slackSendMessage.config.json",
+  "useThisTestBootstrapFile" : "slackSendMessage.bootstrap.json",
+  "mockEndpointResponses": [
+    {
+      "whenThisIsCalled": "http://mockserver/services/myslackid",
+      "expectedPayload" : "{\"text\":\"Hello beautiful world\",\"channel\":\"joy\"}",
+      "returnThisFile": "/slack/slack.ok.response.txt"
+    }
+  ],
+  "theseMetricsShouldHaveBeenSent": []
+}

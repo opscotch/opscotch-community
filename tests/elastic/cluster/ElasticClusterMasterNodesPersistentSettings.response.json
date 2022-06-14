@@ -1,0 +1,17 @@
+#! This is an annoying comment that elastic puts in!!
+{
+    "persistent" : {
+        "discovery": {
+            "zen": {
+                "minimum_master_nodes": "1"
+            }
+        }
+      },
+    "defaults": {
+        "discovery": {
+            "zen": {
+                "minimum_master_nodes": "-1"
+            }
+        }
+    }
+}

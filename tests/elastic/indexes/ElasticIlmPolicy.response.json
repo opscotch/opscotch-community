@@ -1,0 +1,62 @@
+{
+    "watch-history-ilm-policy" : {
+      "version" : 1,
+      "modified_date" : "2020-07-13T22:37:05.356Z",
+      "policy" : {
+        "phases" : {
+          "delete" : {
+            "min_age" : "7d",
+            "actions" : {
+              "delete" : { }
+            }
+          }
+        }
+      }
+    },
+    "purge_old" : {
+      "version" : 8,
+      "modified_date" : "2020-08-12T20:43:08.892Z",
+      "policy" : {
+        "phases" : {
+          "hot" : {
+            "min_age" : "0ms",
+            "actions" : {
+              "set_priority" : {
+                "priority" : 100
+              }
+            }
+          },
+          "delete" : {
+            "min_age" : "30d",
+            "actions" : {
+              "delete" : { }
+            }
+          }
+        }
+      }
+    },
+    "slm-history-ilm-policy" : {
+      "version" : 1,
+      "modified_date" : "2020-07-13T22:37:05.453Z",
+      "policy" : {
+        "phases" : {
+          "hot" : {
+            "min_age" : "0ms",
+            "actions" : {
+              "rollover" : {
+                "max_size" : "50gb",
+                "max_age" : "30d"
+              }
+            }
+          },
+          "delete" : {
+            "min_age" : "90d",
+            "actions" : {
+              "delete" : { }
+            }
+          }
+        }
+      }
+    }
+  }
+  

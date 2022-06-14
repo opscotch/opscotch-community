@@ -1,0 +1,18 @@
+#! This is an annoying comment that elastic puts in!!
+{
+  "transient" : {
+    "cluster" : {
+      "max_shards_per_node" : "3000"
+    }
+  },
+  "persistent" : {
+    "cluster" : {
+      "max_shards_per_node" : "2000"
+    }
+  },
+  "defaults" : {
+    "cluster" : {
+      "max_shards_per_node" : "1000"
+    }
+  }
+}  

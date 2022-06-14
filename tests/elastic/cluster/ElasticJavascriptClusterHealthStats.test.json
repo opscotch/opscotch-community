@@ -1,0 +1,36 @@
+{
+  "enabled": true,
+  "fromDirectory": "/elastic/cluster/",
+  "testThisRoute": "elastic-cluster-health-stats",
+  "useThisTestConfigFile": "ElasticJavascriptClusterHealthStats.config.json",
+  "useThisTestBootstrapFile" : "Elastic.bootstrap.json",
+  "mockEndpointResponses": [
+    {
+      "whenThisIsCalled": "http://mockserver/_cluster/health",
+      "returnThisFile": "ElasticJavascriptClusterHealthStats.response.json"
+    }
+  ],
+  "theseMetricsShouldHaveBeenSent": [
+    {
+      "key": "elastic-cluster-number-of-nodes",
+      "value": 1.0,
+      "dimensionMap" : {
+        "ad_p" : "1m"
+      }
+    },
+    {
+      "key": "elastic-cluster-active-primary-shards",
+      "value": 4.0,
+      "dimensionMap" : {
+        "ad_p" : "1m"
+      }
+    },
+    {
+      "key": "elastic-cluster-active-shards-percent",
+      "value": 50.0,
+      "dimensionMap" : {
+        "ad_p" : "1m"
+      }
+    }
+  ]
+}

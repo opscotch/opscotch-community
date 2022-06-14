@@ -1,0 +1,76 @@
+{
+  "configVersionId": "234",
+  "routes": [
+    {
+      "name": "Elastic Index Stats",
+      "comments" : "Requires Cluster Monitor, '*' index 'monitor' privileges",
+      "steps": [
+        {
+          "debug": true,
+          "enabled": true,
+          "type": "scripted",
+          "routeName": "elastic-cluster-index-stats",
+          "urlGenerator": {
+            "resource": "/general/standard-url-generator.js",
+            "data": {
+              "path": "/_cat/indices?expand_wildcards=open&format=json",
+              "host-ref": "elastic"
+            }
+          },
+          "resultsProcessor": {
+            "resource": "/general/standard-forwarder.js",
+            "data": {
+              "processroute": "elastic-cluster-index-stats-process"
+            }
+          },
+          "timer": "fixedRate=true&period=60000"
+        },
+        {
+          "debug": true,
+          "enabled": true,
+          "type": "scripted-split-aggregate",
+          "routeName": "elastic-cluster-index-stats-process",
+          "splitGenerator": {
+            "resource": "/elastic/scripts/indexes/index-stats-closed-filter-results-splitter.js"
+          },
+          "urlGenerator": {
+            "resource": "/elastic/scripts/indexes/index-stats-urlgenerator.js",
+            "data": {
+              "host-ref": "elastic"
+            }
+          },
+          "resultsProcessor": {
+            "resource": "/general/standard-json-resultsprocessor.js",
+            "data": {
+              "prefix": "elastic-index-stats-",
+              "sum": {
+                "_all.total.search.query_current": "query-count",
+                "_all.total.search.fetch_current": "fetch-count",
+                "_all.total.merges.current": "merge-count"
+              },
+              "truecount": {
+                "_all.total.indexing.is_throttled": "is-throttled"
+              },
+              "counterdeltasum": {
+                "_all.total.indexing.index_failed": "index-failed"
+              },
+              "metadata" : {
+                "ad_p" : "1m"
+              }
+            }
+          },
+          "persistenceFile": "persistence.data"
+        }
+      ],
+      "data" : {
+          "ad" : {
+            "elastic-index-stats-is-throttled" : [ "MEAN_HIGH" ],
+            "elastic-index-stats-query-count" : [ "MEAN_HIGH" ],
+            "elastic-index-stats-fetch-count" : [ "MEAN_HIGH" ],
+            "elastic-index-stats-merge-count" : [ "MEAN_HIGH" ],
+            "elastic-index-stats-index-failed" : [ "MEAN_HIGH" ]
+          }
+      }
+    }
+  ]
+}
