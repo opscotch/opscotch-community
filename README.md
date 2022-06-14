@@ -1,3 +1,6 @@
+# opscotch
+Opscotch is in closed beta, and will be available for the general public in due time
+
 
 # opscotch Agent
 
