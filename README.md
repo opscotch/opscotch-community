@@ -2,6 +2,8 @@
 
 This repository contains the public resources that are useful when working with [opscotch workflows](https://docs.opscotch.co/docs/current/workflow).
 
+To use opscotch you need a (trial) license. [Please request one here](https://www.opscotch.co/license).
+
 Please see the [opscotch documentation website](https://docs.opscotch.co/docs/current/introduction/audience) for how to use these resources.
 
 
