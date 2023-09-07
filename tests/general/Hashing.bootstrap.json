@@ -1,9 +1,7 @@
 {
-    "data": {
-        "hosts": {
-            "mockserver": {
-                "host": "http://mockserver"
-            }
+    "hosts": {
+        "mockserver": {
+            "host": "http://mockserver"
         }
     }
 }

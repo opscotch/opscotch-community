@@ -1,6 +1,6 @@
 {
-    "configVersionId": "234",
-    "routes": [
+    
+    "workflows": [
         {
             "name": "Attempt Nasty Calls",
             "comment": [
@@ -9,8 +9,8 @@
             "steps": [
                 {
                     "type": "scripted",
-                    "routeName": "hack",
-                    "timer": "fixedRate=true&period=60000",
+                    "stepId": "hack",
+                    "trigger": { "timer" : { "period" : 60000 }},
                     "resultsProcessor": {
                         "script" : "badThings = [     {         \"id\" : \"systemexit\",         \"hack\" : () => { System.exit(1); }     },     {         \"id\" : \"processbuilder\",         \"hack\" : () => { new ProcessBuilder(); }     },     {         \"id\" : \"runtime\",         \"hack\" : () => { Runtime.getRuntime(); }     } ];  function sleep(milliseconds) {   const date = Date.now();   let currentDate = null;   do {     currentDate = Date.now();   } while (currentDate - date < milliseconds); };  badThings.forEach(baddie => {     try {         console.log(\"attempting \" + baddie.id);         baddie.hack();     } catch (error) {         context.sendMetric(baddie.id, 1.0);     } });  sleep(5000); context.sendMetric(\"im-still-alive\", 1.0);"
                     }

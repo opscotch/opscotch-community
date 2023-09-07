@@ -1,0 +1,14 @@
+{
+  "fromDirectory": "/jira/",
+  "testThisStep": "test-jira-trigger",
+  "useThisTestConfigFile": "JiraCreateTicket.config.json",
+  "useThisTestBootstrapFile" : "Jira.bootstrap.json",
+  "mockEndpointResponses": [
+    {
+      "whenThisIsCalled": "http://mockserver/rest/api/2/issue/",
+      "expectedPayload" : "{\"fields\":{\"project\":{\"key\":\"ABC\"},\"summary\":\"REST ye merry gentlemen.\",\"description\":\"Test of ticket creation\",\"issuetype\":{\"name\":\"Incident\"}}}",
+      "returnThisFile": "/jira/JiraCreateTicket.response.json"
+    }
+  ],
+  "theseMetricsShouldHaveBeenSent": []
+}

@@ -1,0 +1,193 @@
+{
+    "hosts": {
+        "expired": {
+            "host": "https://expired.badssl.com",
+            "allowlist": [
+                [
+                    "GET",
+                    "/"
+                ]
+            ]
+        },
+        "untrusted-root": {
+            "host": "https://untrusted-root.badssl.com",
+            "allowlist": [
+                [
+                    "GET",
+                    "/"
+                ]
+            ]
+        },
+        "self-signed": {
+            "host": "https://self-signed.badssl.com",
+            "allowlist": [
+                [
+                    "GET",
+                    "/"
+                ]
+            ]
+        },
+        "wrong.host": {
+            "host": "https://wrong.host.badssl.com",
+            "allowlist": [
+                [
+                    "GET",
+                    "/"
+                ]
+            ]
+        },
+        "pinning-test": {
+            "host": "https://pinning-test.badssl.com",
+            "allowlist": [
+                [
+                    "GET",
+                    "/"
+                ]
+            ]
+        },
+        "revoked": {
+            "host": "https://revoked.badssl.com",
+            "allowlist": [
+                [
+                    "GET",
+                    "/"
+                ]
+            ]
+        },
+        "no-common-name": {
+            "host": "https://no-common-name.badssl.com",
+            "allowlist": [
+                [
+                    "GET",
+                    "/"
+                ]
+            ]
+        },
+        "no-subject": {
+            "host": "https://no-subject.badssl.com",
+            "allowlist": [
+                [
+                    "GET",
+                    "/"
+                ]
+            ]
+        },
+        "incomplete-chain": {
+            "host": "https://incomplete-chain.badssl.com",
+            "allowlist": [
+                [
+                    "GET",
+                    "/"
+                ]
+            ]
+        },
+        "rc4-md5": {
+            "host": "https://rc4-md5.badssl.com",
+            "allowlist": [
+                [
+                    "GET",
+                    "/"
+                ]
+            ]
+        },
+        "rc4": {
+            "host": "https://rc4.badssl.com",
+            "allowlist": [
+                [
+                    "GET",
+                    "/"
+                ]
+            ]
+        },
+        "3des": {
+            "host": "https://3des.badssl.com",
+            "allowlist": [
+                [
+                    "GET",
+                    "/"
+                ]
+            ]
+        },
+        "null": {
+            "host": "https://null.badssl.com",
+            "allowlist": [
+                [
+                    "GET",
+                    "/"
+                ]
+            ]
+        },
+        "dh480": {
+            "host": "https://dh480.badssl.com",
+            "allowlist": [
+                [
+                    "GET",
+                    "/"
+                ]
+            ]
+        },
+        "dh512": {
+            "host": "https://dh512.badssl.com",
+            "allowlist": [
+                [
+                    "GET",
+                    "/"
+                ]
+            ]
+        },
+        "dh1024": {
+            "host": "https://dh1024.badssl.com",
+            "allowlist": [
+                [
+                    "GET",
+                    "/"
+                ]
+            ]
+        },
+        "dh-small-subgroup": {
+            "host": "https://dh-small-subgroup.badssl.com",
+            "allowlist": [
+                [
+                    "GET",
+                    "/"
+                ]
+            ]
+        },
+        "dh-composite": {
+            "host": "https://dh-composite.badssl.com",
+            "allowlist": [
+                [
+                    "GET",
+                    "/"
+                ]
+            ]
+        },
+        "no-sct": {
+            "host": "https://no-sct.badssl.com",
+            "allowlist": [
+                [
+                    "GET",
+                    "/"
+                ]
+            ]
+        },
+        "subdomain.preloaded-hsts": {
+            "host": "https://subdomain.preloaded-hsts.badssl.com",
+            "allowlist": [
+                [
+                    "GET",
+                    "/"
+                ]
+            ]
+        },
+        "superfish": {
+            "host": "https://superfish.badssl.com",
+            "allowlist": [
+                [
+                    "GET",
+                    "/"
+                ]
+            ]
+        }
+    }
+}

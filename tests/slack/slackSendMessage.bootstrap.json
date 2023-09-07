@@ -1,15 +1,13 @@
 {
-    "data": {
-        "hosts": {
-            "slack": {
-                "host": "http://mockserver",
-                "whitelist": [
-                    [
-                        "POST",
-                        "/services/myslackid"
-                    ]
+    "hosts": {
+        "slack": {
+            "host": "http://mockserver",
+            "allowlist": [
+                [
+                    "POST",
+                    "/services/myslackid"
                 ]
-            }
+            ]
         }
     }
 }

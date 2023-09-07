@@ -48,8 +48,8 @@ metric = { metric: "elastic-cluster-master-eligible-nodes"};
     - Not Even
     - discovery.zen.minimum_master_nodes < (master-eligible/2) + 1
 */
-console.log ("masterEligibleNodes: " + masterEligibleNodes);
-console.log ("minimumMasterNodes: " + minimumMasterNodes);
+//console.log ("masterEligibleNodes: " + masterEligibleNodes);
+//console.log ("minimumMasterNodes: " + minimumMasterNodes);
 if (masterEligibleNodes != 0 && masterEligibleNodes % 2 != 0 && (masterEligibleNodes/2 + 1) > minimumMasterNodes ) {
     metric.value = 0
 } else{

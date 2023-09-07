@@ -1,6 +1,6 @@
 {
   "fromDirectory": "/security/",
-  "testThisRoute": "hack",
+  "testThisStep": "hack",
   "useThisTestConfigFile": "hackers.config.json",
   "theseMetricsShouldHaveBeenSent": [
     {

@@ -1,6 +1,6 @@
 {
   "fromDirectory": "/slack/",
-  "testThisRoute": "test-trigger",
+  "testThisStep": "test-trigger",
   "useThisTestConfigFile": "slackSendMessage.config.json",
   "useThisTestBootstrapFile" : "slackSendMessage.bootstrap.json",
   "mockEndpointResponses": [

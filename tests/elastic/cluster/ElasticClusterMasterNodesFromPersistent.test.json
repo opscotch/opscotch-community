@@ -1,7 +1,7 @@
 {
     "enabled": true,
     "fromDirectory": "/elastic/cluster/",
-    "testThisRoute": "get-master-eligible-nodes",
+    "testThisStep": "get-master-eligible-nodes",
     "useThisTestConfigFile": "ElasticClusterMasterNodes.config.json",
     "useThisTestBootstrapFile" : "Elastic.bootstrap.json",
     "mockEndpointResponses": [

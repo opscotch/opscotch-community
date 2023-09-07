@@ -1,7 +1,7 @@
 {
   "enabled": true,
   "fromDirectory": "/elastic/cluster/",
-  "testThisRoute": "elastic-cluster-health-stats",
+  "testThisStep": "elastic-cluster-health-stats",
   "useThisTestConfigFile": "ElasticJavascriptClusterHealthStats.config.json",
   "useThisTestBootstrapFile" : "Elastic.bootstrap.json",
   "mockEndpointResponses": [

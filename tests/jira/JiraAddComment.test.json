@@ -1,0 +1,14 @@
+{
+  "fromDirectory": "/jira/",
+  "testThisStep": "test-jira-comment-trigger",
+  "useThisTestConfigFile": "JiraAddComment.config.json",
+  "useThisTestBootstrapFile" : "Jira.bootstrap.json",
+  "mockEndpointResponses": [
+    {
+      "whenThisIsCalled": "http://mockserver/rest/api/2/issue/ABC-19971/comment",
+      "expectedPayload" : "{\"body\":\"This is my fantastic comment\",\"key\":\"ABC-19971\"}",
+      "returnThisFile": "/jira/JiraAddComment.response.json"
+    }
+  ],
+  "theseMetricsShouldHaveBeenSent": []
+}

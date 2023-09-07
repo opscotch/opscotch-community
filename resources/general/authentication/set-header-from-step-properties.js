@@ -15,12 +15,15 @@ headersObjectAsJSONString = context.getAuthenticationPropertiesFromStep(properti
 if (headersObjectAsJSONString == null) {
     authStep = context.getData("authStep");
     context.setProperty("OPSCOTCH_AUTH_DATA", context.mergeJsonStrings(passedData, context.getData("passToAuthData")));
-    context.sendToStep(authStep, null);
+    context.sendToStep(authStep, null); // this will call the step synchronously and return here when done.
     headersObjectAsJSONString = context.getAuthenticationPropertiesFromStep(propertiesFromStep, propertyName);
 }
 
-headersObject = JSON.parse(headersObjectAsJSONString);
+if (headersObjectAsJSONString == null) {
+    throw "Authentication has not performed as expected. The expected result from the authentication step is not present;";
+}
 
+headersObject = JSON.parse(headersObjectAsJSONString);
 Object.keys(headersObject).forEach(headerName => {
     context.setHeader(headerName, headersObject[headerName]);
 });

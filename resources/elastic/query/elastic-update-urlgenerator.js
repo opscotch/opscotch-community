@@ -15,4 +15,5 @@ if (context.getData("idproperty") && context.getProperty(context.getData("idprop
     recordId = JSON.parse(context.getHeader(context.getData("idheader")))[0];
 }
 
-context.setUrl(context.getData("host-ref"), "/" + context.getData("index") + "/_update/" + recordId);
+context.setUrl(context.getData("host-ref"), "/" + context.getData("index") + "/_update/" + recordId );
+context.setHttpMethod("POST");

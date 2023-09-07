@@ -1,0 +1,87 @@
+{
+    
+    "workflows": [
+        {
+            "name": "Jira Basic Auth",
+            "steps": [
+                {
+                    "stepId": "auth-jira-basic",
+                    "type": "scripted-auth",
+                    "debug": false,
+                    "resultsProcessor": {
+                        "data": {
+                            "fromHost": "jira",
+                            "headerName": "Authorization",
+                            "keyOfValue": "authorization",
+                            "propertiesStoredOnStep": "auth-jira-basic",
+                            "propertyName": "Authorization"
+                        },
+                        "resource": "/general/authentication/standard-restricted-data-as-auth.js"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Add a Jira Comment",
+            "steps": [
+                {
+                    "comment": "This is used to trigger the test as jira-add-comment doesn't have a timer",
+                    "stepId": "test-jira-comment-trigger",
+                    "trigger": { "timer" : { "period" : 600000 }},
+                    "type": "scripted",
+                    "resultsProcessor": {
+                        "processors": [
+                            {
+                                "resource": "/general/standard-data-as-body.js",
+                                "data": {
+                                    "keyOfBody": "jiraCommentToBeSentForTesting",
+                                    "jiraCommentToBeSentForTesting": {
+                                        "body": "This is my fantastic comment",
+                                        "key": "ABC-19971"
+                                    }
+                                }
+                            },
+                            {
+                                "resource": "/general/standard-forwarder.js",
+                                "data": {
+                                    "processroute": "jira-add-comment"
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    "type": "scripted",
+                    "stepId": "jira-add-comment",
+                    "comment": "Expects body to specify the body and the key",
+                    "authenticationProcessor": {
+                        "comment": [
+                            "This expects that there is a property called 'Authorization' stored on a step",
+                            "If it is not present then it asks another step to put them them"
+                        ],
+                        "data": {
+                            "authStep": "auth-jira-basic",
+                            "passToAuthData": {},
+                            "propertiesStoredOnStep": "auth-jira-basic",
+                            "propertyName": "Authorization"
+                        },
+                        "resource": "/general/authentication/set-header-from-step-properties.js"
+                    },
+                    "urlGenerator": {
+                        "resource": "/jira/general/jira-key-urlgenerator.js",
+                        "data": {
+                            "host-ref": "jira",
+                            "path": "/rest/api/2/issue/{key}/comment"
+                        }
+                    },
+                    "payloadGenerator": {
+                        "resource": "/general/standard-use-forwarded-message-payloadgenerator.js"
+                    },
+                    "resultsProcessor": {
+                        "resource": "/general/standard-noop.js"
+                    }
+                }
+            ]
+        }
+    ]
+}

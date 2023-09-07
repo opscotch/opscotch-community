@@ -1,10 +1,10 @@
 {
-  "configVersionId": "234",
+  
   "data": {
     "hosts": {
       "elastic": {
         "host": "http://mockserver",
-        "whitelist": [
+        "allowlist": [
           [
             "GET",
             "/_ml/.*"
@@ -13,17 +13,49 @@
       }
     }
   },
-  "routes": [
+  "workflows": [
+    {
+      "name": "Elastic Basic Auth",
+      "steps": [
+        {
+          "stepId": "auth-elastic-basic",
+          "type": "scripted-auth",
+          "resultsProcessor": {
+            "resource": "/general/authentication/standard-restricted-data-as-auth.js",
+            "data": {
+              "fromHost": "elastic",
+              "keyOfValue": "authorization",
+              "headerName": "Authorization",
+              "propertiesStoredOnStep": "auth-elastic-basic",
+              "propertyName": "Authorization"              
+            }
+          }
+        }
+      ]
+    },
     {
       "name": "Get jobs with closed status",
       "comment" : "add data.excludeJobs to exclude jobs (comma separator)",
       "steps": [
-        {
-          "debug": true,
+      {
           "enabled": true,
           "type": "scripted",
-          "routeName": "get-jobs-details",
-          "timer": "fixedRate=true&period=600000",
+          "stepId": "get-jobs-details",
+          "authenticationProcessor" : {
+            "comment" : [
+              "This expects that there is a property called 'Authorization' stored on a step",
+              "If it is not present then it asks another step to put them them"
+            ],
+            "resource": "/general/authentication/set-header-from-step-properties.js",
+            "data": {
+              "propertiesStoredOnStep": "auth-elastic-basic",
+              "propertyName": "Authorization",
+              "authStep": "auth-elastic-basic",
+              "passToAuthData" : {                
+              }
+            }
+          },
+          "trigger": { "timer" : { "period" : 600000 }},
           "urlGenerator": {
             "resource": "/general/standard-url-generator.js",
             "data": {
@@ -42,10 +74,9 @@
         {
           "comment": "This little quirk allows the above step to process the metric but not send it, so that we can reuse the above code",
           "type": "scripted",
-          "routeName": "get-jobs-details-sender",
+          "stepId": "get-jobs-details-sender",
           "resultsProcessor": {
-            "resource": "/general/standard-send-metric.js",
-            "data": {}
+            "resource": "/general/standard-send-metric.js"
           }
         }
       ],

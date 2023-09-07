@@ -7,105 +7,110 @@
         "1. want to send an email? If the access token is available, use it. Otherwise",
         "2. Use the refresh token to request a new access token"
     ],
-    "configVersionId": "234",
-    "routes": [
+    
+    "workflows": [
         {
             "name": "Send an Email via o365",
             "steps": [
                 {
                     "comment": "This is used to trigger the test as o365-send-message doesn't have a timer",
-                    "routeName": "test-trigger",
-                    "timer": "fixedRate=true&period=600000",
+                    "stepId": "test-trigger",
+                    "trigger": { "timer" : { "period" : 600000 }},
                     "type": "scripted",
-                    "payloadGenerator": {
-                        "resource" : "/general/standard-data-as-body.js",
-                        "data" : {
-                            "keyOfBody" : "o365MessageToBeSentForTesting",
-                            "o365MessageToBeSentForTesting" : {
-                                "message": {
-                                  "subject": "Test email",
-                                  "body": {
-                                    "contentType": "Text",
-                                    "content": "This is a test email"
-                                  },
-                                  "toRecipients": [
-                                    {
-                                      "emailAddress": {
-                                        "address": "alertme@example.com"
-                                      }
-                                    }
-                                  ]
-                                },
-                                "saveToSentItems": "false"
-                            }  
-                        }
-                    },
                     "resultsProcessor": {
-                        "resource": "/general/standard-forwarder.js",
-                        "data": {
-                            "processroute": "o365-send-message"
-                        }
+                        "processors": [
+                            {
+                                "resource": "/general/standard-data-as-body.js",
+                                "data": {
+                                    "keyOfBody": "o365MessageToBeSentForTesting",
+                                    "o365MessageToBeSentForTesting": {
+                                        "message": {
+                                            "subject": "Test email",
+                                            "body": {
+                                                "contentType": "Text",
+                                                "content": "This is a test email"
+                                            },
+                                            "toRecipients": [
+                                                {
+                                                    "emailAddress": {
+                                                        "address": "alertme@example.com"
+                                                    }
+                                                }
+                                            ]
+                                        },
+                                        "saveToSentItems": "false"
+                                    }
+                                }
+                            },
+                            {
+                                "resource": "/general/standard-forwarder.js",
+                                "data": {
+                                    "processroute": "o365-send-message"
+                                }
+                            }
+                        ]
                     }
                 },
                 {
-                    "type" : "scripted-auth",
-                    "routeName": "o356-check-token",
-                    "comment" : "Will check for a valid token, otherwise request one using the refresh token",
+                    "type": "scripted-auth",
+                    "stepId": "o356-check-token",
+                    "comment": "Will check for a valid token, otherwise request one using the refresh token",
                     "urlGenerator": {
                         "resource": "/general/standard-url-generator.js",
                         "data": {
                             "path": "/mytennantid/oauth2/v2.0/token",
-                            "host-ref": "login.microsoftonline.com"
+                            "host-ref": "login.microsoftonline.com",
+                            "method": "POST"
                         }
                     },
                     "payloadGenerator": {
                         "resource": "/o365/sendEmailRefreshToken-payloadgenerator.js",
-                        "data" : {
+                        "data": {
                             "host-ref": "login.microsoftonline.com"
                         }
                     },
-                    "resultsProcessor" : {
-                        "resource" : "/o365/setAccessAndRefreshToken.js",
-                        "data" : {
+                    "resultsProcessor": {
+                        "resource": "/o365/setAccessAndRefreshToken.js",
+                        "data": {
                             "propertiesStoredOnStep": "o356-check-token",
                             "propertyName": "access-token"
                         }
                     },
-                    "persistenceFile" : "persistence.data"
+                    "persistenceFile": "persistence.data"
                 },
                 {
                     "type": "scripted",
-                    "routeName": "o365-send-message",
-                    "comment" : [ 
+                    "stepId": "o365-send-message",
+                    "comment": [
                         "Expects body to be a Microsoft Graph json email",
                         "Will execute the authenticationProcessor and expect a authorisation token to be set"
-                     ],
-                    "authenticationProcessor" : {
-                        "comment" : [
-                          "This expects that there is a property called 'access-token' stored on the 'o356-check-token' step",
-                          "If it is not present then it asks o356-check-token step to put them them"
+                    ],
+                    "authenticationProcessor": {
+                        "comment": [
+                            "This expects that there is a property called 'access-token' stored on the 'o356-check-token' step",
+                            "If it is not present then it asks o356-check-token step to put them them"
                         ],
                         "resource": "/general/authentication/set-header-from-step-properties.js",
                         "data": {
-                          "propertiesStoredOnStep": "o356-check-token",
-                          "propertyName": "access-token",
-                          "authStep": "o356-check-token",
-                          "passToAuthData" : {                
-                          }
+                            "propertiesStoredOnStep": "o356-check-token",
+                            "propertyName": "access-token",
+                            "authStep": "o356-check-token",
+                            "passToAuthData": {}
                         }
-                      },
+                    },
                     "urlGenerator": {
-                        "comment" : "it is expected that the 'Authorization' header is set",
+                        "comment": "it is expected that the 'Authorization' header is set",
                         "resource": "/general/standard-url-generator.js",
                         "data": {
                             "path": "/v1.0/me/sendMail",
-                            "host-ref": "graph.microsoft.com"
+                            "host-ref": "graph.microsoft.com",
+                            "method": "POST"
                         }
                     },
                     "payloadGenerator": {
                         "resource": "/general/standard-use-forwarded-message-payloadgenerator.js"
                     },
-                    "resultsProcessor" : {
+                    "resultsProcessor": {
                         "resource": "/general/standard-noop.js"
                     }
                 }

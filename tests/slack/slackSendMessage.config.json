@@ -1,35 +1,39 @@
 {
-    "configVersionId": "234",
-    "routes": [
+    
+    "workflows": [
         {
             "name": "Send a Slack Message",
             "steps": [
                 {
                     "comment": "This is used to trigger the test as slack-send-message doesn't have a timer",
-                    "routeName": "test-trigger",
-                    "timer": "fixedRate=true&period=600000",
+                    "stepId": "test-trigger",
+                    "trigger": { "timer" : { "period" : 600000 }},
                     "type": "scripted",
-                    "payloadGenerator": {
-                        "resource" : "/general/standard-data-as-body.js",
-                        "data" : {
-                            "keyOfBody" : "slackMessageToBeSentForTesting",
-                            "slackMessageToBeSentForTesting" : {
-                                "text" : "Hello beautiful world",
-                                "channel" : "joy"
-                            }
-                        }
-                    },
                     "resultsProcessor": {
-                        "resource": "/general/standard-forwarder.js",
-                        "data": {
-                            "processroute": "slack-send-message"
-                        }
+                        "processors": [
+                            {
+                                "resource": "/general/standard-data-as-body.js",
+                                "data": {
+                                    "keyOfBody": "slackMessageToBeSentForTesting",
+                                    "slackMessageToBeSentForTesting": {
+                                        "text": "Hello beautiful world",
+                                        "channel": "joy"
+                                    }
+                                }
+                            },
+                            {
+                                "resource": "/general/standard-forwarder.js",
+                                "data": {
+                                    "processroute": "slack-send-message"
+                                }
+                            }
+                        ]
                     }
                 },
                 {
                     "type": "scripted",
-                    "routeName": "slack-send-message",
-                    "comment" : "Expects body to be a slack json message",
+                    "stepId": "slack-send-message",
+                    "comment": "Expects body to be a slack json message",
                     "urlGenerator": {
                         "resource": "/slack/webhook-urlgenerator.js",
                         "data": {
@@ -40,7 +44,7 @@
                     "payloadGenerator": {
                         "resource": "/general/standard-use-forwarded-message-payloadgenerator.js"
                     },
-                    "resultsProcessor" : {
+                    "resultsProcessor": {
                         "resource": "/general/standard-noop.js"
                     }
                 }

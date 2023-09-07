@@ -1,0 +1,15 @@
+{
+  "enabled": true,
+  "fromDirectory": "/general/",
+  "testThisStep": "httpfailed",
+  "useThisTestConfigFile": "httpFailed.config.json",
+  "useThisTestBootstrapFile" : "httpFailed.bootstrap.json",
+  "mockEndpointResponses": [
+  ],
+  "theseMetricsShouldHaveBeenSent": [
+    {
+      "key": "success",
+      "value": 1
+    }
+  ]
+}

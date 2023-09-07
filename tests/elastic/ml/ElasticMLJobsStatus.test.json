@@ -1,7 +1,7 @@
 {
     "enabled": true,
     "fromDirectory": "/elastic/ml/",
-    "testThisRoute": "get-jobs-details",
+    "testThisStep": "get-jobs-details",
     "useThisTestConfigFile": "ElasticMLJobsStatus.config.json",
     "useThisTestBootstrapFile" : "Elastic.bootstrap.json",
     "mockEndpointResponses": [

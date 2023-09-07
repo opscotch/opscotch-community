@@ -1,15 +1,47 @@
 {
-  "configVersionId": "234",
-  "routes": [
+  
+  "workflows": [
     {
-      "name": "Elastic Index Stats",
-      "comments" : "Requires Cluster Monitor, '*' index 'monitor' privileges",
+      "name": "Elastic Basic Auth",
       "steps": [
         {
-          "debug": true,
+          "stepId": "auth-elastic-basic",
+          "type": "scripted-auth",
+          "resultsProcessor": {
+            "resource": "/general/authentication/standard-restricted-data-as-auth.js",
+            "data": {
+              "fromHost": "elastic",
+              "keyOfValue": "authorization",
+              "headerName": "Authorization",
+              "propertiesStoredOnStep": "auth-elastic-basic",
+              "propertyName": "Authorization"              
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Elastic Index Stats",
+      "comment" : "Requires Cluster Monitor, '*' index 'monitor' privileges",
+      "steps": [
+        {
           "enabled": true,
           "type": "scripted",
-          "routeName": "elastic-cluster-index-stats",
+          "stepId": "elastic-cluster-index-stats",
+          "authenticationProcessor" : {
+            "comment" : [
+              "This expects that there is a property called 'Authorization' stored on a step",
+              "If it is not present then it asks another step to put them them"
+            ],
+            "resource": "/general/authentication/set-header-from-step-properties.js",
+            "data": {
+              "propertiesStoredOnStep": "auth-elastic-basic",
+              "propertyName": "Authorization",
+              "authStep": "auth-elastic-basic",
+              "passToAuthData" : {                
+              }
+            }
+          },
           "urlGenerator": {
             "resource": "/general/standard-url-generator.js",
             "data": {
@@ -23,13 +55,26 @@
               "processroute": "elastic-cluster-index-stats-process"
             }
           },
-          "timer": "fixedRate=true&period=60000"
+          "trigger": { "timer" : { "period" : 60000 }}
         },
         {
-          "debug": true,
           "enabled": true,
           "type": "scripted-split-aggregate",
-          "routeName": "elastic-cluster-index-stats-process",
+          "stepId": "elastic-cluster-index-stats-process",
+          "authenticationProcessor" : {
+            "comment" : [
+              "This expects that there is a property called 'Authorization' stored on a step",
+              "If it is not present then it asks another step to put them them"
+            ],
+            "resource": "/general/authentication/set-header-from-step-properties.js",
+            "data": {
+              "propertiesStoredOnStep": "auth-elastic-basic",
+              "propertyName": "Authorization",
+              "authStep": "auth-elastic-basic",
+              "passToAuthData" : {                
+              }
+            }
+          },
           "splitGenerator": {
             "resource": "/elastic/scripts/indexes/index-stats-closed-filter-results-splitter.js"
           },

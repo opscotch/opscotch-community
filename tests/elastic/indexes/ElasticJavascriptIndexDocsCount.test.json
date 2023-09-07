@@ -1,6 +1,6 @@
 {
   "fromDirectory": "/elastic/indexes/",
-  "testThisRoute": "get-index-docs-count-diff",
+  "testThisStep": "get-index-docs-count-diff",
   "useThisTestConfigFile": "ElasticJavascriptIndexDocsCount.config.json",
   "useThisTestBootstrapFile" : "Elastic.bootstrap.json",
   "mockEndpointResponses": [

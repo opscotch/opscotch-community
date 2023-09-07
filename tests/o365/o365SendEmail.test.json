@@ -1,6 +1,6 @@
 {
     "fromDirectory": "/o365/",
-    "testThisRoute": "test-trigger",
+    "testThisStep": "test-trigger",
     "useThisTestConfigFile": "o365SendEmail.config.json",
     "useThisTestBootstrapFile" : "o365SendEmail.bootstrap.json",
     "mockEndpointResponses": [
@@ -14,7 +14,7 @@
         "expectedPayload" : "{\"message\":{\"subject\":\"Test email\",\"body\":{\"contentType\":\"Text\",\"content\":\"This is a test email\"},\"toRecipients\":[{\"emailAddress\":{\"address\":\"alertme@example.com\"}}]},\"saveToSentItems\":\"false\"}",
         "returnThisFile": "/o365/empty.response.txt",
         "expectedHeaders" : {
-          "Authorization" : "anAccessTokenFromLogin"
+          "Authorization" : ["anAccessTokenFromLogin"]
         }
       }
     ],

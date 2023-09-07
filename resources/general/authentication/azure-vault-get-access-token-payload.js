@@ -20,14 +20,14 @@ Property in thr Bootstrap host data called "secret":
 }
 
 */
-console.log(context.getProperty("OPSCOTCH_AUTH_DATA"))
+//console.log(context.getProperty("OPSCOTCH_AUTH_DATA"))
 passedAuthData = JSON.parse(context.getProperty("OPSCOTCH_AUTH_DATA"));
 data = JSON.parse(context.getData());
-console.log(context.getRestrictedDataFromHost(passedAuthData["azureVaultHost"]))
-restictedData = JSON.parse(context.getRestrictedDataFromHost(passedAuthData["azureVaultHost"]))
+//console.log(context.getRestrictedDataFromHost(passedAuthData["azureVaultHost"]))
+restrictedData = JSON.parse(context.getRestrictedDataFromHost(passedAuthData["azureVaultHost"]))
 
-if (!restictedData.hasOwnProperty("secret")) {
-    throw "secret not found in restictedData";
+if (!restrictedData.hasOwnProperty("secret")) {
+    throw "secret not found in restrictedData";
 }
 
-context.setMessage(restictedData["secret"]);
+context.setMessage(restrictedData["secret"]);

@@ -1,21 +1,30 @@
 {
   "enabled": true,
   "fromDirectory": "/elastic/indexes/",
-  "testThisRoute": "elastic-cluster-index-stats",
+  "testThisStep": "elastic-cluster-index-stats",
   "useThisTestConfigFile": "ElasticJavascriptIndexStats.config.json",
   "useThisTestBootstrapFile" : "Elastic.bootstrap.json",
   "mockEndpointResponses": [
     {
       "whenThisIsCalled": "http://mockserver/_cat/indices?expand_wildcards=open&format=json",
-      "returnThisFile": "ElasticJavascriptIndexStatsIndexes.response.json"
+      "returnThisFile": "ElasticJavascriptIndexStatsIndexes.response.json",
+      "expectedHeaders" : {
+        "Authorization": ["Basic LETMEIN"]
+      }
     },
     {
       "whenThisIsCalled": "http://mockserver/filebeat-7.6.0-2020.06.15/_stats",
-      "returnThisFile": "ElasticJavascriptIndexStatsIndex.response.json"
+      "returnThisFile": "ElasticJavascriptIndexStatsIndex.response.json",
+      "expectedHeaders" : {
+        "Authorization": ["Basic LETMEIN"]
+      }
     },
     {
       "whenThisIsCalled": "http://mockserver/filebeat-7.6.0-2020.06.14/_stats",
-      "returnThisFile": "ElasticJavascriptIndexStatsIndex.response.json"
+      "returnThisFile": "ElasticJavascriptIndexStatsIndex.response.json",
+      "expectedHeaders" : {
+        "Authorization": ["Basic LETMEIN"]
+      }
     }
   ],
   "theseMetricsShouldHaveBeenSent": [

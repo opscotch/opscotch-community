@@ -1,0 +1,100 @@
+{
+    "fromDirectory": "/security/",
+    "testThisStep": "bad-ssl",
+    "useThisTestConfigFile": "sslchecks.config.json",
+    "useThisTestBootstrapFile" : "sslchecks.bootstrap.json",
+    "mockEndpointResponses": [],
+    "theseMetricsShouldHaveBeenSent": [
+      {
+        "key" : "expired",
+        "value" : 1.0
+      },
+      {
+        "key" : "untrusted-root",
+        "value" : 1.0
+      },
+      {
+        "key" : "self-signed",
+        "value" : 1.0
+      },
+      {
+        "key" : "wrong.host",
+        "value" : 1.0
+      },
+      {
+        "key" : "revoked",
+        "value" : 1.0
+      },
+      {
+        "key" : "no-common-name",
+        "value" : 1.0
+      }
+      ,
+      {
+        "key" : "no-subject",
+        "value" : 1.0
+      }
+      ,
+      {
+        "key" : "incomplete-chain",
+        "value" : 1.0
+      }
+      ,
+      {
+        "key" : "rc4-md5",
+        "value" : 1.0
+      }
+      ,
+      {
+        "key" : "rc4",
+        "value" : 1.0
+      }
+      ,
+      {
+        "key" : "3des",
+        "value" : 1.0
+      }
+      ,
+      {
+        "key" : "null",
+        "value" : 1.0
+      },
+      {
+        "key" : "dh480",
+        "value" : 1.0
+      },
+      {
+        "key" : "dh512",
+        "value" : 1.0
+      },
+      {
+        "key" : "pinning-test-vulnerable",
+        "value" : 1.0
+      },
+      {
+        "key" : "dh1024-vulnerable",
+        "value" : 1.0
+      },
+      {
+        "key" : "dh-small-subgroup-vulnerable",
+        "value" : 1.0
+      },
+      {
+        "key" : "dh-composite",
+        "value" : 1.0
+      },
+      {
+        "key" : "no-sct-vulnerable",
+        "value" : 1.0
+      },
+      {
+        "key" : "subdomain.preloaded-hsts",
+        "value" : 1.0
+      },
+      {
+        "key" : "superfish",
+        "value" : 1.0
+      }
+    ]
+  }
+  

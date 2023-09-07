@@ -9,4 +9,4 @@ Will forward the hits.hits result
 
 body = context.getMessageBodyAsString();
 response = JSON.parse(body);
-context.sendToRoute(context.getData("processroute"), JSON.stringify(response.hits.hits));
+context.sendToStep(context.getData("processroute"), JSON.stringify(response.hits.hits));

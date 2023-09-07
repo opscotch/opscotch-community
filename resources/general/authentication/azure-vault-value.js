@@ -48,4 +48,4 @@ keyName = passedAuthData["propertyAzureVaultValueKeyName"];
 authenticationProperties = {};
 authenticationProperties[keyName] = body["value"];
 
-context.setAuthenticationPropertiesOnStep(storeOnStep, 1000, propertyName, JSON.stringify(authenticationProperties));
+context.setAuthenticationPropertiesOnStep(storeOnStep, 3600000, propertyName, JSON.stringify(authenticationProperties));

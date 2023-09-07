@@ -1,6 +1,6 @@
 {
   "fromDirectory": "/elastic/indexes/",
-  "testThisRoute": "get-old-indexes-count",
+  "testThisStep": "get-old-indexes-count",
   "useThisTestConfigFile": "ElasticJavascriptOldIndexes.config.json",
   "useThisTestBootstrapFile" : "Elastic.bootstrap.json",
   "timestampOverride" : 1635788500100 ,

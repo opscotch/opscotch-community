@@ -28,4 +28,4 @@ forwarders = JSON.parse(context.getData("forwardOnValue"));
 
 forwardTo = forwarders[""+json[field]] ?? forwarders["_default"];
 
-context.sendToRoute(forwardTo, body);
+context.sendToStep(forwardTo, body);

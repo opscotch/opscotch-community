@@ -1,13 +1,46 @@
 {
-  "configVersionId": "234",
-  "routes": [
+  
+  "workflows": [
+    {
+      "name": "Elastic Basic Auth",
+      "steps": [
+        {
+          "stepId": "auth-elastic-basic",
+          "type": "scripted-auth",
+          "resultsProcessor": {
+            "resource": "/general/authentication/standard-restricted-data-as-auth.js",
+            "data": {
+              "fromHost": "elastic",
+              "keyOfValue": "authorization",
+              "headerName": "Authorization",
+              "propertiesStoredOnStep": "auth-elastic-basic",
+              "propertyName": "Authorization"              
+            }
+          }
+        }
+      ]
+    },
     {
       "name": "Elastic index count",
       "comment" : "Requires Cluster Monitor, '*' index 'view_index_metadata', '*' index 'monitor'", 
       "steps": [
         {
           "type": "scripted",
-          "routeName": "elastic-index-count",
+          "stepId": "elastic-index-count",
+          "authenticationProcessor" : {
+            "comment" : [
+              "This expects that there is a property called 'Authorization' stored on a step",
+              "If it is not present then it asks another step to put them them"
+            ],
+            "resource": "/general/authentication/set-header-from-step-properties.js",
+            "data": {
+              "propertiesStoredOnStep": "auth-elastic-basic",
+              "propertyName": "Authorization",
+              "authStep": "auth-elastic-basic",
+              "passToAuthData" : {                
+              }
+            }
+          },
           "urlGenerator": {
             "resource": "/general/standard-url-generator.js",
             "data": {
@@ -18,7 +51,7 @@
           "resultsProcessor": {
             "resource": "/elastic/scripts/indexes/index-count-resultprocessor.js"
           },
-          "timer": "fixedRate=true&period=60000"
+          "trigger": { "timer" : { "period" : 60000 }}
         }
       ]
     }

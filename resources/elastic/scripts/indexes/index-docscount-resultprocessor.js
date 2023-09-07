@@ -7,11 +7,21 @@ indexes = [];
 
 /* Getting the index name and docs number */
 const REX = /[\-]\d{4}[\.](0?[1-9]|1[012])[\.](0?[1-9]|[12][0-9]|3[01])$/; /* i.e match with : index_name-2021.11.17 */
+const REX2 = /[\-]\d{4}[\.](0?[1-9]|1[012])[\.](0?[1-9]|[12][0-9]|3[01])[\-]\d{6}$/; /* i.e match with : index_name-2021.11.17-000267 */
+const REX3 = /[\-]\d{6}$/; /* i.e match with : index_name-000256 */
 indexList.forEach(obj => {
   ind = obj["index"];
   /* considering only the indexes which name end in a date -YYYY.MM.DD and ignoring indexes which start with a . */
   if (obj.status == "open" && ind.match(REX) && ind.charAt(0)!= "."){
     removeDate = ind.slice(0, ind.length - 11);
+    indexes.push([ obj["index"], removeDate, { count: obj["docs.count"], ingestSize: obj["pri.store.size"], storeSize: obj["store.size"] } ])
+  }
+  else if (obj.status == "open" && ind.match(REX2) && ind.charAt(0)!= "."){
+    removeDate = ind.slice(0, ind.length - 18);
+    indexes.push([ obj["index"], removeDate, { count: obj["docs.count"], ingestSize: obj["pri.store.size"], storeSize: obj["store.size"] } ])
+  }
+  else if (obj.status == "open" && ind.match(REX3) && ind.charAt(0)!= "."){
+    removeDate = ind.slice(0, ind.length - 7);
     indexes.push([ obj["index"], removeDate, { count: obj["docs.count"], ingestSize: obj["pri.store.size"], storeSize: obj["store.size"] } ])
   }
 });

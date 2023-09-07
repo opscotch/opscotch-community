@@ -1,0 +1,53 @@
+{
+  "fromDirectory": "/elastic/appsearch/",
+  "testThisStep": "get-search-click-rate",
+  "useThisTestConfigFile": "ElasticJavascriptSearchClickRate.config.json",
+  "useThisTestBootstrapFile" : "ElasticAppSearch.bootstrap.json",
+  "timestampOverride" : 1648522800123,
+  "mockEndpointResponses": [
+    {
+      "whenThisIsCalled": "http://mockserver/logs-app_search.analytics-default/_search",
+      "withMethod" : "GET",
+      "returnThisFile": "/elastic/appsearch/ElasticJavascriptSearchClickRate.response.json",
+      "expectedPayload" : "{\"size\":0,\"query\":{\"bool\":{\"must_not\":[{\"term\":{\"event.query_string\":{\"value\":\"\"}}}],\"filter\":[{\"range\":{\"@timestamp\":{\"gte\":\"1647918000123\",\"lt\":\"1648522740000\"}}}]}},\"aggs\":{\"counts_by_time\":{\"date_histogram\":{\"field\":\"@timestamp\",\"fixed_interval\":\"1m\"},\"aggs\":{\"counts_by_action\":{\"terms\":{\"field\":\"event.action\"}}}}}}"
+    }
+  ],
+  "theseMetricsShouldHaveBeenSent": [
+    {
+      "timestamp":1648522800000,
+      "key": "elastic-appsearch-search-rate",
+      "value": 24,
+      "dimensionMap" : {
+        "ad_p" : "1m",
+        "ad": "ad_ml"
+      }
+    },
+    {
+      "timestamp":1648522800000,
+      "key": "elastic-appsearch-click-rate",
+      "value": 3,
+      "dimensionMap" : {
+        "ad_p" : "1m",
+        "ad": "ad_ml"
+      }
+    },
+    {
+      "timestamp":1648522860000,
+      "key": "elastic-appsearch-search-rate",
+      "value": 18,
+      "dimensionMap" : {
+        "ad_p" : "1m",
+        "ad": "ad_ml"
+      }
+    },
+    {
+      "timestamp":1648522860000,
+      "key": "elastic-appsearch-click-rate",
+      "value": 1,
+      "dimensionMap" : {
+        "ad_p" : "1m",
+        "ad": "ad_ml"
+      }
+    }
+  ]
+}

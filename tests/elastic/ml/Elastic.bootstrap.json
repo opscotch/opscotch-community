@@ -1,15 +1,16 @@
 {
-  "data": {
-    "hosts": {
-      "elastic": {
-        "host": "http://mockserver",
-        "whitelist": [
-          [
-            "GET",
-            "/_ml/.*"
-          ]
+  "hosts": {
+    "elastic": {
+      "data" : {
+        "authorization": "Basic LETMEIN"
+      },
+      "host": "http://mockserver",
+      "allowlist": [
+        [
+          "GET",
+          "/_ml/.*"
         ]
-      }
+      ]
     }
   }
 }

@@ -1,7 +1,7 @@
 {
   "enabled": true,
   "fromDirectory": "/general/",
-  "testThisRoute": "hashed-items",
+  "testThisStep": "hashed-items",
   "useThisTestConfigFile": "HashingExample.config.json",
   "useThisTestBootstrapFile" : "Hashing.bootstrap.json",
   "mockEndpointResponses": [

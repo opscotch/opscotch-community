@@ -1,13 +1,13 @@
 {
-  "configVersionId": "234",
-  "routes": [
+  
+  "workflows": [
     {
       "name": "hashed items",
       "steps": [
         {
           "enabled": true,
           "type": "scripted",
-          "routeName": "hashed-items",
+          "stepId": "hashed-items",
           "urlGenerator": {
             "resource": "/general/standard-url-generator.js",
             "data": {
@@ -18,7 +18,7 @@
           "resultsProcessor": {
             "script": "context.getMessageBodyAsString().split(\"\\n\").forEach(item => context.sendMetric(\"index:\" + context.hash(item.split(\" \")[2])+\"-doc-count\", parseInt(item.split(\" \")[6])));"
           },
-          "timer": "fixedRate=true&period=60000"
+          "trigger": { "timer" : { "period" : 60000 }}
         }
       ]
     }

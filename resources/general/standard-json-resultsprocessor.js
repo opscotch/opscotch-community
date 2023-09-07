@@ -115,6 +115,10 @@ Object.keys(metricFunctions).forEach(function(metricFunctionKey) {
                 aggregate = metricFunctions[metricFunctionKey].aggregate(k, aggregate, value);
             }
 
+            if (aggregate == null) {
+                console.log("aggregate should not be null");
+            }
+
             if (context.getData("processroute")) {
                 forwardResponse[metricConfig[k]] = aggregate;
             } else {

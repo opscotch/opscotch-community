@@ -15,7 +15,7 @@ Passed authentication response:
  }
 */
 
-body = context.getOrigBody();
+body = context.getPassedMessageAsString();
 console.log("XXXXXX"+body);
 json = JSON.parse(body);
 

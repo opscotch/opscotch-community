@@ -1,0 +1,42 @@
+{
+  "aggregations": {
+    "counts_by_time": {
+      "buckets": [
+        {
+          "key" : 1648522800000,
+          "counts_by_action": {
+            "doc_count_error_upper_bound": 0,
+            "sum_other_doc_count": 0,
+            "buckets": [
+              {
+                "key": "loco_moco_search",
+                "doc_count": 24
+              },
+              {
+                "key": "loco_moco_click",
+                "doc_count": 3
+              }
+            ]
+          }
+        },
+        {
+          "key" : 1648522860000,
+          "counts_by_action": {
+            "doc_count_error_upper_bound": 0,
+            "sum_other_doc_count": 0,
+            "buckets": [
+              {
+                "key": "loco_moco_search",
+                "doc_count": 18
+              },
+              {
+                "key": "loco_moco_click",
+                "doc_count": 1
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

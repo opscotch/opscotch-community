@@ -1,7 +1,7 @@
 {
   "enabled": true,
   "fromDirectory": "/elastic/indexes/",
-  "testThisRoute": "elastic-index-count",
+  "testThisStep": "elastic-index-count",
   "useThisTestConfigFile": "ElasticJavascriptIndexCount.config.json",
   "useThisTestBootstrapFile" : "Elastic.bootstrap.json",
   "mockEndpointResponses": [

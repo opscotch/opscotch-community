@@ -1,6 +1,6 @@
 {
   "fromDirectory": "/elastic/indexes/",
-  "testThisRoute": "get-index-docs-out-of-band",
+  "testThisStep": "get-index-docs-out-of-band",
   "useThisTestConfigFile": "ElasticJavascriptIndexOutOfBand.config.json",
   "useThisTestBootstrapFile" : "Elastic.bootstrap.json",
   "mockEndpointResponses": [
