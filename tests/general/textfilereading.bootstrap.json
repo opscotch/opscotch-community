@@ -1,0 +1,10 @@
+{
+  "allowFileAccess" : [
+    {
+      "id" : "testFile",
+      "directoryOrFile": "/home/jeremy/dev/opscotch/community/opscotch-community/tests/general/HashingExample.response.txt",
+      "patterns" : [ ".+\\.txt$"],
+      "READ" : true
+    }
+  ]
+}

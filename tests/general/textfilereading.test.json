@@ -1,0 +1,12 @@
+{
+  "enabled": true,
+  "fromDirectory": "/general/",
+  "testThisStep": "fileReader",
+  "useThisTestConfigFile": "textfilereading.config.json",
+  "useThisTestBootstrapFile" : "textfilereading.bootstrap.json",
+  "theseLogsShouldHaveBeenSent" : [
+    "yellow open filebeat-7.6.0-2020.06.15 I29sLcn3QSO-xelCXSYkDg 1 1 180 0 182.1kb 182.1kb",
+    "yellow open filebeat-7.6.0-2020.06.14 o_M_luEFRHSVi2X41XhMwQ 1 1 960 0 262.8kb 262.8kb",
+    " yellow open filebeat-7.6.0-2020.06.13 WMNJL25cQE2CtvYm4WlYGA 1 1 231 0 100.4kb 100.4kb"
+  ]
+}
