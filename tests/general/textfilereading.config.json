@@ -1,0 +1,22 @@
+{
+  "workflows": [
+    {
+      "name": "file reading",
+      "steps" : [
+        {
+          "stepId": "fileReader",
+          "type": "scripted",
+          "trigger": {
+            "fileWatcher" : {
+              "bootstrapFileId": "testFile",
+              "lineSplit": "\\n"
+            }
+          },
+          "resultsProcessor": {
+            "script": "console.log(context.getMessageBodyAsString());JSON.parse(context.getMessageBodyAsString()).forEach(l => context.diagnosticLog(l.message))"
+          }
+        }
+      ]
+    }
+  ]
+}
