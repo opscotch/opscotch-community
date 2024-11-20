@@ -1,5 +1,5 @@
 {
-	"license" : "licenses.txt",
+	"license" : "license.txt",
 	"resourceDirs" : [ 
         "resources"
     ],

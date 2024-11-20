@@ -1,1 +1,4 @@
 license.txt
+/empty.config.json
+/test.bootstrap.json
+test.config.*
