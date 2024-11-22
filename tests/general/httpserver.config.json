@@ -1,0 +1,45 @@
+{
+  "workflows": [
+    {
+      "name": "simple http server",
+      "steps" : [
+        {
+          "stepId": "httpserver",
+          "type": "scripted",
+          "trigger": {
+            "httpRequestTrigger" : {
+              "bootstrapHttpServerId": "testhttp",
+              "path" : "/hello",
+              "method" : "GET"
+            }
+          },
+          "resultsProcessor": {
+            "script": "context.diagnosticLog(context.getMessageBodyAsString());context.setMessage('goodbye');"
+          }
+        }
+      ]
+    },
+    {
+      "name": "simple http proxy",
+      "steps" : [
+        {
+          "stepId": "httpserver",
+          "type": "scripted",
+          "trigger": {
+            "httpRequestTrigger" : {
+              "bootstrapHttpServerId": "testhttp",
+              "path" : "/proxy",
+              "method" : "GET"
+            }
+          },
+          "urlGenerator" : {
+            "script" : "context.setUrl('proxiedServer', '/proxyme');"
+          },
+          "resultsProcessor": {
+            "script": "context.diagnosticLog(context.getMessageBodyAsString());context.setMessage(context.getMessageBodyAsString());"
+          }
+        }
+      ]
+    }
+  ]
+}

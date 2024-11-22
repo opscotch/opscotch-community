@@ -1,0 +1,19 @@
+{
+  "allowHttpServerAccess" : [
+    {
+      "id" : "testhttp",
+      "port" : 11000
+    }
+  ],
+  "hosts": {
+    "proxiedServer": {
+      "host": "http://mockserver",
+      "allowlist": [
+        [
+          "GET",
+          "/proxyme"
+        ]
+      ]
+    }
+  }
+}

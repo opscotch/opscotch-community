@@ -1,0 +1,23 @@
+{
+  "enabled": true,
+  "fromDirectory": "/general/",
+  "testThisStep": "httpserver",
+  "useThisTestConfigFile": "httpserver.config.json",
+  "useThisTestBootstrapFile" : "httpserver.bootstrap.json",
+  "makeTheseCalls" : [
+    {
+      "url" : "http://localhost:11000/hello",
+      "expectedResponse" : "goodbye"
+    },
+    {
+      "url" : "http://localhost:11000/proxy",
+      "expectedResponse" : "{\n  \"status\": \"OK\",\n  \"sentfrom\": \"native test service\"\n}"
+    }
+  ],
+  "mockEndpointResponses": [
+    {
+      "whenThisIsCalled": "http://mockserver/proxyme",
+      "returnThisFile": "okfile.json"
+    }
+  ]
+}
