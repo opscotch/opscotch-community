@@ -1,0 +1,23 @@
+{
+  "workflows": [
+    {
+      "name": "read zip file",
+      "steps" : [
+        {
+          "stepId": "readzip",
+          "type": "httpFile",
+          "trigger": {
+            "httpRequestTrigger" : {
+              "bootstrapHttpServerId": "staticFileServer",
+              "path" : ".*",
+              "method" : "get"
+            }
+          },
+          "resultsProcessor": {
+            "script": "context.setProperty('path', 'okfile.json');"
+          }
+        }
+      ]
+    }
+  ]
+}

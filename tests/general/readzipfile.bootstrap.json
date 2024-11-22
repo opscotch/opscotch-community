@@ -1,0 +1,18 @@
+{
+    "allowFileAccess" : [
+        {
+            "id" : "zipFile",
+            "directoryOrFile": "/home/jeremy/dev/opscotch/community/opscotch-community/tests/general/file.zip",
+            "READ" : true
+        }
+    ],
+    "allowHttpServerAccess" : [
+        {
+            "id" : "staticFileServer",
+            "port" : 11000,
+            "serveFromPackagedAsset" : {
+                "packagedAssetFileId" : "zipFile"
+            }
+        }
+    ]
+}

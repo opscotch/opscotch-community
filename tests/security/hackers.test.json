@@ -18,6 +18,10 @@
     {
       "key" : "runtime",
       "value" : 1.0
+    },
+    {
+      "key" : "javatype",
+      "value" : 1.0
     }
   ],
   "mockEndpointResponses" : []

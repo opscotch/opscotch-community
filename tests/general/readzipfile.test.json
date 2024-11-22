@@ -1,0 +1,14 @@
+{
+  "enabled": true,
+  "fromDirectory": "/general/",
+  "testThisStep": "readzip",
+  "useThisTestConfigFile": "readzipfile.config.json",
+  "useThisTestBootstrapFile" : "readzipfile.bootstrap.json",
+  "makeTheseCalls" : [
+    {
+      "url" : "http://localhost:11000/okfile.json",
+      "expectedResponse" : "{\n  \"status\": \"OK\",\n  \"sentfrom\": \"native test service\"\n}"
+    }
+  ],
+  "secondsToWaitForCompletion" : 500
+}
