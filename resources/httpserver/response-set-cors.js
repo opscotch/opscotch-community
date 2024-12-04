@@ -1,0 +1,1 @@
+context.setHeader("Access-Control-Allow-Origin", "*");

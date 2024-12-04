@@ -1,0 +1,136 @@
+{
+    "workflows": [
+        {
+            "name": "opscotch config API",
+            "data" : {
+                "fileId" : "opscotch-configs"
+            },
+            "steps": [
+                {
+                    "stepId" : "cors",
+                    "trigger" : {
+                        "http" : {
+                            "server" : "api",
+                            "method" : "OPTIONS",
+                            "path" : ".*"
+                        }
+                    },
+                    "resultsProcessor" : {
+                        "processors" : [
+                            {
+                                "resource" : "/general/standard-clear-body.js"
+                            },
+                            {
+                                "resource" : "/httpserver/response-set-cors.js"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "stepId" : "filelister",
+                    "trigger" : {
+                        "http" : {
+                            "server" : "api",
+                            "method" : "GET",
+                            "path" : "/configs/list/.*"
+                        }
+                    },
+                    "resultsProcessor" : {
+                        "processors" : [
+                            {
+                                "resource" : "/httpserver/response-set-cors.js"
+                            },
+                            {
+                                "resource" : "/apps/opscotch-configurator/listdirectory.js"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "stepId" : "fileread",
+                    "trigger" : {
+                        "http" : {
+                            "server" : "api",
+                            "method" : "GET",
+                            "path" : "/configs/read/.*"
+                        }
+                    },
+                    "resultsProcessor" : {
+                        "processors" : [
+                            {
+                                "resource" : "/httpserver/response-set-cors.js"
+                            },
+                            {
+                                "resource" : "/apps/opscotch-configurator/property-replace.js",
+                                "data" : {
+                                    "property" : "path",
+                                    "replace" : "/configs/read",
+                                    "with" : ""
+                                }
+                            },
+                            {
+                                "resource" : "/apps/opscotch-configurator/readfile.js"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "stepId" : "filediff",
+                    "trigger" : {
+                        "http" : {
+                            "server" : "api",
+                            "method" : "POST",
+                            "path" : "/configs/diff/.*"
+                        }
+                    },
+                    "resultsProcessor" : {
+                        "processors" : [
+                            {
+                                "resource" : "/httpserver/response-set-cors.js"
+                            },
+                            {
+                                "resource" : "/apps/opscotch-configurator/property-replace.js",
+                                "data" : {
+                                    "property" : "path",
+                                    "replace" : "/configs/diff",
+                                    "with" : ""
+                                }
+                            },
+                            {
+                                "resource" : "/apps/opscotch-configurator/difffile.js"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "stepId" : "filewrite",
+                    "trigger" : {
+                        "http" : {
+                            "server" : "api",
+                            "method" : "POST",
+                            "path" : "/configs/write/.*"
+                        }
+                    },
+                    "resultsProcessor" : {
+                        "processors" : [
+                            {
+                                "resource" : "/httpserver/response-set-cors.js"
+                            },
+                            {
+                                "resource" : "/apps/opscotch-configurator/property-replace.js",
+                                "data" : {
+                                    "property" : "path",
+                                    "replace" : "/configs/write",
+                                    "with" : ""
+                                }
+                            },
+                            {
+                                "resource" : "/apps/opscotch-configurator/writefile.js"
+                            }
+                        ]
+                    }
+                }
+            ]
+        }
+    ]
+}
