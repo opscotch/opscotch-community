@@ -8,7 +8,10 @@
     {
       "url" : "http://localhost:11000/okfile.json",
       "expectedResponse" : "{\n  \"status\": \"OK\",\n  \"sentfrom\": \"native test service\"\n}"
+    },
+    {
+      "url" : "http://localhost:11000/file.png",
+      "expectedSize" : 6424
     }
-  ],
-  "secondsToWaitForCompletion" : 500
+  ]
 }

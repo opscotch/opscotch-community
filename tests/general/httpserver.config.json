@@ -7,8 +7,8 @@
           "stepId": "httpserver",
           "type": "scripted",
           "trigger": {
-            "httpRequestTrigger" : {
-              "bootstrapHttpServerId": "testhttp",
+            "http" : {
+              "server": "testhttp",
               "path" : "/hello",
               "method" : "GET"
             }
@@ -26,8 +26,8 @@
           "stepId": "httpserver",
           "type": "scripted",
           "trigger": {
-            "httpRequestTrigger" : {
-              "bootstrapHttpServerId": "testhttp",
+            "http" : {
+              "server": "testhttp",
               "path" : "/proxy",
               "method" : "GET"
             }

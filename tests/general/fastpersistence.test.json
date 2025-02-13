@@ -1,0 +1,9 @@
+{
+  "enabled": true,
+  "fromDirectory": "/general/",
+  "testThisStep": "perist",
+  "useThisTestConfigFile": "fastpersistence.config.json",
+  "theseLogsShouldHaveBeenSent" : [
+    "take:5000"
+  ]
+}

@@ -1,4 +1,5 @@
 {
+    "ignore" : "true",
     "fromDirectory": "/security/",
     "testThisStep": "bad-ssl",
     "useThisTestConfigFile": "sslchecks.config.json",

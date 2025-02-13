@@ -7,14 +7,14 @@
           "stepId": "readzip",
           "type": "httpFile",
           "trigger": {
-            "httpRequestTrigger" : {
-              "bootstrapHttpServerId": "staticFileServer",
+            "http" : {
+              "server": "staticFileServer",
               "path" : ".*",
               "method" : "get"
             }
           },
           "resultsProcessor": {
-            "script": "context.setProperty('path', 'okfile.json');"
+            "script": "context.setProperty('path', JSON.parse(context.getBody()).path);"
           }
         }
       ]

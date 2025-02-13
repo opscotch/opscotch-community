@@ -1,0 +1,9 @@
+{
+  "enabled": true,
+  "fromDirectory": "/general/",
+  "testThisStep": "perist",
+  "useThisTestConfigFile": "simplepersistence.config.json",
+  "theseLogsShouldHaveBeenSent" : [
+    "theValue"
+  ]
+}

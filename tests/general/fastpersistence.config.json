@@ -1,0 +1,28 @@
+{
+  "workflows": [
+    {
+      "name": "simple persistence",
+      "steps" : [
+        {
+          "stepId": "perist",
+          "type": "scripted",
+          "resultsProcessor": {
+            "processors" : [
+              {
+                "script": "for(var i = 0; i < 5000; i++) { context.queue().push('an item'); }"
+              },
+              {
+                "script": "var taken = []; var t = context.queue().take(10000); while(t.length) { taken = taken.concat(t); context.sleep(500); t = context.queue().take(10000); console.log(t.length); } context.diagnosticLog('take:' + taken.length);"
+              }
+            ]
+            
+          },
+          "trigger" : {
+            "runOnce": true
+          },
+          "persistenceFile": "persistenceFile.data"
+        }
+      ]
+    }
+  ]
+}

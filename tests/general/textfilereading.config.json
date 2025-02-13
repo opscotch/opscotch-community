@@ -13,7 +13,7 @@
             }
           },
           "resultsProcessor": {
-            "script": "console.log(context.getMessageBodyAsString());JSON.parse(context.getMessageBodyAsString()).forEach(l => context.diagnosticLog(l.message))"
+            "script": "console.log(context.getBody());JSON.parse(context.getBody()).forEach(l => context.diagnosticLog(l.message))"
           }
         }
       ]

@@ -1,0 +1,20 @@
+{
+  "workflows": [
+    {
+      "name": "simple persistence",
+      "steps" : [
+        {
+          "stepId": "perist",
+          "type": "scripted",
+          "resultsProcessor": {
+            "script": "context.setPersistedItem('myItem', 'theValue'); context.diagnosticLog(context.getPersistedItem('myItem'));"
+          },
+          "trigger" : {
+            "runOnce": true
+          },
+          "persistenceFile": "persistenceFile.data"
+        }
+      ]
+    }
+  ]
+}
