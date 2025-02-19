@@ -9,7 +9,7 @@
           "trigger": {
             "fileWatcher" : {
               "bootstrapFileId": "testFile",
-              "eventSplitter": "\\n"
+              "lineSplit": "\\n"
             }
           },
           "resultsProcessor": {
