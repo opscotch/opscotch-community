@@ -2,7 +2,7 @@
   "allowFileAccess" : [
     {
       "id" : "testFile",
-      "directoryOrFile": "${OPSCOTCH_COMMUNITY_ROOT}/tests/general/HashingExample.response.txt",
+      "directoryOrFile": "/home/jeremy/dev/opscotch/community/opscotch-community/tests/general/HashingExample.response.txt",
       "patterns" : [ ".+\\.txt$"],
       "READ" : true
     }
