@@ -1,0 +1,38 @@
+[
+    {
+        "enabled": true,
+        "deploymentId": "opscotch-ui",
+        "remoteConfiguration": "${OPSCOTCH_UI_HOME}/workflow.json",
+        "errorHandling": {
+            "enableLocalLogging": true
+        },
+        "workflow": {
+            "errorHandling": {
+                "enableLocalLogging": true
+            },
+            "metricOutput": {
+                "enabled" : false
+            }
+        },
+        "allowFileAccess" : [
+            {
+                "id" : "app-static-zip",
+                "directoryOrFile" : "${OPSCOTCH_UI_HOME}/react-app/opscotch-monitor-package.zip",
+                "READ" : true
+            }
+        ],
+        "allowHttpServerAccess": [
+            {
+                "id": "api",
+                "port": 11001
+            },
+            {
+                "id": "app-static",
+                "port": 11002,
+                "serveFromPackagedAsset" : {
+                    "packagedAssetFileId": "app-static-zip"
+                }
+            }
+        ]
+    }
+]
