@@ -1,0 +1,109 @@
+{
+    "workflows": [
+        {
+            "name": "opscotch monitor",
+            "steps": [
+                {
+                    "enabled" : "true",
+                    "stepId" : "cors",
+                    "trigger" : {
+                        "http" : {
+                            "server" : "api",
+                            "method" : "OPTIONS",
+                            "path" : ".*"
+                        }
+                    },
+                    "resultsProcessor" : {
+                        "processors" : [
+                            {
+                                "resource" : "/general/standard-clear-body.js"
+                            },
+                            {
+                                "resource" : "/httpserver/response-set-cors.js"
+                            },
+                            {
+                                "script" : "context.setProperty(\"status_code\", \"200\")"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "stepId" : "controller",
+                    "trigger" : {
+                        "http" : {
+                            "server" : "api",
+                            "method" : "GET",
+                            "path" : "/_metrics"
+                        },
+                        "timer" : {
+                            "period" : 10000
+                        }
+                    },
+                    "persistenceFileFlush": true,
+                    "resultsProcessor" : {
+                        "processors" : [
+                            {
+                                "resource" : "/apps/opscotch-monitor/controller.js"
+                            }
+                        ]
+                        
+                    },
+                    "persistenceFile": "controller.data"
+                },
+                {
+                    "debug" : "true",
+                    "stepId" : "metric-collect",
+                    "trigger" : {
+                        "http" : {
+                            "server" : "api",
+                            "method" : "POST",
+                            "path" : "/_metrics"
+                        }
+                    },
+                    "resultsProcessor" : {
+                        "processors" : [
+                            {
+                                "script" : "context.sendToStep(\"metric-process\", JSON.parse(context.getBody()).body)"
+                            },
+                            {
+                                "script" : "context.setProperty(\"status_code\", \"200\"); context.setMessage(\"{ status : 200 }\");"   
+                            }
+                        ]
+                    }
+                },
+                {
+                    "debug" : "true",
+                    "stepId" : "metric-process",
+                    "type" : "scripted-split-aggregate",
+                    "splitGenerator": { 
+                        "resource" : "/general/standard-newline-aggregator-split.js"
+                    },
+                    "itemResultProcessor": {
+                        "script" : "context.setProperty(\"_action\", \"setmetric\"); context.sendToStep(\"controller\", context.getBody());"
+                    },
+                    "resultsProcessor" : {
+                        "script" : "context.setProperty(\"status_code\", \"200\"); context.setMessage(\"{ status : 200 }\");"   
+                    }
+                },
+                {
+                    "stepId" : "static-app",
+                    "type" : "httpFile",
+                    "trigger" : {
+                        "http" : {
+                            "server" : "app-static",
+                            "path" : "/.*",
+                            "method" : "GET"
+                        }
+                    },
+                    "resultsProcessor" : {
+                        "processors" : [
+                            {
+                                "script" : "var p = JSON.parse(context.getBody()).path; context.setProperty(\"path\", p == \"/\" ? \"/index.html\" : p);"
+                            }
+                        ]
+                    }
+                }
+            ]
+        }
+    ]
+}
