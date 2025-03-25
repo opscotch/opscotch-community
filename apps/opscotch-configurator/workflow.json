@@ -1,12 +1,14 @@
 {
     "workflows": [
         {
+            "enabled" : true,
             "name": "opscotch config API",
             "data" : {
                 "fileId" : "opscotch-configs"
             },
             "steps": [
                 {
+                    "enabled" : "true",
                     "stepId" : "cors",
                     "trigger" : {
                         "http" : {

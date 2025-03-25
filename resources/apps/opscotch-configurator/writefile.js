@@ -1,4 +1,4 @@
-doc.fromSchema({
+doc.inSchema({
     type : "object",
     required : [ "path", "body" ],
     properties : {

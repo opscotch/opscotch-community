@@ -1,4 +1,4 @@
-doc.fromSchema({
+doc.inSchema({
     type : "object",
     required : [ "uri", "method", "path" ],
     properties : {
@@ -21,8 +21,10 @@ doc.fromSchema({
     }
 })
 .run(() => {
-    var request = JSON.parse(context.getPassedMessageAsString());
-    context.setMessage(context.files(context.getData("fileId")).list());   
+    var request = JSON.parse(context.getBody());
+    console.log(request);
+    console.log(context.files(context.getData("fileId")).list(request.path));
+    context.setMessage(context.files(context.getData("fileId")).list(request.path));   
 }).outSchema({
     type : "array",
     items : {
