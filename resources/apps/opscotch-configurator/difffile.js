@@ -23,9 +23,10 @@ doc.inSchema(
         }
     }
 ).run(() => {
-    var request = JSON.parse(context.getPassedMessageAsString());
+    var request = JSON.parse(context.getBody());
     var bodyObj = JSON.parse(request.body);
-    var filePath = request.path.replace("/configs/diff","");
+    
+    var filePath = request.path;
     var orginalFileObj = JSON.parse(context.files(context.getData("fileId")).read(filePath));
 
     function findDifferences(obj1, obj2, path = '') {
