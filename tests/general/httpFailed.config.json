@@ -1,5 +1,4 @@
 {
-  
   "workflows": [
     {
       "name": "http failed",
@@ -20,8 +19,7 @@
           },
           "resultsProcessor": {
             "script": "context.sendMetric('success', 0.0);"
-          },
-          "trigger": { "timer" : { "period" : 60000 }}
+          }
         }
       ]
     }

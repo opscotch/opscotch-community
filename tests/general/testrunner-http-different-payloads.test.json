@@ -1,0 +1,29 @@
+{
+  "enabled": true,
+  "fromDirectory": "/general/",
+  "testThisStep": "differnt-payloads",
+  "useThisTestConfigFile": "testrunner-http-tests.config.json",
+  "useThisTestBootstrapFile" : "testrunner-http-tests.bootstrap.json",
+  "mockEndpointResponses": [
+    {
+      "whenThisIsCalled": "http://mockserver/hello",
+      "expectedPayload": "hello world",
+      "returnThisStatusCode": "222"
+    },
+    {
+      "whenThisIsCalled": "http://mockserver/hello",
+      "expectedPayload": "hello kitty",
+      "returnThisStatusCode": "333"
+    }
+  ],
+  "theseMetricsShouldHaveBeenSent": [
+    {
+      "key": "hello-world",
+      "value": 1
+    },
+    {
+      "key": "hello-kitty",
+      "value": 1
+    }
+  ]
+}

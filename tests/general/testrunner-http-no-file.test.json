@@ -1,0 +1,19 @@
+{
+  "enabled": true,
+  "fromDirectory": "/general/",
+  "testThisStep": "no-return-file",
+  "useThisTestConfigFile": "testrunner-http-tests.config.json",
+  "useThisTestBootstrapFile" : "testrunner-http-tests.bootstrap.json",
+  "mockEndpointResponses": [
+    {
+      "whenThisIsCalled": "http://mockserver/hello",
+      "returnThisStatusCode": "200"
+    }
+  ],
+  "theseMetricsShouldHaveBeenSent": [
+    {
+      "key": "hello",
+      "value": 1
+    }
+  ]
+}

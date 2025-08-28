@@ -2,7 +2,7 @@
     "allowFileAccess" : [
         {
             "id" : "zipFile",
-            "directoryOrFile": "tests/general/file.zip",
+            "directoryOrFile": "${OPSCOTCH_COMMUNITY_ROOT}/tests/general/file.zip",
             "READ" : true
         }
     ],

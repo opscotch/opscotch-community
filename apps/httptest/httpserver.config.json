@@ -1,0 +1,24 @@
+{
+  "workflows": [
+    {
+      "name": "simple http server",
+      "steps" : [
+        {
+          "enabled" : true,
+          "stepId": "httpserver",
+          "type": "scripted",
+          "trigger": {
+            "http" : {
+              "server": "testhttp",
+              "path" : "/hello",
+              "method" : "GET"
+            }
+          },
+          "resultsProcessor": {
+            "script": "context.setMessage('goodbye1');"
+          }
+        }
+      ]
+    }
+  ]
+}

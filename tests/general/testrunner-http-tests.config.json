@@ -1,0 +1,79 @@
+{
+  "workflows": [
+    {
+      "name": "no file returned",
+      "steps": [
+        {
+          "type": "scripted",
+          "stepId": "no-return-file",
+          "urlGenerator": {
+            "resource": "/general/standard-url-generator.js",
+            "data": {
+              "path": "/hello",
+              "host-ref": "test"
+            }
+          },
+          "resultsProcessor" : {
+            "script" : "// no op"
+          },
+          "httpStatusHandling" : {
+            "200" : {
+              "script": "context.sendMetric('hello', 1);"
+            }
+          }
+        },
+        {
+          "type": "scripted",
+          "stepId": "differnt-payloads",
+          "urlGenerator": {
+            "resource": "/general/standard-url-generator.js",
+            "data": {
+              "path": "/hello",
+              "host-ref": "test"
+            }
+          },
+          "payloadGenerator" : {
+            "script" : "context.setBody('hello world')"
+          },
+          "resultsProcessor" : {
+            "script" : "// no op"
+          },
+          "httpStatusHandling" : {
+            "222" : {
+                "processors" : [
+                    {
+                        "script": "context.sendMetric('hello-world', 1);"
+                    },
+                    {
+                        "script": "context.sendToStep('differnt-payloads-1', '')"
+                    }
+                ]
+            }
+          }
+        },
+        {
+          "type": "scripted",
+          "stepId": "differnt-payloads-1",
+          "urlGenerator": {
+            "resource": "/general/standard-url-generator.js",
+            "data": {
+              "path": "/hello",
+              "host-ref": "test"
+            }
+          },
+          "payloadGenerator" : {
+            "script" : "context.setBody('hello kitty')"
+          },
+          "resultsProcessor" : {
+            "script" : "// no op"
+          },
+          "httpStatusHandling" : {
+            "333" : {
+                "script": "context.sendMetric('hello-kitty', 1);"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

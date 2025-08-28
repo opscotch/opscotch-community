@@ -1,0 +1,11 @@
+{
+  "hosts": {
+    "test": {
+      "host": "http://mockserver",
+      "allowlist": [
+        ["GET", "/hello"],
+        ["POST", "/hello"]
+      ]
+    }
+  }
+}

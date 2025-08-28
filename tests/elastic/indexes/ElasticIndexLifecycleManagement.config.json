@@ -1,12 +1,4 @@
 {
-  "messages" : [
-    {
-      "stepId" : "elastic-ilm-fetch",
-      "key" : "enableDiagnostics",
-      "value" : "true",
-      "expiry" : "2050-01-01T00:00:00+00:00"
-    }
-  ],
   "workflows": [
     {
       "name": "Elastic Basic Auth",

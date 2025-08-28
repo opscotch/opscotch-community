@@ -24,13 +24,13 @@ doc.inSchema(
     }
 ).run(() => {
     var request = JSON.parse(context.getBody());
-    var bodyObj = JSON.parse(request.body);
     
     var filePath = request.path;
     console.log(filePath);
     const contents = context.files(context.getData("fileId")).read(filePath);
 
     if (contents.startsWith('[') || contents.startsWith('{')) {
+      var bodyObj = JSON.parse(request.body);
       var orginalFileObj = JSON.parse(contents);
 
       function findDifferences(obj1, obj2, path = '') {
