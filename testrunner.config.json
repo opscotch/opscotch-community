@@ -6,5 +6,5 @@
 	"testDirs" : [
         "tests"
     ],
-    "concurrency" : 5
+    "debug" : false
 }
