@@ -72,6 +72,28 @@
                 "script": "context.sendMetric('hello-kitty', 1);"
             }
           }
+        },
+        {
+          "type": "scripted",
+          "stepId": "post-a-file",
+          "urlGenerator": {
+            "resource": "/general/standard-url-generator.js",
+            "data": {
+              "path": "/hello",
+              "host-ref": "test"
+            }
+          },
+          "payloadGenerator" : {
+            "script" : "context.setBody('hello vietnam')"
+          },
+          "resultsProcessor" : {
+            "script" : "// no op"
+          },
+          "httpStatusHandling" : {
+            "200" : {
+                "script": "context.sendMetric('hello-vietnam', 1);"
+            }
+          }
         }
       ]
     }

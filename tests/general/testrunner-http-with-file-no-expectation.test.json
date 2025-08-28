@@ -1,0 +1,20 @@
+{
+  "enabled": true,
+  "fromDirectory": "/general/",
+  "testThisStep": "post-a-file",
+  "useThisTestConfigFile": "testrunner-http-tests.config.json",
+  "useThisTestBootstrapFile" : "testrunner-http-tests.bootstrap.json",
+  "mockEndpointResponses": [
+    {
+      "whenThisIsCalled": "http://mockserver/hello",
+      "withMethod" : "POST",
+      "returnThisFile" : "okfile.json"
+    }
+  ],
+  "theseMetricsShouldHaveBeenSent": [
+    {
+      "key": "hello-vietnam",
+      "value": 1
+    }
+  ]
+}
