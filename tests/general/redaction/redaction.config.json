@@ -1,0 +1,46 @@
+{
+  "comment" : "These tests must be run in order, on a single concurrency test runner",
+  "workflows": [
+    {
+      "name": "simple redaction",
+      "steps" : [
+        {
+          "stepId": "redact",
+          "authenticationProcessor" : {
+            "script" : "context.setHeader('secret', 'mySecret')"
+          },
+          "resultsProcessor": {
+            "processors" : [
+              {
+                "script": "console.log('this is mySecret');"
+              },
+              {
+                "script": "context.sendMetric('test-done', 1.0)"
+              }
+            ]
+            
+          }
+        }
+      ]
+    }, 
+    {
+      "name": "no redaction",
+      "steps" : [
+        {
+          "stepId": "no-redact",
+          "resultsProcessor": {
+            "processors" : [
+              {
+                "script": "console.log('this is mySecret');"
+              },
+              {
+                "script": "context.sendMetric('test-done', 1.0)"
+              }
+            ]
+            
+          }
+        }
+      ]
+    }
+  ]
+}

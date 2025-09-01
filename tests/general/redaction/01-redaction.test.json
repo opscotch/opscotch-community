@@ -1,0 +1,15 @@
+{
+  "enabled": true,
+  "fromDirectory": "/general/redaction",
+  "testThisStep": "redact",
+  "useThisTestConfigFile": "redaction.config.json",
+  "theseMetricsShouldHaveBeenSent": [
+    {
+      "key": "test-done",
+      "value": 1.0
+    }
+  ],
+  "theseLogsShouldHaveBeenSent" : [
+    "this is <REDACTED>"
+  ]
+}
