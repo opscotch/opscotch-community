@@ -1,0 +1,83 @@
+{
+    "workflows": [
+        {
+            "enabled" : true,
+            "name": "opscotch diagnostics",
+            "steps": [
+                {
+                    "stepId" : "metric-collect",
+                    "trigger" : {
+                        "http" : {
+                            "server" : "api",
+                            "method" : "POST",
+                            "path" : "/_metrics"
+                        }
+                    },
+                    "resultsProcessor" : {
+                        "processors" : [
+                            {
+                                "script" : "context.sendToStep(\"metric-save\", JSON.parse(context.getBody()).body)"
+                            },
+                            {
+                                "script" : "context.setProperty(\"status_code\", \"200\"); context.setMessage(\"{ status : 200 }\");"   
+                            }
+                        ]
+                    }
+                },
+                {
+                    "stepId" : "metric-save",
+                    "trigger" : {
+                        "timer" : {
+                            "period" : 1000
+                        }
+                    },
+                    "resultsProcessor" : {
+                        "processors" : [
+                            {
+                                "resource" : "apps/opscotch-diagnostics/save.js"
+                            }
+                        ]
+                    },
+                    "persistenceFile" : "metric-save"
+                },
+                {
+                    "stepId" : "forward",
+                    "trigger" : {
+                        "timer" : {
+                            "period" : 1000
+                        }
+                    },
+                    "resultsProcessor" : {
+                        "resource" : "apps/opscotch-diagnostics/forward.js"
+                    },
+                    "persistenceFile" : "forward"
+                },
+                {
+                    "stepId" : "forwarder",
+                    "urlGenerator" : {
+                        "script" : "context.setUrl(context.getData('forwardingHost'), '')"
+                    },
+                    "payloadGenerator" : {
+                        "script" : "//no op"
+                    },
+                    "resultsProcessor" : {
+                        "script" : "context.diagnosticLog('forward successful');"
+                    }
+                },
+                {
+                    "stepId" : "read",
+                    "trigger" : {
+                        "http" : {
+                            "server" : "api",
+                            "method" : "POST",
+                            "path" : "/read"
+                        }
+                    },
+                    "resultsProcessor" : {
+                        "resource" : "apps/opscotch-diagnostics/read.js"
+                    }
+                }
+            ]
+        }
+    ]
+}
