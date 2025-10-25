@@ -4,11 +4,11 @@
         "deploymentId": "opscotch-ui",
         "remoteConfiguration": "${OPSCOTCH_UI_HOME}/workflow.json",
         "errorHandling": {
-            "enableLocalLogging": true
+            "enableLocalLogging": false
         },
         "workflow": {
             "errorHandling": {
-                "enableLocalLogging": true
+                "enableLocalLogging": false
             },
             "metricOutput": {
                 "enabled" : false
@@ -34,5 +34,5 @@
                 }
             }
         ]
-    }
+    }    
 ]

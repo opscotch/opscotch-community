@@ -21,6 +21,9 @@
                             },
                             {
                                 "resource" : "/httpserver/response-set-cors.js"
+                            },
+                            {
+                                "script" : "context.setProperty(\"status_code\", \"200\")"
                             }
                         ]
                     }
@@ -263,6 +266,30 @@
                             },
                             {
                                 "resource" : "/apps/opscotch-configurator/writefile.js"
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "enabled" : true,
+            "name": "opscotch static",
+            "steps": [
+                {
+                    "stepId" : "static-app",
+                    "type" : "httpFile",
+                    "trigger" : {
+                        "http" : {
+                            "server" : "app-static",
+                            "path" : "/.*",
+                            "method" : "GET"
+                        }
+                    },
+                    "resultsProcessor" : {
+                        "processors" : [
+                            {
+                                "script" : "var p = JSON.parse(context.getBody()).path; context.setProperty(\"path\", p == \"/\" ? \"/index.html\" : p);"
                             }
                         ]
                     }

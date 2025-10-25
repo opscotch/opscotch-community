@@ -4,7 +4,6 @@ var payload = context.getBody();
 var q = context.queue();
 
 if (payload) {
-    console.log(payload);
     q.push(payload);
 
     if(context.getData("forwardingHost")) {
@@ -26,7 +25,6 @@ if (payload) {
         
         if (fileList && fileList.length > 0) {
             file = fileList.reduce((latest, e) => (e.modified > latest.modified ? e : latest))
-            console.log(JSON.stringify(file));
             fileOffSet = file.bytes;
             file = file.name;
         } else {

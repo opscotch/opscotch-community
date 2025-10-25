@@ -7,7 +7,7 @@ Stashs the ticket reference away
 */
 
 
-body = context.getMessageBodyAsString();
-jiraTicket = JSON.parse(body);
+const body = context.getMessageBodyAsString();
+const jiraTicket = JSON.parse(body);
 if (jiraTicket.key)
     context.setProperty("OPSCOTCH_phmActionReference", jiraTicket.key);

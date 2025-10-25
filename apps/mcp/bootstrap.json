@@ -1,0 +1,106 @@
+[
+  {
+    "enabled": true,
+    "agentPrivateKey": "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JSUV2Z0lCQURBTkJna3Foa2lHOXcwQkFRRUZBQVNDQktnd2dnU2tBZ0VBQW9JQkFRREE5R2k5RVlTVGZyTXoKUk4wSjBXT0R2N2cyOGFKK0plS0VycHRYRHFPTHUwZjRjYVNJeE5TT1ZmcnVxRmNMV2w0NTVCOTJSUUFNVHJyNwo5VXZacHVJWXF5Z1BKUGl0TFo0ZzlEdnFXdnA0aHgrYjRTM3ZNbTIvejBNTnA2K3puTmJoZG1rZXRWUEE1UTR4CkQ0OTVzWHpvWHRpN2prZFJpRXdvdkI3YkFuRXhHdXVuaVhuN21UMVdyUGZoN05Cc2V4aHE0NkxOWDJJL0ZFRnUKN015LzIrdkZNVGhlaWJNTisrQU1wcldqQjlMbWozUmdicjUrUmx6cFlYd0NpcUloM3BZUTliQ0ZvcVU0S3lpdApmb2pmRmlaNFlGWHlHKzFuaTNNYjg0a2htZUI3V3RxRDVkbGFiWFhhZUl0WDZ6Z211VVFRcTc3NnZ4WVBGSld0Ci9vQ3JaUStwQWdNQkFBRUNnZ0VCQUxnMFhBMHJQUnFsMlNPM3VTRFhVWjZFRjdQMFNFRVBuOGswKzcxSGoyQWwKUVZidi9yaEcxL2l1SW1sV01ncjNrWDdJeGpSZE9PZUcvY0R0Y3lUc3lXbnRjOGZKYnRHOCsvblB6NmN5aFcwcwo2a01nM0g0KzhVRXM5NEdBdFI3T091Rnc3bmZQZVk1cjNYbCt0bVRoeVRINDRnVmpsYmhEV3htRVJoeWtuelRWCktod29tUFFqUFZYdldXTkRwK1o1WnE0MDZYZW5pOW9PWFhGcjZMQWFpQ29MYmhwSjJHTk1ZWWVtMG9YdCtSTkoKRUs5aUdLVkJWcjd5Zm8wWC80VmlXb1ZuTXdRTXIweXpqd1R5OGdZSnU0am5oREpSQVVxdzBhOC9udlpvSVZvaQp5aXBvYzg4M29GSFRBeXQ4SWxobU93YUE4U0VOekhFc1dDS1R1cEUxYU5FQ2dZRUE3WG5OSmd5ZFpDWUZiRGlDCm9FUGxJcHk2SkdWeFNaNmNCMDJDVnZrYURrQUxHM2NRaTBTZHdaK05FU3BMYk5wNDR0OElhbHBrTUczS0VjNlYKR3pEQ0R5bk9GYnZmelVEYmRzcXpWdXZjN2JYbzVWbmM1TWZzcFJwV3Q4RGlqSjRyQWh1eW5vQ2JHZnk3QlJDZApLdE4yYlltdzdWWDJGaHEwdmFhaUNjaHpvYTBDZ1lFQTBBR082OXRrUjdIeFQybVVUY1FRQ25Rd3ZNeDF4OHpWCjViZjltVWZKRS9WYXR6emVRV3pFc1FBaHFGQ1Y4TGNqalRZZDJmck5iSzFQTEU0RFdMVW80bWxtY2FZUjduZ1YKUzJicGh2OUFDbEhmc25LcndNRFdMMWd6YU5xa1BJdElLRUd4dThSSDd0VGtncnkxUkZwWmgzRnYxZ3p1d0pnUwozVmNVeWVtUFBXMENnWUFSRDBMeGpNNXh0MW1FWUxyaGtIOFJjWGpkekh2SzhoMzdXRklZdFdSdHlhUUNvUmNMCktpNjdEaDh3TUgyaW9EODI3UmJKclJ5dGJmV3FPZEQwVnhoWnhvTUxoS2ViTXlHUTh4YlhFN0tYVVE0ZUM4cVcKbE5Zbk5qRXNtaXFzTjJDWGtpM092U1puUTRTYjVJbWwzZk1RQTJnMlpJcDlKQVgvNmN5U0wxZy9NUUtCZ0Z4dAo5TloxdlEvbTBIWWJVbDFrSEVTbzhPZFVhNW9IT1oxRXJ4b252Z0J5YkljME13Y2JrQ09mRFZXL3lZRVh3R0tGCmc2cFRPbWxxY2Q0Y0pIeU1zOGc0VWQ5NmprbExieHI4ZGhVWTQ1b3lXNWJ1UWNmN2FMSE5IYnNnUFE3eVRYUW0KRFJhRTEvb1cvQnZrUXlCR2piWVVBRUE3cXZSR0gwdmY0RXNBMERmWkFvR0JBSmo3VUFkZzBlWnd6RzA5QnVvWApwYUVFRmJ4ckM1ckprNWlmTlBTRldNQVkwWTBhUmQwNnBSOXZpTVlJaDJJVWphQW1OY09VQlp0NldsTjdiMmNJCmowL0t1ZFNTZFVVNVRxUmovTnk1aWhXczdzQmpyZ2hpRmxvRVVwUkhiZndnMkdhbGR0aFIwUEhYMXRiZ0pXNGwKMUs1VTBORG1xczgxQXFGRnFsN3VBbUhWCi0tLS0tRU5EIFBSSVZBVEUgS0VZLS0tLS0K",
+    "deploymentId": "opscotch-mcp",
+    "remoteConfiguration": "/home/jeremy/dev/opscotch/community/opscotch-community/apps/mcp/opscotch-mcp.app",
+    "packaging": {
+      "packageId": "opscotch-mcp"
+    },
+    "errorHandling": {
+      "enableLocalLogging": true
+    },
+    "workflow": {
+      "errorHandling": {
+        "enableLocalLogging": true
+      }
+    },
+    "allowHttpServerAccess": [
+      {
+        "id": "mcp",
+        "port": 11000
+      }
+    ],
+    "allowFileAccess": [
+      {
+        "id": "opscotch-configs",
+        "directoryOrFile": "${OPSCOTCH_CONFIGURATOR_HOME}/",
+        "READ": true,
+        "LIST": true,
+        "WRITE": true,
+        "DELETE": true
+      },
+      {
+        "id": "opscotch-resources",
+        "directoryOrFile": "${OPSCOTCH_RESOURCES}/",
+        "READ": true,
+        "LIST": true,
+        "WRITE": true,
+        "DELETE": true
+      }
+    ]
+  },
+  {
+    "deploymentId": "opscotch-packager",
+    "enabled": true,
+    "agentPrivateKey": "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JSUV2UUlCQURBTkJna3Foa2lHOXcwQkFRRUZBQVNDQktjd2dnU2pBZ0VBQW9JQkFRQzRzZk5pZERDWStFcVMKK3B0QnY0MGJlOE1lbTBxWlhyaWxNTWFCT3k0bU1tUkhodmdoU2ZacVlLWlUwWnRyTVBBbDVkUUVpQ3U5TjJCcwo4TGlqcko5OFFiVjNjaGVtNVczY29MaDY2aWc3WXlpVjB0bU56bEZMU2kvN3lReDhXaXp6dHdxeUUySEJXL0Q3ClBoN1Z3QllqYk9pbTBnejZKVEZkdDZQcjAwbnd6TktUM0NJc242Nlo5cjNKRzNtZ3phUitTbnF5NndaMTBXMi8KbDY1dk1XWjZTdEQzVEgyM1RyMVFvT3lTQk4xVTFrd2V2b1VNT1o3ME00dVk0YkpuTWxzWHltZktkV2tuc0hybQpsSHlvWVdJZVU2ZGtDdnl6V2tqaGI5eVpFM0V1MnFJZEZTV2hUUVBkTFFrTXEzWGtQamxyQXJvV3NjV1gwWlhVCjNXOUFDTkZQQWdNQkFBRUNnZ0VBRklLK2twcHdveXcvcTk3a3l3Sm91enFkU3BMWVQvdnk2WFZuTmdiS2N6ZDUKWjNBWHNpcXlrTkcyNXdoNENBbGhRZlFwL1c3WjNLTi9zOWx2eDgxdDBMRERaRVpwVmdGNGw5M0pYdTBPRnJwRwpVWTBlMTk2bnJJTEtuVjJRWTJib1F4QjZ3WmZoYlVXMmwxQW93SGdhZlVpazlaR3lHejF5SkFRMjBnT2UzSHpTClFoZ0Z2NFlzTmpUTnlnWjMwMFRBZGxjZFgwdTVnMlpuQ1FBblNpM25MQURCaklmQzkxZWQvb0JKTmYxSXA4NTMKVkpXeStLeUV5cThsZGRyeUlDME90MFIxRmZNQVZ1UlJNSEJsUi9lSkZmYlp4RjdocEMza3lDK2hIekxPTC8yegpaN09JOGNMNUJmZm1kK3k3a0FpK3BLbmlJOGx2QmxxOXRJeEdsY0JqMFFLQmdRRFpraTZXQ0Mxd3JVY1dOeFNlCk9UaE1YcGJ2MzBtOE40Y0lHYm5HejV1UG9yQ1VBb0lKd2MwTmM4bVJvcXh1aGVJS0doV3hsbnpNYXZaUHY0NGUKOXhCZ0UvVUlhUlRtMjkyWXVObkVnQUxGeHhpVlB0QnR3MlhtRlRZN3pxZW9XRjI3U2o3Sys2MkIzVW1rVHI2Ygo3bUdLMkE0TUV2eXNWOEpER0NxZHh4TCttd0tCZ1FEWlVUdVdiZVMxZ1NnN29EcHRtVjdEVEJzL0wrT3J4eDlVCkF1V1FCdlRWVEQ1Z3lmajRxektSVTdpZmNmZFVHNWhYbEJDYlBPbmRVOWl6TWltNERPWW5Dc0c3bC9iNXJxUVoKUER4aDVhWm1acEd1RVBJSE1tRmtuOEFFM2tNUzlTbjdQdTVBQW1xVDU4dmhzQmcwVlBhTDZhMTFVeVY4M3pLUQo0Vm5iZGdxcFhRS0JnR3RFUmhHVU1Jc0g4eTlCc3JtYmJtVkFrVnZzRTFkbmJQeVNhbVJaZ05HZEhUK3J5TjcwCm5Kc1FSZ1cyVlJzY2lPZ0FHa2YyOE1wN3hicGxyN1VXakExQ2FhRmU1WDQ0VWhWMHRYREt5Qk1vYUxkVVE4Q0sKQUpnaVJ4M1BjaHR1amEvRUdCZE5aQ3JOcGZ3TEVyQ2dJNWtua2kxand3MVpLeDZYTUpPZlRYOFhBb0dCQUorbwpBbk1lQVcwbm1udFQyQmsxR0YyNnlEbS80VEFPZG9HdUx5R0ZPdEtKMVRvZXFIOW9weG9GdkJuSURNRUtGUDRpCmxhQzNPOG1URkIxeXVSdXl2bFBvbnpSSERQZWF5b3lQcUh6enp6QmtJcHNUYi96QmtyUHVlWkFhQ29VZkFOekkKK3hpanJkRkQ5cEcwWWRQd3A4RmF5RWp0OFJpd2tlSEc3ZEZDQThzeEFvR0FQaFFMb096dG1QOXZ3aFdOYVJ3RgpZZHV5elZJajhxbndEWmkrbG9BTzdxT2RoS1ZtSVlLK3EwMHVOMlhnZFI4Z0RhbUY3dmhiZ2QyaktDK3ZXQjlrCldEK0hPOEowT2piZlNPdjZheENtbFVMaWdqbHo4WFM0Z1dXUGFXZW94Vk1sKzV3NDFJenVJU3pRaHpqMDVoYVEKdWZaRDJUa1FRYXhuOHJMMGVSSDE4UWc9Ci0tLS0tRU5EIFBSSVZBVEUgS0VZLS0tLS0K",
+    "remoteConfiguration": "/home/jeremy/dev/opscotch/hopscotch/core/core/packager/packagerapp/opscotch-packager.app",
+    "persistenceRoot": "persistence",
+    "errorHandling": {
+      "enableLocalLogging": true
+    },
+    "workflow": {
+      "errorHandling": {
+        "enableLocalLogging": true
+      },
+      "metricOutput": {
+        "enabled": false
+      }
+    },
+    "allowHttpServerAccess": [
+      {
+        "id": "api",
+        "port": 39575
+      }
+    ],
+    "allowFileAccess": [
+      {
+        "id": "localResources",
+        "directoryOrFile": "/home/jeremy/dev/opscotch/hopscotch/core/core/packager/packagerapp/resources",
+        "READ": true,
+        "LIST": true
+      },
+      {
+        "id": "communityResources",
+        "directoryOrFile": "/home/jeremy/dev/opscotch/community/opscotch-community/resources",
+        "READ": true,
+        "LIST": true
+      },
+      {
+        "id": "licensingResources",
+        "directoryOrFile": "/home/jeremy/dev/opscotch/hopscotch/core/core/licenser/licensingapp/resources/apps",
+        "READ": true
+      },
+      {
+        "id": "workingDirectory",
+        "directoryOrFile": "/home/jeremy/dev/opscotch/hopscotch/core/core/packager/packagerapp/tmp",
+        "READ": true,
+        "LIST": true,
+        "WRITE": true,
+        "DELETE": true,
+        "required": true
+      }
+    ],
+    "keys": [],
+    "data": {
+      "packager_debug": true,
+      "license_debug": true,
+      "resourceIds": [
+        "localResources",
+        "communityResources",
+        "licensingResources"
+      ],
+      "deleteOldFilesAfterMinutes": 30
+    }
+  }
+]

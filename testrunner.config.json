@@ -1,10 +1,10 @@
 {
-	"license" : "license.txt",
+	"license" : "/home/jeremy/dev/opscotch/hopscotch/core/core/licenser/github-test-license.txt",
 	"resourceDirs" : [ 
         "resources"
     ],
 	"testDirs" : [
         "tests"
     ],
-    "debug" : false
+    "debug" : true
 }
