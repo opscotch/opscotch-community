@@ -1,0 +1,17 @@
+{
+    "allowExternalHostAccess" : [
+        {
+            "authenticationHost" : "true",
+            "id" : "protected-host",
+            "host": "http://mockserver/noop",
+            "data" : {
+                "secretHeader" : "Abc123",
+                "secretHeader1" : "Xyz123"
+            }
+        },
+        {
+            "id" : "call-host",
+            "host": "http://mockserver/call-me"
+        }
+    ]
+}

@@ -1,0 +1,92 @@
+{
+    "workflows" : [
+        {
+            "name" : "auth testing",
+            "steps" : [
+                {
+                    "stepId" : "set-auth-headers-direct",
+                    "authenticationProcessor" : {
+                        "processors" : [
+                            {
+                                "script" : "var d = JSON.parse(context.getRestrictedDataFromHost('protected-host')); context.setHeader('Authorization', d.secretHeader); console.log(`auth console.log: ${d.secretHeader}`); context.diagnosticLog(`auth diagnosticLog: ${d.secretHeader}`);"
+                            }
+                        ]
+                    },
+                    "urlGenerator" : {
+                        "script" : "context.setUrl('call-host', '');"
+                    },
+                    "resultsProcessor" : {
+                        "processors" : [
+                            {
+                                "comment" : "exfiltrate via header",
+                                "script" : "console.log(`do I have the secret: ${context.getHeader('Authorization')}`)"
+                            },
+                            {
+                                "comment" : "exfiltrate via log",
+                                "script" : "console.log(`what if I did steal it, is it redacted?: Abc123`)"
+                            },
+                            {
+                                "comment" : "exfiltrate via metric",
+                                "script" : "context.sendMetric(0, 'notExfiltratedAbc123', 1.0, { 'keyAbc123' : 'valueAbc123' })"
+                            },
+                            {
+                                "script" : "context.sendMetric('done', 1.0)"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "stepId" : "set-auth-headers-indirect",
+                    "authenticationProcessor" : {
+                        "processors" : [
+                            {
+                                "script" : "r = context.sendToStep('set-auth-headers-indirect-normal-step'); console.log(`auth console.log: ${r.getHeader('Authorization')}`); context.diagnosticLog(`auth diagnosticLog: ${r.getHeader('Authorization')}`);  context.setHeader('Authorization', d.secretHeader)"
+                            }
+                        ]
+                    },
+                    "urlGenerator" : {
+                        "script" : "context.setUrl('call-host', '');"
+                    },
+                    "resultsProcessor" : {
+                        "processors" : [
+                            {
+                                "script" : "console.log(`do I have the secret: ${context.getHeader('Authorization')}`)"
+                            },
+                            {
+                                "script" : "console.log(`what if I did steal it, is it redacted?: Xyz123`)"
+                            },
+                            {
+                                "comment" : "exfiltrate via header",
+                                "script" : "console.log(`do I have the secret: ${context.getHeader('Authorization')}`)"
+                            },
+                            {
+                                "comment" : "exfiltrate via log",
+                                "script" : "console.log(`what if I did steal it, is it redacted?: Xyz123`)"
+                            },
+                            {
+                                "comment" : "exfiltrate via metric",
+                                "script" : "context.sendMetric('Xyz123', 1.0)"
+                            },
+                            {
+                                "script" : "context.sendMetric('done', 1.0)"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "stepId" : "set-auth-headers-indirect-normal-step",
+                    "resultsProcessor" : {
+                        "processors" : [
+                            {
+                                "script" : "console.log(`do I have the secret: ${context.getHeader('Authorization')}`)"
+                            },
+                            {
+                                "script" : "console.log(`what if I did steal it, is it redacted?: Xyz123`)"
+                            }
+                        ]
+                    }
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,27 @@
+{
+    "enabled" : "false",
+    "fromDirectory" : "general/authentication",
+    "testThisStep" : "set-auth-headers-indirect",
+    "useThisTestConfigFile" : "auth-proc.config.json",
+    "useThisTestBootstrapFile" : "auth-proc-bootstrap.json",
+    "timestampOverride" : 1762722577000,
+    "mockEndpointResponses" : [
+        {
+            "whenThisIsCalled": "http://mockserver/call-me",
+            "returnThisStatusCode" : 202,
+            "expectedHeaders" : {
+                "Authorization" : ["Xyz123"]
+            }
+        }
+    ],
+    "logsShouldNotContain" : [
+        "secretHeader",
+        "Xyz123"
+    ],
+    "theseMetricsShouldHaveBeenSent" : [
+        {
+            "key": "done",
+            "value": 1.0
+        }
+    ]
+}

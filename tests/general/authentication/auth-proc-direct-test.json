@@ -1,0 +1,33 @@
+{
+    "fromDirectory" : "general/authentication",
+    "testThisStep" : "set-auth-headers-direct",
+    "useThisTestConfigFile" : "auth-proc.config.json",
+    "useThisTestBootstrapFile" : "auth-proc-bootstrap.json",
+    "timestampOverride" : 1762722577000,
+    "mockEndpointResponses" : [
+        {
+            "whenThisIsCalled": "http://mockserver/call-me",
+            "returnThisStatusCode" : 202,
+            "expectedHeaders" : {
+                "Authorization" : ["Abc123"]
+            }
+        }
+    ],
+    "logsShouldNotContain" : [
+        "secretHeader",
+        "Abc123"
+    ],
+    "theseMetricsShouldHaveBeenSent" : [
+        {
+            "key": "done",
+            "value": 1.0
+        },
+        {
+            "key": "notExfiltrated",
+            "value": 1.0,
+            "dimensionMap" : {
+                "key" : "value"
+            }
+        }
+    ]
+}

@@ -2,3 +2,10 @@ license.txt
 /empty.config.json
 /test.bootstrap.json
 test.config.*
+*properties-*
+*.bin*
+*.app
+*.zip
+*.log*
+*.key
+*.packaged
