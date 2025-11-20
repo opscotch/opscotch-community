@@ -25,30 +25,14 @@ doc.inSchema(
 )
 .run(() => {
 
-    const error = (code, message, id, data) => {
-        context.setProperty("status_code", 200);
-        var e = {
-            jsonrpc: "2.0",
-            error: {
-                code: code,
-                message: message
-            }
-        };
-        if (id) {
-            e.id = id
-        }
-
-        if (data) {
-            e.data = data;
-        }
-
-        context.setBody(JSON.stringify(e));
-        context.end();
-    }
-
     console.log("jsonrpc request format accepted");
 
     const json = JSON.parse(context.getBody());
+
+    context.diagnostic().setAttribute("jsonrpc.method", json.method);
+    if (json.id) {
+        context.diagnostic().setAttribute("jsonrpc.id", json.id);
+    }
 
     const responseContext = context.sendToStep("mcp.controller", JSON.stringify({
         command : "jsonrpc",

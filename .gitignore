@@ -4,8 +4,9 @@ license.txt
 test.config.*
 *properties-*
 *.bin*
-*.app
-*.zip
 *.log*
 *.key
 *.packaged
+*r_0
+*w_0
+**.app

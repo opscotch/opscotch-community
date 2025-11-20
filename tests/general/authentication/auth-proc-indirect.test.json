@@ -1,5 +1,5 @@
 {
-    "enabled" : "false",
+    "ignore" : "true",
     "fromDirectory" : "general/authentication",
     "testThisStep" : "set-auth-headers-indirect",
     "useThisTestConfigFile" : "auth-proc.config.json",
