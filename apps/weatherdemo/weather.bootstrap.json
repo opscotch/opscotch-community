@@ -1,0 +1,25 @@
+[
+    {
+        "remoteConfiguration" : "weather.config.json",
+        "deploymentId" : "weather-examples",
+        "agentPrivateKey" :  "",
+        "allowExternalHostAccess" : [
+            { 
+                "id" : "openweathermap",
+                "host" : "https://api.openweathermap.org",
+                "allowList" : [
+                    { "method" : "GET", "uriPattern" : "/data/2.5/weather"}
+                ]
+            }
+        ],
+        "allowHttpServerAccess": [
+            {
+                "id" : "openweathermap",
+                "port" : 11003
+            }
+        ],
+        "data" : {
+            "openweathermapApiKey" : "a83da2d308613877a88910dce9568dd5"
+        }
+    }
+]

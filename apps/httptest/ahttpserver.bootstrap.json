@@ -1,0 +1,40 @@
+[
+  {
+      "deploymentId" : "httptest1",
+      "agentPrivateKey" :  "",
+      "allowHttpServerAccess" : [
+        {
+          "id" : "testhttp",
+          "port" : 11001
+        }
+      ],
+      "remoteConfiguration" : "ahttpserver.config.json",
+      "workflow" : {
+        "errorHandling" : {
+          "enableLocalLogging": true
+        },
+        "metricOutput" : {
+          "enabled": false
+        }
+      }
+  },
+  {
+    "deploymentId" : "httptest2",
+    "agentPrivateKey" :  "",
+    "allowHttpServerAccess" : [
+      {
+        "id" : "testhttp",
+        "port" : 11002
+      }
+    ],
+    "remoteConfiguration" : "ahttpserver.config.json",
+    "workflow" : {
+      "errorHandling" : {
+        "enableLocalLogging": true
+      },
+      "metricOutput" : {
+        "enabled": false
+      }
+    }
+}
+]

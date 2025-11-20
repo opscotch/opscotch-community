@@ -1,0 +1,61 @@
+{
+    "fromDirectory" : "general/authentication",
+    "testThisStep" : "idp-key-cache-timer",
+    "useThisTestConfigFile" : "jwt.config.json",
+    "useThisTestBootstrapFile" : "jwt.bootstrap.json",
+    "timestampOverride" : 1762722577000,
+    "mockEndpointResponses" : [
+        {
+            "whenThisIsCalled": "http://mockserver/the-idps-well-known-openid-configuration-certs",
+            "returnThisFile": "idp-certs.json"
+        }
+    ],
+    "theseLogsShouldHaveBeenSent" : [
+        "IdP certs updated: hash: 1A61E8CE76065A1AC6C3A5A1A09C0B48942FB8D319F83FBF86D1D76DF475B9EE"
+    ],
+    "makeTheseCalls" : [
+        {
+            "url" : "http://localhost:22000/role1/will-allow",
+            "headers" : [
+                [ "Authorization", "Bearer eyJhbGciOiJFZERTQSIsInR5cCIgOiAiSldUIiwia2lkIiA6ICItN2xaenVXS05QcVQ1eTAzcWVJNlB5RzlyWTJOZG5tcUlwWHBmTk10NXk0In0.eyJleHAiOjE3NjI4MDc4NzYsImlhdCI6MTc2MjgwNzU3NiwianRpIjoib25ydHJvOjI1YzI4OGE3LWVmZDUtZDNjYS1mYmY1LWY4YTM4Mjk3NTY2MCIsImlzcyI6Imh0dHA6Ly9sb2NhbGhvc3Q6ODA4MC9yZWFsbXMvZGV2IiwiYXVkIjoibXktYXBpIiwic3ViIjoiNGNkZjgyMmItMGNjMi00OTZmLWE1ODItMGI4MGY3MmRjMjEyIiwidHlwIjoiQmVhcmVyIiwiYXpwIjoibXktY2xpZW50LWFwcCIsInNpZCI6IjcxNjY1YzIxLWY3ZGYtMWQ2Ny04ZDUwLTk5ZmI1ZGE4YTgxMiIsImFjciI6IjEiLCJhbGxvd2VkLW9yaWdpbnMiOlsiKiJdLCJyZXNvdXJjZV9hY2Nlc3MiOnsibXktYXBpIjp7InJvbGVzIjpbInJvbGUxIiwicm9sZTIiLCJkYXRhLnJlYWQiXX19LCJzY29wZSI6InByb2ZpbGUgZW1haWwiLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwibmFtZSI6IlRlc3QgVXNlciIsInByZWZlcnJlZF91c2VybmFtZSI6ImRldnVzZXIiLCJnaXZlbl9uYW1lIjoiVGVzdCIsImZhbWlseV9uYW1lIjoiVXNlciIsImVtYWlsIjoiZGV2dXNlckBleGFtcGxlLmNvbSJ9.52YRFCJfdUBSRhzzgu3LoEYRmrKukWBnNXCBMTtv1p3mgW78phlnFcpvA2Ub63J7L69GXEOMTrbJY8L6SFm9Dw" ]
+            ],
+            "expectedResponse" : "{\"status\" : 200}",
+            "expectedResponseCode" : 200
+        },
+        {
+            "url" : "http://localhost:22000/role1/will-deny",
+            "headers" : [
+                [ "Authorization", "Bearer eyJhbGciOiJFZERTQSIsInR5cCIgOiAiSldUIiwia2lkIiA6ICItN2xaenVXS05QcVQ1eTAzcWVJNlB5RzlyWTJOZG5tcUlwWHBmTk10NXk0In0.eyJleHAiOjE3NjI4MDc4NzYsImlhdCI6MTc2MjgwNzU3NiwianRpIjoib25ydHJvOjI1YzI4OGE3LWVmZDUtZDNjYS1mYmY1LWY4YTM4Mjk3NTY2MCIsImlzcyI6Imh0dHA6Ly9sb2NhbGhvc3Q6ODA4MC9yZWFsbXMvZGV2IiwiYXVkIjoibXktYXBpIiwic3ViIjoiNGNkZjgyMmItMGNjMi00OTZmLWE1ODItMGI4MGY3MmRjMjEyIiwidHlwIjoiQmVhcmVyIiwiYXpwIjoibXktY2xpZW50LWFwcCIsInNpZCI6IjcxNjY1YzIxLWY3ZGYtMWQ2Ny04ZDUwLTk5ZmI1ZGE4YTgxMiIsImFjciI6IjEiLCJhbGxvd2VkLW9yaWdpbnMiOlsiKiJdLCJyZXNvdXJjZV9hY2Nlc3MiOnsibXktYXBpIjp7InJvbGVzIjpbInJvbGUxIiwicm9sZTIiLCJkYXRhLnJlYWQiXX19LCJzY29wZSI6InByb2ZpbGUgZW1haWwiLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwibmFtZSI6IlRlc3QgVXNlciIsInByZWZlcnJlZF91c2VybmFtZSI6ImRldnVzZXIiLCJnaXZlbl9uYW1lIjoiVGVzdCIsImZhbWlseV9uYW1lIjoiVXNlciIsImVtYWlsIjoiZGV2dXNlckBleGFtcGxlLmNvbSJ9.52YRFCJfdUBSRhzzgu3LoEYRmrKukWBnNXCBMTtv1p3mgW78phlnFcpvA2Ub63J7L69GXEOMTrbJY8L6SFm9Dw" ]
+            ],
+            "expectedResponse" : "{\"status\" : 401}",
+            "expectedResponseCode" : 401,
+            "method" : "POST"
+        },
+        {
+            "url" : "http://localhost:22000/role2/will-allow",
+            "headers" : [
+                [ "Authorization", "Bearer eyJhbGciOiJFZERTQSIsInR5cCIgOiAiSldUIiwia2lkIiA6ICItN2xaenVXS05QcVQ1eTAzcWVJNlB5RzlyWTJOZG5tcUlwWHBmTk10NXk0In0.eyJleHAiOjE3NjI4MDc4NzYsImlhdCI6MTc2MjgwNzU3NiwianRpIjoib25ydHJvOjI1YzI4OGE3LWVmZDUtZDNjYS1mYmY1LWY4YTM4Mjk3NTY2MCIsImlzcyI6Imh0dHA6Ly9sb2NhbGhvc3Q6ODA4MC9yZWFsbXMvZGV2IiwiYXVkIjoibXktYXBpIiwic3ViIjoiNGNkZjgyMmItMGNjMi00OTZmLWE1ODItMGI4MGY3MmRjMjEyIiwidHlwIjoiQmVhcmVyIiwiYXpwIjoibXktY2xpZW50LWFwcCIsInNpZCI6IjcxNjY1YzIxLWY3ZGYtMWQ2Ny04ZDUwLTk5ZmI1ZGE4YTgxMiIsImFjciI6IjEiLCJhbGxvd2VkLW9yaWdpbnMiOlsiKiJdLCJyZXNvdXJjZV9hY2Nlc3MiOnsibXktYXBpIjp7InJvbGVzIjpbInJvbGUxIiwicm9sZTIiLCJkYXRhLnJlYWQiXX19LCJzY29wZSI6InByb2ZpbGUgZW1haWwiLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwibmFtZSI6IlRlc3QgVXNlciIsInByZWZlcnJlZF91c2VybmFtZSI6ImRldnVzZXIiLCJnaXZlbl9uYW1lIjoiVGVzdCIsImZhbWlseV9uYW1lIjoiVXNlciIsImVtYWlsIjoiZGV2dXNlckBleGFtcGxlLmNvbSJ9.52YRFCJfdUBSRhzzgu3LoEYRmrKukWBnNXCBMTtv1p3mgW78phlnFcpvA2Ub63J7L69GXEOMTrbJY8L6SFm9Dw" ]
+            ],
+            "expectedResponse" : "{\"status\" : 200}",
+            "expectedResponseCode" : 200
+        },
+        {
+            "url" : "http://localhost:22000/role2/will-allow",
+            "headers" : [
+                [ "Authorization", "Bearer eyJhbGciOiJFZERTQSIsInR5cCIgOiAiSldUIiwia2lkIiA6ICItN2xaenVXS05QcVQ1eTAzcWVJNlB5RzlyWTJOZG5tcUlwWHBmTk10NXk0In0.eyJleHAiOjE3NjI4MDc4NzYsImlhdCI6MTc2MjgwNzU3NiwianRpIjoib25ydHJvOjI1YzI4OGE3LWVmZDUtZDNjYS1mYmY1LWY4YTM4Mjk3NTY2MCIsImlzcyI6Imh0dHA6Ly9sb2NhbGhvc3Q6ODA4MC9yZWFsbXMvZGV2IiwiYXVkIjoibXktYXBpIiwic3ViIjoiNGNkZjgyMmItMGNjMi00OTZmLWE1ODItMGI4MGY3MmRjMjEyIiwidHlwIjoiQmVhcmVyIiwiYXpwIjoibXktY2xpZW50LWFwcCIsInNpZCI6IjcxNjY1YzIxLWY3ZGYtMWQ2Ny04ZDUwLTk5ZmI1ZGE4YTgxMiIsImFjciI6IjEiLCJhbGxvd2VkLW9yaWdpbnMiOlsiKiJdLCJyZXNvdXJjZV9hY2Nlc3MiOnsibXktYXBpIjp7InJvbGVzIjpbInJvbGUxIiwicm9sZTIiLCJkYXRhLnJlYWQiXX19LCJzY29wZSI6InByb2ZpbGUgZW1haWwiLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwibmFtZSI6IlRlc3QgVXNlciIsInByZWZlcnJlZF91c2VybmFtZSI6ImRldnVzZXIiLCJnaXZlbl9uYW1lIjoiVGVzdCIsImZhbWlseV9uYW1lIjoiVXNlciIsImVtYWlsIjoiZGV2dXNlckBleGFtcGxlLmNvbSJ9.52YRFCJfdUBSRhzzgu3LoEYRmrKukWBnNXCBMTtv1p3mgW78phlnFcpvA2Ub63J7L69GXEOMTrbJY8L6SFm9Dw" ]
+            ],
+            "expectedResponse" : "{\"status\" : 200}",
+            "expectedResponseCode" : 200,
+            "method" : "POST"
+        },
+        {
+            "url" : "http://localhost:22000/role3/will-deny",
+            "headers" : [
+                [ "Authorization", "Bearer eyJhbGciOiJFZERTQSIsInR5cCIgOiAiSldUIiwia2lkIiA6ICItN2xaenVXS05QcVQ1eTAzcWVJNlB5RzlyWTJOZG5tcUlwWHBmTk10NXk0In0.eyJleHAiOjE3NjI4MDc4NzYsImlhdCI6MTc2MjgwNzU3NiwianRpIjoib25ydHJvOjI1YzI4OGE3LWVmZDUtZDNjYS1mYmY1LWY4YTM4Mjk3NTY2MCIsImlzcyI6Imh0dHA6Ly9sb2NhbGhvc3Q6ODA4MC9yZWFsbXMvZGV2IiwiYXVkIjoibXktYXBpIiwic3ViIjoiNGNkZjgyMmItMGNjMi00OTZmLWE1ODItMGI4MGY3MmRjMjEyIiwidHlwIjoiQmVhcmVyIiwiYXpwIjoibXktY2xpZW50LWFwcCIsInNpZCI6IjcxNjY1YzIxLWY3ZGYtMWQ2Ny04ZDUwLTk5ZmI1ZGE4YTgxMiIsImFjciI6IjEiLCJhbGxvd2VkLW9yaWdpbnMiOlsiKiJdLCJyZXNvdXJjZV9hY2Nlc3MiOnsibXktYXBpIjp7InJvbGVzIjpbInJvbGUxIiwicm9sZTIiLCJkYXRhLnJlYWQiXX19LCJzY29wZSI6InByb2ZpbGUgZW1haWwiLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwibmFtZSI6IlRlc3QgVXNlciIsInByZWZlcnJlZF91c2VybmFtZSI6ImRldnVzZXIiLCJnaXZlbl9uYW1lIjoiVGVzdCIsImZhbWlseV9uYW1lIjoiVXNlciIsImVtYWlsIjoiZGV2dXNlckBleGFtcGxlLmNvbSJ9.52YRFCJfdUBSRhzzgu3LoEYRmrKukWBnNXCBMTtv1p3mgW78phlnFcpvA2Ub63J7L69GXEOMTrbJY8L6SFm9Dw" ]
+            ],
+            "expectedResponse" : "{\"status\" : 401}",
+            "expectedResponseCode" : 401
+        }
+        
+    ]
+}

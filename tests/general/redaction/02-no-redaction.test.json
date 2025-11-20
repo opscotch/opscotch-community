@@ -3,6 +3,7 @@
   "fromDirectory": "/general/redaction",
   "testThisStep": "no-redact",
   "useThisTestConfigFile": "redaction.config.json",
+  "useThisTestBootstrapFile" : "redaction.bootstrap.json",
   "theseMetricsShouldHaveBeenSent": [
     {
       "key": "test-done",

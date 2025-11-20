@@ -3,6 +3,13 @@
   "fromDirectory": "/general/redaction",
   "testThisStep": "redact",
   "useThisTestConfigFile": "redaction.config.json",
+  "useThisTestBootstrapFile" : "redaction.bootstrap.json",
+  "mockEndpointResponses" : [
+      {
+          "whenThisIsCalled": "http://mockserver/noop",
+          "returnThisStatusCode" : 202
+      }
+  ],
   "theseMetricsShouldHaveBeenSent": [
     {
       "key": "test-done",

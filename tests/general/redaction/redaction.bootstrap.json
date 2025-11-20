@@ -1,0 +1,8 @@
+{
+    "allowExternalHostAccess" : [
+        {
+            "id" : "host",
+            "host": "http://mockserver/noop"
+        }
+    ]
+}

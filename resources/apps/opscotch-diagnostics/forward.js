@@ -10,7 +10,7 @@ if (payload) {
     payload = q.take(1);
     while(payload[0]) {
         payload = payload[0];
-        context.diagnosticLog(`forwarding: ${payload}`);
+        //context.diagnosticLog(`forwarding: ${payload}`);
         var returnedState = context.sendToStep("forwarder", payload);
         if (returnedState.isErrored()) {
             context.diagnosticLog(`forwarding errored`);

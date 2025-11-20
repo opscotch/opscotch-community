@@ -55,13 +55,13 @@
                 {
                     "stepId" : "forwarder",
                     "urlGenerator" : {
-                        "script" : "context.setUrl(context.getData('forwardingHost'), '')"
+                        "script" : "context.setUrl(context.getData(\"forwardingHost\"), \"\")"
                     },
                     "payloadGenerator" : {
                         "script" : "//no op"
                     },
                     "resultsProcessor" : {
-                        "script" : "context.diagnosticLog('forward successful');"
+                        "script" : "context.diagnosticLog(\"forward successful\");"
                     }
                 },
                 {

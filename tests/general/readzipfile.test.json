@@ -1,4 +1,5 @@
 {
+  "comment" : "THIS REQUIRES THE OPSCOTCH_COMMUNITY_ROOT ENVIRONMENT VARIABLE TO BE SET ON THE AGENT - SEE THE README",
   "enabled": true,
   "fromDirectory": "/general/",
   "testThisStep": "readzip",

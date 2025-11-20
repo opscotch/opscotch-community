@@ -62,20 +62,6 @@
           "enabled": true,
           "type": "scripted-split-aggregate",
           "stepId": "elastic-node-stats-process",
-          "authenticationProcessor" : {
-            "comment" : [
-              "This expects that there is a property called 'Authorization' stored on a step",
-              "If it is not present then it asks another step to put them them"
-            ],
-            "resource": "/general/authentication/set-header-from-step-properties.js",
-            "data": {
-              "propertiesStoredOnStep": "auth-elastic-basic",
-              "propertyName": "Authorization",
-              "authStep": "auth-elastic-basic",
-              "passToAuthData" : {                
-              }
-            }
-          },
           "splitGenerator": {
             "resource": "/general/standard-json-dict-values-aggregator-split.js",
             "data": {

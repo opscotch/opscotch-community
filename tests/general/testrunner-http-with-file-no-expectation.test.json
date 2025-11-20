@@ -1,4 +1,5 @@
 {
+  "secondsToWaitForCompletion" : 100000,
   "enabled": true,
   "fromDirectory": "/general/",
   "testThisStep": "post-a-file",

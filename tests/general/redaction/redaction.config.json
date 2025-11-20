@@ -6,13 +6,16 @@
       "steps" : [
         {
           "stepId": "redact",
+          "urlGenerator" : {
+            "script" : "context.setUrl('host','')"
+          },
           "authenticationProcessor" : {
             "script" : "context.setHeader('secret', 'mySecret')"
           },
           "resultsProcessor": {
             "processors" : [
               {
-                "script": "console.log('this is mySecret');"
+                "script": "context.diagnosticLog('this is mySecret');"
               },
               {
                 "script": "context.sendMetric('test-done', 1.0)"
@@ -31,7 +34,7 @@
           "resultsProcessor": {
             "processors" : [
               {
-                "script": "console.log('this is mySecret');"
+                "script": "context.diagnosticLog('this is mySecret');"
               },
               {
                 "script": "context.sendMetric('test-done', 1.0)"

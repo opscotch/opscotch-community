@@ -1,0 +1,43 @@
+{
+    "allowExternalHostAccess" : [
+        {
+            "id" : "idp-wellknown-config",
+            "host": "http://mockserver/the-idps-well-known-openid-configuration-certs",
+            "allowList" : [
+                {
+                    "method" : "GET",
+                    "uriPattern" : ".*"
+                }
+            ]
+        },
+        {
+            "id" : "proxied-api",
+            "host": "http://mockserver/your-proxy-here"
+        }
+    ],
+    "allowHttpServerAccess" : [
+        {
+            "id" : "http-test",
+            "port" : 22000
+        }
+    ],
+    "data" : {
+        "issuer" : "http://localhost:8080/realms/dev",
+        "audience" : "my-api",
+        "rules" : [
+            {
+                "uriPattern" : "/role1.*",
+                "method" : "GET",
+                "requireRole" : "role1"  
+            },
+            {
+                "uriPattern" : "role2.*",
+                "requireRole" : "role2"  
+            },
+            {
+                "uriPattern" : "role3.*",
+                "requireRole" : "role3"  
+            }
+        ]
+    }
+}
