@@ -2,7 +2,7 @@
     {
         "enabled": true,
         "deploymentId": "opscotch-ui",
-        "remoteConfiguration": "${OPSCOTCH_UI_HOME}/workflow.json",
+        "remoteConfiguration": "workflow.json",
         "errorHandling": {
             "enableLocalLogging": false
         },
@@ -17,7 +17,7 @@
         "allowFileAccess" : [
             {
                 "id" : "app-static-zip",
-                "directoryOrFile" : "${OPSCOTCH_UI_HOME}/react-app/opscotch-monitor-package.zip",
+                "directoryOrFile" : "react-app/opscotch-monitor-package.zip",
                 "READ" : true
             }
         ],
