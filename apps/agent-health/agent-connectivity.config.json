@@ -1,0 +1,27 @@
+{
+    "workflows": [
+        {
+            "name": "Agent connectivity test",
+            "steps": [
+                {
+                    "stepId": "agent-connectivity",
+                    "urlGenerator": {
+                        "processors" : [
+                            {
+                                "script" : "context.setUrl(\"test\", \"/get\")"
+                            }
+                        ]
+                    },
+                    "resultsProcessor": {
+                        "processors" : [
+                            {
+                                "script": "context.sendMetric(\"agent-connectivity\", 2.0);"
+                            }
+                        ]
+                    },
+                    "trigger": { "timer" : { "period" : 60000 }}
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,29 @@
+{
+    "workflows": [
+        {
+            "name": "Agent Heartbeat",
+            "steps": [
+                {
+                    "enabled": true,
+                    "type": "scripted",
+                    "stepId": "agent-heartbeat",
+                    "resultsProcessor": {
+                        "resource": "",
+                        "script": "context.sendMetric(\"agent-heartbeat\", 67.0);"
+                    },
+                    "trigger": { "timer" : { "period" : 60000 }},
+                    "data": {
+                        "ad": {
+                            "agent-heartbeat": [
+                                "MEAN_LOW"
+                            ]
+                        },
+                        "metadata": {
+                            "ad_p": "1m"
+                        }
+                    }
+                }
+            ]
+        }
+    ]
+}

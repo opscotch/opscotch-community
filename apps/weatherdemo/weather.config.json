@@ -1,0 +1,35 @@
+{
+    "workflows": [
+        {
+            "name" : "Current Temperature",
+            "steps" : [
+                {
+                    "stepId": "current-temperature",
+                    "trigger" : {
+                        "http": {
+                            "method": "GET",
+                            "path": "/city/.*",
+                            "server" : "openweathermap"
+                        }
+                    },
+                    "urlGenerator" : {
+                        "processors" : [
+                            {
+                                "comment" : "Extract the city name from the url",
+                                "script" : "const path = JSON.parse(context.getBody()).path; context.setProperty(`city`, path.slice(path.lastIndexOf(`/`) + 1));"
+                            },
+                            {
+                                "comment" : "Generate the openweathermap api url",
+                                "script" : "context.setUrl(`openweathermap`,`/data/2.5/weather?units=metric&q=Wellington&appid=${context.getData(\"openweathermapApiKey\")}`);"
+                            }
+                        ]
+                    },
+                    "resultsProcessor" : {
+                        "comment" : "Reurn just the the http result",
+                        "script" : "// no op"
+                    }
+                }
+            ]
+        }
+    ]
+}

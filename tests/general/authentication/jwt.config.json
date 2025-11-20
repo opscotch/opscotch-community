@@ -1,0 +1,81 @@
+{
+    "workflows" : [
+        {
+            "name" : "JWT example",
+            "steps" : [
+                {
+                    "comment" : "Frequently download and cache the latest IdP public keys",
+                    "stepId" : "idp-key-cache-timer",
+                    "trigger" : {
+                        "timer" : {
+                            "comment" : "900000 is 15 minutes",
+                            "period" : 900000
+                        }
+                    },
+                    "urlGenerator" : {
+                        "script" : "context.setUrl('idp-wellknown-config', '');"
+                    },
+                    "resultsProcessor" : {
+                        "processors" : [
+                            {
+                                "script" : "context.sendToStep('idp-key-cache', JSON.stringify( { command : 'cache', detail : JSON.parse(context.getBody()) } ))"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "comment" : "Handle IdP public keys cache and JWT decode",
+                    "stepId" : "idp-key-cache",
+                    "resultsProcessor" : {
+                        "processors" : [
+                            {
+                                "resource" : "general/authentication/idp-jwt-cached-key-processor.js"
+                            }
+                        ]   
+                    },
+                    "persistenceFile" : "jwt-cache"
+                },
+                {
+                    "stepId" : "http-get",
+                    "trigger" : {
+                        "http" : {
+                            "method" : "GET",
+                            "path" : "/.*",
+                            "server" : "http-test"
+                        }
+                    },
+                    "resultsProcessor" : {
+                        "processors" : [
+                            {
+                                "script" : "context.setProperty('auth_valid', context.sendToStep('idp-key-cache', JSON.stringify( { command : 'auth', detail : { token : JSON.parse(context.getHeader('Authorization'))[0], method : 'GET', path : JSON.parse(context.getBody()).path } } )).getProperty('auth_valid'))"
+                            },
+                            {
+                                "script" : "const valid = String(context.getProperty('auth_valid')).trim().toLowerCase() === 'true'; if (valid) { context.setBody({ \"status\" : 200 }); context.setProperty('status_code', '200') } else { context.setBody({ \"status\" : 401 }); context.setProperty('status_code', '401') }"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "stepId" : "http-post",
+                    "trigger" : {
+                        "http" : {
+                            "method" : "POST",
+                            "path" : "/.*",
+                            "server" : "http-test"
+                        }
+                    },
+                    "resultsProcessor" : {
+                        "processors" : [
+                            {
+                                "script" : "context.setProperty('auth_valid', context.sendToStep('idp-key-cache', JSON.stringify( { command : 'auth', detail : { token : JSON.parse(context.getHeader('Authorization'))[0], method : 'POST', path : JSON.parse(context.getBody()).path } } )).getProperty('auth_valid'))"
+                            },
+                            {
+                                "script" : "const valid = String(context.getProperty('auth_valid')).trim().toLowerCase() === 'true'; if (valid) { context.setBody({ \"status\" : 200 }); context.setProperty('status_code', '200') } else { context.setBody({ \"status\" : 401 }); context.setProperty('status_code', '401') }"
+                            }
+                        ]
+                    }
+                }
+            ]
+        }
+    ]
+}

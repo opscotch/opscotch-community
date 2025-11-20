@@ -15,7 +15,7 @@
             }
           },
           "resultsProcessor": {
-            "script": "context.setMessage('goodbye1');"
+            "script": "context.setBody(`goodbye`)"
           }
         }
       ]

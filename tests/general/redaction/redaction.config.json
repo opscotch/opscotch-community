@@ -6,6 +6,9 @@
       "steps" : [
         {
           "stepId": "redact",
+          "urlGenerator" : {
+            "script" : "context.setUrl('host','')"
+          },
           "authenticationProcessor" : {
             "script" : "context.setHeader('secret', 'mySecret')"
           },
