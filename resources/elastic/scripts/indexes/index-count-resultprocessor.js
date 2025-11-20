@@ -1,1 +1,0 @@
-context.sendMetric(context.getTimestamp(), "elastic-index-count", context.getMessageBodyAsString().split("\n").length);

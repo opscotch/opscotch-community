@@ -1,8 +1,0 @@
-{
-    "token_type": "Bearer",
-    "scope": "profile openid email https://graph.microsoft.com/Mail.Send",
-    "expires_in": 5181,
-    "ext_expires_in": 5181,
-    "access_token": "anAccessTokenFromLogin",
-    "refresh_token": "aRefreshTokenFromLogin"
-  }

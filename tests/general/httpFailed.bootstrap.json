@@ -1,7 +1,0 @@
-{
-    "hosts": {
-        "broken-server": {
-            "host": "http://localhost:12345"
-        }
-    }
-}
