@@ -1,9 +1,0 @@
-{
-	"license" : "licenses.txt",
-	"resourceDirs" : [ 
-        "resources"
-    ],
-	"testDirs" : [
-        "tests"
-    ]
-}
