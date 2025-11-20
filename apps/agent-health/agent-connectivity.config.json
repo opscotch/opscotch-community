@@ -19,7 +19,7 @@
                             }
                         ]
                     },
-                    "trigger": { "timer" : { "period" : 1000 }}
+                    "trigger": { "timer" : { "period" : 60000 }}
                 }
             ]
         }

@@ -1,0 +1,25 @@
+[
+  {
+    "enabled" : false,
+    "agentPrivateKey": "",
+    "deploymentId": "agent-alive",
+    "remoteConfiguration": "agent-health.config.json"
+  },
+  {
+    "agentPrivateKey": "",
+    "deploymentId": "agent-connectivity",
+    "remoteConfiguration": "agent-connectivity.config.json",
+    "allowExternalHostAccess": [
+        {
+            "id" : "test",
+            "host": "https://httpbin.org",
+            "allowList" : [
+                {
+                    "method" : "GET",
+                    "uriPattern" : "/get"
+                }
+            ]
+        }
+    ]
+  }
+]
