@@ -1,0 +1,6 @@
+[
+    {
+        "deploymentId" : "hello-world",
+        "remoteConfiguration" : "workflow.json"
+    }
+]

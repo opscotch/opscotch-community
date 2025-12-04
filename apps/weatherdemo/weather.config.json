@@ -20,7 +20,7 @@
                             },
                             {
                                 "comment" : "Generate the openweathermap api url",
-                                "script" : "context.setUrl(`openweathermap`,`/data/2.5/weather?units=metric&q=Wellington&appid=${context.getData(\"openweathermapApiKey\")}`);"
+                                "script" : "context.setUrl(`openweathermap`,`/data/2.5/weather?units=metric&q=${context.getProperty(`city`)}&appid=${context.getData(\"openweathermapApiKey\")}`);"
                             }
                         ]
                     },
