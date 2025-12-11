@@ -113,9 +113,15 @@ doc
             context.diagnosticLog(`IdP certs updated: hash: ${hash}`);
 
         } else if (json.command == "auth") {
-            
+
             const base64UrlToBase64 = (base64url) => {
-                let base64 = base64url.replace(/-/g, "+").replace(/_/g, "/");
+                
+                const mapped = new Array(base64url.length);
+                for (let i = 0; i < base64url.length; i++) {
+                    const ch = base64url.charCodeAt(i);
+                    mapped[i] = ch === 45 /* '-' */ ? "+" : ch === 95 /* '_' */ ? "/" : base64url[i];
+                }
+                let base64 = mapped.join("");
                 const pad = base64.length % 4;
                 if (pad === 2) base64 += "==";
                 else if (pad === 3) base64 += "=";
