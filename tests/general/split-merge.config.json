@@ -1,0 +1,28 @@
+{
+    "workflows" : [
+        {
+            "name" : "split testing",
+            "steps" : [
+                {
+                    "stepId" : "splittest",
+                    "type" : "scripted-split-aggregate",
+                    "splitGenerator" : {
+                        "script" : "context.addSplitReturnItem('1'); context.addSplitReturnItem('2'); context.addSplitReturnItem('3');"
+                    },
+                    "itemResultProcessor" : {
+                        "script" : "console.log(context.getBody()); context.sendToStep('anotherstep', context.getBody(), { 'h' : `${context.getBody()}B` })"
+                    },
+                    "resultsProcessor" : {
+                        "script" : "console.log('done')"
+                    }
+                },
+                {
+                    "stepId" : "anotherstep",
+                    "resultsProcessor" : {
+                        "script" : "console.log(context.getBody() + 'A'); console.log(JSON.parse(context.getHeader('h'))[0])"
+                    }
+                }
+            ]
+        }
+    ]
+}
