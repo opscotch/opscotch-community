@@ -229,7 +229,7 @@ doc
             const keyList = Array.isArray(keysJson) ? keysJson : Array.isArray(keysJson.keys) ? keysJson.keys : [];
             const key = keyList.find((k) => k.kid === headersJson.kid);
             
-            const keyId = crypto.registerKey("sign", "public", bytes.binaryToHex(bytes.base64ToBinary(base64UrlToBase64(key.x))))
+            const keyId = crypto.registerKey("sign", "public", bytes.base64ToBinary(base64UrlToBase64(key.x)))
 
             const signatureBytes = bytes.base64ToBinary(base64UrlToBase64(signatureB64Url));
             const signedContent = bytes.createFromString(headerB64Url + "." + payloadB64Url);
