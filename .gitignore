@@ -1,7 +1,7 @@
 license.txt
 /empty.config.json
 /test.bootstrap.json
-test.config.*
+/test.config.*
 *properties-*
 *.bin*
 *.log*

@@ -1,7 +1,7 @@
 doc
+    .description("Optional basic authorization handling. To activate, define the authorizationHeaders object in data.")
     .dataSchema({
         type : "object",
-        required: [ "authorizationHeaders" ],
         properties : {
             authorizationHeaders : {
                 type : "object",
@@ -25,17 +25,19 @@ doc
     })
     .run(() => {
 
-        let basicAuth = JSON.parse(context.getHeader("Authorization")).find(s => s.trim().toLowerCase().startsWith("basic")).replace(/basic/i, "").trim();
-        
-        if ( ! basicAuth || ! JSON.parse(context.getData("authorizationHeaders"))
-            .basic
-            .values
-            .find(s => s == basicAuth) ) 
-        {
-            context.setProperty("status_code", 401);
-            context.setBody("");
-            context.setStream(null);
-            context.end();
+        if (context.getData("authorizationHeaders")) {
+            let basicAuth = JSON.parse(context.getHeader("Authorization")).find(s => s.trim().toLowerCase().startsWith("basic"));
+            
+            if ( ! basicAuth || ! JSON.parse(context.getData("authorizationHeaders"))
+                .basic
+                .values
+                .find(s => s == basicAuth.replace(/basic/i, "").trim()) ) 
+            {
+                context.setProperty("status_code", 401);
+                context.setBody("");
+                context.setStream(null);
+                context.end();
+            }
         }
-
+        
     });
