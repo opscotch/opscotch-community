@@ -1,0 +1,27 @@
+{
+    "workflows": [
+        {
+            "name": "TCP Listener",
+            "steps": [
+                {
+                    "stepId": "tcp-listener",
+                    "trigger" : {
+                        "tcp" : {
+                            "server" : "tcp-listener",
+                            "delimiter": "|",
+                            "stripDelimiter" : true,
+                            "maxBatchWindowMillis" : 100,
+                            "batchSize" : 5
+                        },
+                        "timer" : {
+                            "period" : 1000
+                        }
+                    },
+                    "resultsProcessor": {
+                        "resource": "apps/tcp-example/throughput-counter.js"
+                    }
+                }
+            ]
+        }
+    ]
+}
