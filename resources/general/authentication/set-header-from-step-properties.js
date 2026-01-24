@@ -1,14 +1,21 @@
 /*
 This processor expects that when the step referred to by the "authStep" data property is called,
 it will place an object on the step properties referred to by the "propertiesFromStep" data property, 
-with the key referred to by the "propertyName" data property. The object should contain properties of headers to be set.
+with the key referred to by the "propertyName" property. The object should contain properties of headers to be set.
+
+"propertyName" property can either be set via a data property or by a context.getProperty("authPropertyName")
 
 The above object will be got, and the keys iterated, where by the key will be the header name, and the value the header value
 */
 
 passedData = context.getProperty("OPSCOTCH_AUTH_DATA");
 propertiesFromStep = context.getData("propertiesStoredOnStep");
-propertyName = context.getData("propertyName");
+propertyName = context.getProperty("authPropertyName"); 
+if ( !propertyName ) {
+    propertyName =context.getData("propertyName");
+}
+
+console.log(`auth property name = ${propertyName}`)
 
 headersObjectAsJSONString = context.getAuthenticationPropertiesFromStep(propertiesFromStep, propertyName);
 
