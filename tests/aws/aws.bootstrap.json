@@ -1,0 +1,20 @@
+{
+  "allowExternalHostAccess": [
+    {
+      "id" : "iamhost",
+      "data" : {
+        "region": "us-east-1",
+        "accessKey" : "AKIDEXAMPLE",
+        "secretKey" : "wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY",
+        "host" : "iam.amazonaws.com",
+        "service" : "iam"
+      },
+      "host": "http://mockserver",
+      "headers" : {
+        "Content-Type" : "application/x-www-form-urlencoded; charset=utf-8"
+      }
+    }
+  ]
+}
+
+
