@@ -5,15 +5,13 @@
       "port" : 11000
     }
   ],
-  "hosts": {
-    "proxiedServer": {
+  "allowExternalHostAccess": [
+    {
+      "id" : "proxiedServer",
       "host": "http://mockserver",
-      "allowlist": [
-        [
-          "GET",
-          "/proxyme"
-        ]
+      "allowList": [
+          { "method" : "GET", "uriPattern" : "/proxyme" }
       ]
     }
-  }
+  ]
 }

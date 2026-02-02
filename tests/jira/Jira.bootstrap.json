@@ -1,20 +1,21 @@
 {
-    "hosts": {
-        "jira": {
+    "allowExternalHostAccess": [
+        {
+            "id": "jira",
             "host": "http://mockserver",
-            "data" : {
-                "authorization": "Basic base64(user@abc.co:token)"
-            },
             "headers": {
                 "Content-Type": "application/json;charset=UTF-8",
                 "Accept": "application/json, text/plain, */*"
             },
-            "allowlist": [
-                [
-                    "POST",
-                    "/rest/api/2/issue/.*"
-                ]
-            ]
+            "allowList": [
+                {
+                    "method": "POST",
+                    "uriPattern": "/rest/api/2/issue/.*"
+                }
+            ],
+            "data": {
+                "authorization": "Basic base64(user@abc.co:token)"
+            }
         }
-    }
+    ]
 }

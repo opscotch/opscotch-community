@@ -1,20 +1,21 @@
 {
-  "hosts": {
-    "elastic": {
-      "data" : {
-        "authorization": "Basic LETMEIN"
-      },
-      "host": "http://mockserver",
-      "allowlist": [
-        [
-          "GET",
-          "/.ent-search-engine-documents-nzqa-prod-search/_count"
-        ],
-        [
-          "GET",
-          "/logs-app_search.analytics-default/.*"
-        ]
-      ]
-    }
-  }
+    "allowExternalHostAccess": [
+        {
+            "id": "elastic",
+            "host": "http://mockserver",
+            "allowList": [
+                {
+                    "method": "GET",
+                    "uriPattern": "/.ent-search-engine-documents-nzqa-prod-search/_count"
+                },
+                {
+                    "method": "GET",
+                    "uriPattern": "/logs-app_search.analytics-default/.*"
+                }
+            ],
+            "data": {
+                "authorization": "Basic LETMEIN"
+            }
+        }
+    ]
 }

@@ -1,11 +1,18 @@
 {
-  "hosts": {
-    "test": {
-      "host": "http://mockserver",
-      "allowlist": [
-        ["GET", "/hello"],
-        ["POST", "/hello"]
-      ]
-    }
-  }
+    "allowExternalHostAccess": [
+        {
+            "id": "test",
+            "host": "http://mockserver",
+            "allowList": [
+                {
+                    "method": "GET",
+                    "uriPattern": "/hello"
+                },
+                {
+                    "method": "POST",
+                    "uriPattern": "/hello"
+                }
+            ]
+        }
+    ]
 }

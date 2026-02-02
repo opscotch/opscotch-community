@@ -1,27 +1,29 @@
 {
-    "hosts": {
-        "login.microsoftonline.com": {
-            "authenticationHost" : true,
+    "allowExternalHostAccess": [
+        {
+            "authenticationHost": true,
+            "id": "login.microsoftonline.com",
             "host": "http://mockserver",
-            "allowlist": [
-                [
-                    "POST",
-                    "/.*/oauth2/.*"
-                ]
+            "allowList": [
+                {
+                    "method": "POST",
+                    "uriPattern": "/.*/oauth2/.*"
+                }
             ],
-            "data" : {
-                "o365SendEmailRefreshToken" : "aRefreshToken",
-                "o365SendEmailClientId" : "aClientId"
+            "data": {
+                "o365SendEmailRefreshToken": "aRefreshToken",
+                "o365SendEmailClientId": "aClientId"
             }
         },
-        "graph.microsoft.com": {
+        {
+            "id": "graph.microsoft.com",
             "host": "http://mockserver",
-            "allowlist": [
-                [
-                    "POST",
-                    "/v1.0/me/sendMail"
-                ]
+            "allowList": [
+                {
+                    "method": "POST",
+                    "uriPattern": "/v1.0/me/sendMail"
+                }
             ]
         }
-    }
+    ]
 }

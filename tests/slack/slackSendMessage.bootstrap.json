@@ -1,13 +1,14 @@
 {
-    "hosts": {
-        "slack": {
+    "allowExternalHostAccess": [
+        {
+            "id": "slack",
             "host": "http://mockserver",
-            "allowlist": [
-                [
-                    "POST",
-                    "/services/myslackid"
-                ]
+            "allowList": [
+                {
+                    "method": "POST",
+                    "uriPattern": "/services/myslackid"
+                }
             ]
         }
-    }
+    ]
 }
