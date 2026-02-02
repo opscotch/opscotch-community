@@ -8,22 +8,6 @@
           "port" : 13000,
           "tcp" : true
       }
-    ],
-    "workflow" : {
-      "outputs" : [
-        {
-          "enabled" : true,
-          "id" : "my-otel",
-          "routingToken" : "my-otel",
-          "outputUrl": "http://localhost:4317",
-          "type": "otel",
-          "typeProperties": {
-            "otel": {
-              "protocol": "grpc"
-            }
-          }
-        }
-      ]
-    }
+    ]
   }
 ]

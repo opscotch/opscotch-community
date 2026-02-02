@@ -14,12 +14,6 @@ if (c.getStream() != null && c.getStream().available() > 0) {
         opscotch_ingest_to_js_ts : `${opscotch_ingest_to_js_ts}`
     }
 
-    let equals = bytes.createFromString("=");
-    metrics.forEach(metric => {
-        let bits = bytes.split(metric, equals, 0);
-        context.sendMetric("my-otel", bytes.asString(bits[0]), parseFloat(bytes.asString(bits[1])), data);
-    });
-
     c.counter("time", c.getTimestamp() - opscotch_ingest_ts);
     const total = c.counter("count", metrics.length);
 
