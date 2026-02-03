@@ -1,0 +1,25 @@
+{
+    "workflows" : [
+        {
+            "name" : "source",
+            "steps" : [
+                {
+                    "stepId" : "cross-deploy-forward",
+                    "trigger" : {
+                        "http" : {
+                            "method" : "GET",
+                            "path" : "/ping",
+                            "server" : "deployment1"
+                        }
+                    },
+                    "urlGenerator" : {
+                        "script" : "context.setUrl(\"otherhost\", \"/pong\")"
+                    },
+                    "resultsProcessor" : {
+                        "script" : "//no op"
+                    }
+                }
+            ]
+        }
+    ]
+}

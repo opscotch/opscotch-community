@@ -1,0 +1,30 @@
+[
+    {
+        "deploymentId" : "deployment1",
+        "remoteConfiguration" : "ihttp-deployment1.config.json",
+        "allowHttpServerAccess" : [
+            {
+                "id" : "deployment1",
+                "port" : 11000
+            }
+        ],
+        "allowExternalHostAccess" : [
+             {
+                "id" : "otherhost",
+                "transport": "inProc",
+                "inProcServerId" : "inProcOnly",
+                "inProcDeploymentId" : "deployment2"
+            }
+        ]
+    },
+    {
+        "deploymentId" : "deployment2",
+        "remoteConfiguration" : "ihttp-deployment2.config.json",
+        "allowHttpServerAccess" : [
+            {
+                "id" : "inProcOnly",
+                "inProcOnly" : true
+            }
+        ]
+    }
+]

@@ -1,0 +1,20 @@
+{
+    "workflows" : [
+        {
+            "name" : "target",
+            "steps" : [
+                {
+                    "stepId" : "ping",
+                    "resultsProcessor" : {
+                        "script" : "context.setBody(\"pong\");"
+                    },
+                    "trigger" : {
+                        "deploymentAccess" : {
+                            "ids" : ["remoteDeployment"]
+                        }
+                    }
+                }
+            ]
+        }
+    ]
+}

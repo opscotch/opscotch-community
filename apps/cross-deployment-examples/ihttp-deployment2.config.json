@@ -1,0 +1,22 @@
+{
+    "workflows" : [
+        {
+            "name" : "target",
+            "steps" : [
+                {
+                    "stepId" : "pong",
+                    "resultsProcessor" : {
+                        "script" : "context.setBody(\"pong\");"
+                    },
+                    "trigger" : {
+                        "http" : {
+                            "server" : "inProcOnly",
+                            "path" : "/pong",
+                            "method" : "GET"
+                        }
+                    }
+                }
+            ]
+        }
+    ]
+}
