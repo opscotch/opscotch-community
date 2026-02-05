@@ -1,0 +1,12 @@
+[
+    {
+        "deploymentId" : "lambda",
+        "remoteConfiguration" : "lambda.config.json",
+        "allowExternalHostAccess": [
+            {
+                "id" : "aws-lambda-runtime-api",
+                "host": "${AWS_LAMBDA_RUNTIME_API}"
+            }
+        ]
+    }
+]

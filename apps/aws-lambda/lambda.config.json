@@ -4,6 +4,7 @@
             "name" : "lambda listener",
             "steps" : [
                 {
+                    "type" : "scripted",
                     "stepId" : "lambda-listener-start",
                     "httpTimeout" : 0,
                     "comment" : "httpTimeout 0 is blocking forever",
@@ -13,20 +14,17 @@
                     "urlGenerator" : {
                         "processors" : [
                             {
-                                "comment" : "this is the earliest place to fast fail",
-                                "script" : "if ( !context.getData('lambda-event-processor-deploymentId') || !context.getData('lambda-event-processor-stepId')) throw 'lambda-event-processor-deploymentId and lambda-event-processor-stepId must be data properties'"
-                            },
-                            {
                                 "script" : "context.setUrl('aws-lambda-runtime-api', '/2018-06-01/runtime/invocation/next')"
                             }
                         ]
                     },  
                     "resultsProcessor" : {
-                        "resource" : "apps/aws/lambda-response-processor.js"
+                        "resource" : "aws/lambda-response-processor.js"
                     }
                 },
                 {
                     "stepId" : "lambda-listener-response",
+                    "type" : "scripted",
                     "urlGenerator" : {
                         "script" : "context.setUrl('aws-lambda-runtime-api', `/2018-06-01/runtime/invocation/${context.getProperty('awsRequestId')}/${context.getProperty('responseType')}`)"
                     },
@@ -38,25 +36,17 @@
                         ]
                     },
                     "resultsProcessor" : {
-                        "script" : "//no"
-                    }
-                }
-
-            ]
-        },
-        {
-            "name" : "test responses",
-            "steps" : [
-                {
-                    "stepId" : "_test_response_success_",
-                    "resultsProcessor" : {
-                        "script" : "context.setBody('success')"
-                    }
-                },
-                {
-                    "stepId" : "_test_response_failure_",
-                    "resultsProcessor" : {
-                        "script" : "context.setBody('failure'); context.addSystemError('it failed');"
+                        "processors" : [
+                            {
+                                "script" : "context.setProperty(\"responseType\", null);"
+                            },
+                            {
+                                "script" : "context.setProperty(\"awsRequestId\", null);"
+                            },
+                            {
+                                "script" : "context.sendToStepAndForget(\"lambda-listener-start\", null)"
+                            }
+                        ]
                     }
                 }
             ]

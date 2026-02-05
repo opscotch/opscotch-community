@@ -1,0 +1,315 @@
+[
+    {
+        "deploymentId" : "aws-services",
+        "remoteConfiguration" : "aws-services.config.json",
+        "allowExternalHostAccess": [
+            {
+                "id" : "sqs",
+                "host": "https://sqs.${AWS_REGION}.amazonaws.com",
+                "data" : {
+                    "region": "${AWS_REGION}",
+                    "accessKey" : "${AWS_ACCESS_KEY}",
+                    "secretKey" : "${AWS_SECRET_KEY}",
+                    "host" : "sqs.${AWS_REGION}.amazonaws.com",
+                    "service" : "sqs"
+                }
+            },
+            {
+                "id" : "sns",
+                "host": "https://sns.${AWS_REGION}.amazonaws.com",
+                "data" : {
+                    "region": "${AWS_REGION}",
+                    "accessKey" : "${AWS_ACCESS_KEY}",
+                    "secretKey" : "${AWS_SECRET_KEY}",
+                    "host" : "sns.${AWS_REGION}.amazonaws.com",
+                    "service" : "sns"
+                }
+            },
+            {
+                "id" : "sts",
+                "host": "https://sts.amazonaws.com",
+                "data" : {
+                    "region": "us-east-1",
+                    "accessKey" : "${AWS_ACCESS_KEY}",
+                    "secretKey" : "${AWS_SECRET_KEY}",
+                    "host" : "sts.amazonaws.com",
+                    "service" : "sts"
+                }
+            },
+            {
+                "id" : "iam",
+                "host": "https://iam.amazonaws.com",
+                "data" : {
+                    "region": "us-east-1",
+                    "accessKey" : "${AWS_ACCESS_KEY}",
+                    "secretKey" : "${AWS_SECRET_KEY}",
+                    "host" : "iam.amazonaws.com",
+                    "service" : "iam"
+                }
+            },
+            {
+                "id" : "ec2",
+                "host": "https://ec2.${AWS_REGION}.amazonaws.com",
+                "data" : {
+                    "region": "${AWS_REGION}",
+                    "accessKey" : "${AWS_ACCESS_KEY}",
+                    "secretKey" : "${AWS_SECRET_KEY}",
+                    "host" : "ec2.${AWS_REGION}.amazonaws.com",
+                    "service" : "ec2"
+                }
+            },
+            {
+                "id" : "autoscaling",
+                "host": "https://autoscaling.${AWS_REGION}.amazonaws.com",
+                "data" : {
+                    "region": "${AWS_REGION}",
+                    "accessKey" : "${AWS_ACCESS_KEY}",
+                    "secretKey" : "${AWS_SECRET_KEY}",
+                    "host" : "autoscaling.${AWS_REGION}.amazonaws.com",
+                    "service" : "autoscaling"
+                }
+            },
+            {
+                "id" : "cloudformation",
+                "host": "https://cloudformation.${AWS_REGION}.amazonaws.com",
+                "data" : {
+                    "region": "${AWS_REGION}",
+                    "accessKey" : "${AWS_ACCESS_KEY}",
+                    "secretKey" : "${AWS_SECRET_KEY}",
+                    "host" : "cloudformation.${AWS_REGION}.amazonaws.com",
+                    "service" : "cloudformation"
+                }
+            },
+            {
+                "id" : "monitoring",
+                "host": "https://monitoring.${AWS_REGION}.amazonaws.com",
+                "data" : {
+                    "region": "${AWS_REGION}",
+                    "accessKey" : "${AWS_ACCESS_KEY}",
+                    "secretKey" : "${AWS_SECRET_KEY}",
+                    "host" : "monitoring.${AWS_REGION}.amazonaws.com",
+                    "service" : "monitoring"
+                }
+            },
+            {
+                "id" : "elasticloadbalancing",
+                "host": "https://elasticloadbalancing.${AWS_REGION}.amazonaws.com",
+                "data" : {
+                    "region": "${AWS_REGION}",
+                    "accessKey" : "${AWS_ACCESS_KEY}",
+                    "secretKey" : "${AWS_SECRET_KEY}",
+                    "host" : "elasticloadbalancing.${AWS_REGION}.amazonaws.com",
+                    "service" : "elasticloadbalancing"
+                }
+            },
+            {
+                "id" : "sdb",
+                "host": "https://sdb.${AWS_REGION}.amazonaws.com",
+                "data" : {
+                    "region": "${AWS_REGION}",
+                    "accessKey" : "${AWS_ACCESS_KEY}",
+                    "secretKey" : "${AWS_SECRET_KEY}",
+                    "host" : "sdb.${AWS_REGION}.amazonaws.com",
+                    "service" : "sdb"
+                }
+            },
+            {
+                "id": "dynamodb",
+                "host": "https://dynamodb.${AWS_REGION}.amazonaws.com",
+                "data": {
+                "region": "${AWS_REGION}",
+                "accessKey": "${AWS_ACCESS_KEY}",
+                "secretKey": "${AWS_SECRET_KEY}",
+                "host": "dynamodb.${AWS_REGION}.amazonaws.com",
+                "service": "dynamodb"
+                }
+            },
+            {
+                "id": "dynamodbstreams",
+                "host": "https://dynamodbstreams.${AWS_REGION}.amazonaws.com",
+                "data": {
+                "region": "${AWS_REGION}",
+                "accessKey": "${AWS_ACCESS_KEY}",
+                "secretKey": "${AWS_SECRET_KEY}",
+                "host": "dynamodbstreams.${AWS_REGION}.amazonaws.com",
+                "service": "dynamodbstreams"
+                }
+            },
+            {
+                "id": "kms",
+                "host": "https://kms.${AWS_REGION}.amazonaws.com",
+                "data": {
+                "region": "${AWS_REGION}",
+                "accessKey": "${AWS_ACCESS_KEY}",
+                "secretKey": "${AWS_SECRET_KEY}",
+                "host": "kms.${AWS_REGION}.amazonaws.com",
+                "service": "kms"
+                }
+            },
+            {
+                "id": "secretsmanager",
+                "host": "https://secretsmanager.${AWS_REGION}.amazonaws.com",
+                "data": {
+                "region": "${AWS_REGION}",
+                "accessKey": "${AWS_ACCESS_KEY}",
+                "secretKey": "${AWS_SECRET_KEY}",
+                "host": "secretsmanager.${AWS_REGION}.amazonaws.com",
+                "service": "secretsmanager"
+                }
+            },
+            {
+                "id": "cloudwatch-logs",
+                "host": "https://logs.${AWS_REGION}.amazonaws.com",
+                "data": {
+                "region": "${AWS_REGION}",
+                "accessKey": "${AWS_ACCESS_KEY}",
+                "secretKey": "${AWS_SECRET_KEY}",
+                "host": "logs.${AWS_REGION}.amazonaws.com",
+                "service": "logs"
+                }
+            },
+            {
+                "id": "stepfunctions",
+                "host": "https://states.${AWS_REGION}.amazonaws.com",
+                "data": {
+                "region": "${AWS_REGION}",
+                "accessKey": "${AWS_ACCESS_KEY}",
+                "secretKey": "${AWS_SECRET_KEY}",
+                "host": "states.${AWS_REGION}.amazonaws.com",
+                "service": "states"
+                }
+            },
+            {
+                "id": "xray",
+                "host": "https://xray.${AWS_REGION}.amazonaws.com",
+                "data": {
+                "region": "${AWS_REGION}",
+                "accessKey": "${AWS_ACCESS_KEY}",
+                "secretKey": "${AWS_SECRET_KEY}",
+                "host": "xray.${AWS_REGION}.amazonaws.com",
+                "service": "xray"
+                }
+            },
+            {
+                "id": "inspector",
+                "host": "https://inspector.${AWS_REGION}.amazonaws.com",
+                "data": {
+                "region": "${AWS_REGION}",
+                "accessKey": "${AWS_ACCESS_KEY}",
+                "secretKey": "${AWS_SECRET_KEY}",
+                "host": "inspector.${AWS_REGION}.amazonaws.com",
+                "service": "inspector"
+                }
+            },
+            {
+                "id": "guardduty",
+                "host": "https://guardduty.${AWS_REGION}.amazonaws.com",
+                "data": {
+                "region": "${AWS_REGION}",
+                "accessKey": "${AWS_ACCESS_KEY}",
+                "secretKey": "${AWS_SECRET_KEY}",
+                "host": "guardduty.${AWS_REGION}.amazonaws.com",
+                "service": "guardduty"
+                }
+            },
+            {
+                "id": "macie",
+                "host": "https://macie.${AWS_REGION}.amazonaws.com",
+                "data": {
+                "region": "${AWS_REGION}",
+                "accessKey": "${AWS_ACCESS_KEY}",
+                "secretKey": "${AWS_SECRET_KEY}",
+                "host": "macie.${AWS_REGION}.amazonaws.com",
+                "service": "macie"
+                }
+            },
+            {
+                "id": "glue",
+                "host": "https://glue.${AWS_REGION}.amazonaws.com",
+                "data": {
+                "region": "${AWS_REGION}",
+                "accessKey": "${AWS_ACCESS_KEY}",
+                "secretKey": "${AWS_SECRET_KEY}",
+                "host": "glue.${AWS_REGION}.amazonaws.com",
+                "service": "glue"
+                }
+            },
+            {
+                "id": "datapipeline",
+                "host": "https://datapipeline.${AWS_REGION}.amazonaws.com",
+                "data": {
+                "region": "${AWS_REGION}",
+                "accessKey": "${AWS_ACCESS_KEY}",
+                "secretKey": "${AWS_SECRET_KEY}",
+                "host": "datapipeline.${AWS_REGION}.amazonaws.com",
+                "service": "datapipeline"
+                }
+            },
+            {
+                "id": "swf",
+                "host": "https://swf.${AWS_REGION}.amazonaws.com",
+                "data": {
+                "region": "${AWS_REGION}",
+                "accessKey": "${AWS_ACCESS_KEY}",
+                "secretKey": "${AWS_SECRET_KEY}",
+                "host": "swf.${AWS_REGION}.amazonaws.com",
+                "service": "swf"
+                }
+            },
+            {
+                "id": "athena",
+                "host": "https://athena.${AWS_REGION}.amazonaws.com",
+                "data": {
+                "region": "${AWS_REGION}",
+                "accessKey": "${AWS_ACCESS_KEY}",
+                "secretKey": "${AWS_SECRET_KEY}",
+                "host": "athena.${AWS_REGION}.amazonaws.com",
+                "service": "athena"
+                }
+            },
+            {
+                "id": "cost-explorer",
+                "host": "https://ce.${AWS_REGION}.amazonaws.com",
+                "data": {
+                "region": "${AWS_REGION}",
+                "accessKey": "${AWS_ACCESS_KEY}",
+                "secretKey": "${AWS_SECRET_KEY}",
+                "host": "ce.${AWS_REGION}.amazonaws.com",
+                "service": "ce"
+                }
+            },
+            {
+                "id": "budgets",
+                "host": "https://budgets.${AWS_REGION}.amazonaws.com",
+                "data": {
+                "region": "${AWS_REGION}",
+                "accessKey": "${AWS_ACCESS_KEY}",
+                "secretKey": "${AWS_SECRET_KEY}",
+                "host": "budgets.${AWS_REGION}.amazonaws.com",
+                "service": "budgets"
+                }
+            },
+            {
+                "id": "marketplace-metering",
+                "host": "https://metering.marketplace.amazonaws.com",
+                "data": {
+                "region": "us-east-1",
+                "accessKey": "${AWS_ACCESS_KEY}",
+                "secretKey": "${AWS_SECRET_KEY}",
+                "host": "metering.marketplace.amazonaws.com",
+                "service": "meteringmarketplace"
+                }
+            }
+        ],
+        "allowDeploymentAccess" : [
+            {
+                "id" : "callers",
+                "access" : "receive",
+                "anyDeployment" : true
+            }
+        ],
+        "data" : {
+            "aws_account" : "${AWS_ACCOUNT}"
+        }
+    }
+]

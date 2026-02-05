@@ -1,0 +1,13 @@
+[
+    {
+        "deploymentId" : "lambda",
+        "remoteConfiguration" : "https://opscotch-dev-public.s3.us-east-1.amazonaws.com/opscotch-aws-lambda-receiver.app",
+        "remoteConfigurationTimeout" : 2000,
+        "allowExternalHostAccess": [
+            {
+                "id" : "aws-lambda-runtime-api",
+                "host": "http://${AWS_LAMBDA_RUNTIME_API}"
+            }
+        ]
+    }
+]   

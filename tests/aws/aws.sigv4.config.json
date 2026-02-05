@@ -4,7 +4,7 @@
         "authenticationProcessor" : {
             "processors" : [
                 {
-                    "resource" : "aws/authentication/sigv4.js"
+                    "resource" : "apps/aws/authentication/sigv4.js"
                 }
             ]
         },

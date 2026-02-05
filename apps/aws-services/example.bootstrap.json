@@ -1,0 +1,145 @@
+[
+    {
+        "deploymentId" : "aws-service-usage-example",
+        "remoteConfiguration" : "aws-service-usage-example.config.json",
+        "allowHttpServerAccess": [
+            {
+                "id" : "example",
+                "port" : 9000
+            }
+        ],
+        "allowDeploymentAccess" : [
+            {
+                "id" : "aws-services",
+                "access" : "call",
+                "deploymentId" : "aws-services"
+            }
+        ]
+    },
+    {
+        "deploymentId" : "aws-services",
+        "remoteConfiguration" : "aws-services.config.json",
+        "allowExternalHostAccess": [
+            {
+                "id" : "sqs",
+                "host": "https://sqs.${AWS_REGION}.amazonaws.com",
+                "data" : {
+                    "region": "${AWS_REGION}",
+                    "accessKey" : "${AWS_ACCESS_KEY}",
+                    "secretKey" : "${AWS_SECRET_KEY}",
+                    "host" : "sqs.${AWS_REGION}.amazonaws.com",
+                    "service" : "sqs"
+                }
+            },
+            {
+                "id" : "sns",
+                "host": "https://sns.${AWS_REGION}.amazonaws.com",
+                "data" : {
+                    "region": "${AWS_REGION}",
+                    "accessKey" : "${AWS_ACCESS_KEY}",
+                    "secretKey" : "${AWS_SECRET_KEY}",
+                    "host" : "sns.${AWS_REGION}.amazonaws.com",
+                    "service" : "sns"
+                }
+            },
+            {
+                "id" : "sts",
+                "host": "https://sts.amazonaws.com",
+                "data" : {
+                    "region": "us-east-1",
+                    "accessKey" : "${AWS_ACCESS_KEY}",
+                    "secretKey" : "${AWS_SECRET_KEY}",
+                    "host" : "sts.amazonaws.com",
+                    "service" : "sts"
+                }
+            },
+            {
+                "id" : "iam",
+                "host": "https://iam.amazonaws.com",
+                "data" : {
+                    "region": "us-east-1",
+                    "accessKey" : "${AWS_ACCESS_KEY}",
+                    "secretKey" : "${AWS_SECRET_KEY}",
+                    "host" : "iam.amazonaws.com",
+                    "service" : "iam"
+                }
+            },
+            {
+                "id" : "ec2",
+                "host": "https://ec2.${AWS_REGION}.amazonaws.com",
+                "data" : {
+                    "region": "${AWS_REGION}",
+                    "accessKey" : "${AWS_ACCESS_KEY}",
+                    "secretKey" : "${AWS_SECRET_KEY}",
+                    "host" : "ec2.${AWS_REGION}.amazonaws.com",
+                    "service" : "ec2"
+                }
+            },
+            {
+                "id" : "autoscaling",
+                "host": "https://autoscaling.${AWS_REGION}.amazonaws.com",
+                "data" : {
+                    "region": "${AWS_REGION}",
+                    "accessKey" : "${AWS_ACCESS_KEY}",
+                    "secretKey" : "${AWS_SECRET_KEY}",
+                    "host" : "autoscaling.${AWS_REGION}.amazonaws.com",
+                    "service" : "autoscaling"
+                }
+            },
+            {
+                "id" : "cloudformation",
+                "host": "https://cloudformation.${AWS_REGION}.amazonaws.com",
+                "data" : {
+                    "region": "${AWS_REGION}",
+                    "accessKey" : "${AWS_ACCESS_KEY}",
+                    "secretKey" : "${AWS_SECRET_KEY}",
+                    "host" : "cloudformation.${AWS_REGION}.amazonaws.com",
+                    "service" : "cloudformation"
+                }
+            },
+            {
+                "id" : "monitoring",
+                "host": "https://monitoring.${AWS_REGION}.amazonaws.com",
+                "data" : {
+                    "region": "${AWS_REGION}",
+                    "accessKey" : "${AWS_ACCESS_KEY}",
+                    "secretKey" : "${AWS_SECRET_KEY}",
+                    "host" : "monitoring.${AWS_REGION}.amazonaws.com",
+                    "service" : "monitoring"
+                }
+            },
+            {
+                "id" : "elasticloadbalancing",
+                "host": "https://elasticloadbalancing.${AWS_REGION}.amazonaws.com",
+                "data" : {
+                    "region": "${AWS_REGION}",
+                    "accessKey" : "${AWS_ACCESS_KEY}",
+                    "secretKey" : "${AWS_SECRET_KEY}",
+                    "host" : "elasticloadbalancing.${AWS_REGION}.amazonaws.com",
+                    "service" : "elasticloadbalancing"
+                }
+            },
+            {
+                "id" : "sdb",
+                "host": "https://sdb.${AWS_REGION}.amazonaws.com",
+                "data" : {
+                    "region": "${AWS_REGION}",
+                    "accessKey" : "${AWS_ACCESS_KEY}",
+                    "secretKey" : "${AWS_SECRET_KEY}",
+                    "host" : "sdb.${AWS_REGION}.amazonaws.com",
+                    "service" : "sdb"
+                }
+            }
+        ],
+        "allowDeploymentAccess" : [
+            {
+                "id" : "callers",
+                "access" : "receive",
+                "anyDeployment" : true
+            }
+        ],
+        "data" : {
+            "aws_account" : "${AWS_ACCOUNT}"
+        }
+    }
+]
