@@ -13,15 +13,15 @@ doc
     .dataSchema(
         {
             type : "object",
-            required : [ "aws_account" ],
+            required : [ "awsAccount" ],
             properties : {
-                aws_account : {
+                awsAccount : {
                     type : "string"
                 }
             }
         }
     ).run(() => {
-        const uri = `/${context.getData("aws_account")}/${JSON.parse(context.getBody()).aws_sqs_queue}`;
+        const uri = `/${context.getData("awsAccount")}/${JSON.parse(context.getBody()).aws_sqs_queue}`;
         context.setUrl("sqs", uri);
         context.setProperty("uri", uri)
     });

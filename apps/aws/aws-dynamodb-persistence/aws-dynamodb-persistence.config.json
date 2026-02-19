@@ -1,0 +1,69 @@
+{
+    "data" : {
+        "keyField" : "k",
+        "keyFieldType" : "S",
+        "valueType" : "S"
+    },
+    "defaultStepProperties" : {
+        "debug" : true
+    },
+    "workflows" : [
+        {
+            "name" : "Provision Table",
+            "steps" : [
+                {
+                    "stepId" : "table-check",
+                    "trigger" : {
+                        "runOnce" : true,
+                        "deploymentAccess" : {
+                            "ids" : [ "callers" ]
+                        }
+                    },
+                    "resultsProcessor" : {
+                        "resource" : "apps/aws/dynamodb/create-table-if-not-exists.js"
+                    },
+                    "data" : {
+                        "tableSchema" : {
+                            "BillingMode" : "PAY_PER_REQUEST", 
+                            "AttributeDefinitions" : [ 
+                                { 
+                                    "AttributeName" : "k", 
+                                    "AttributeType" : "S" 
+                                } 
+                            ], 
+                            "KeySchema" : [ 
+                                { 
+                                    "AttributeName" : "k", 
+                                    "KeyType" : "HASH" 
+                                } 
+                            ]
+                        }
+                    },
+                    "persistenceFile" : "table-check"
+                },
+                {
+                    "stepId" : "get",
+                    "trigger" : {
+                        "deploymentAccess" : {
+                            "ids" : [ "callers" ]
+                        }
+                    },
+                    "resultsProcessor" : {
+                        "resource" : "/apps/aws/dynamodb/atomic-get.js"
+                    }
+                },
+                {
+                    "stepId" : "put",
+                    "trigger" : {
+                        "deploymentAccess" : {
+                            "ids" : [ "callers" ]
+                        }
+                    },
+                    "resultsProcessor" : {
+                        "resource" : "/apps/aws/dynamodb/atomic-put.js"
+                    }
+                }
+            ]
+        }
+    ]
+}

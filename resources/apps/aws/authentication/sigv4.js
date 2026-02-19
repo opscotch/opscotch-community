@@ -1,12 +1,15 @@
 doc
     .dataSchema(
         {
-            required : [ "hostId" ],
+            required : [ "hostId", "awsRegion" ],
             properties : {
                 hostId : {
                     type : "string"
+                },
+                awsRegion : {
+                    type : "string"
                 }
-    }
+            }
         }
     )
   .run(() => {
@@ -15,10 +18,35 @@ doc
     const crypto = context.crypto();
 
     const hostId = context.getData("hostId");
+    const region = context.getData("awsRegion");
     const hostData = JSON.parse(context.getRestrictedDataFromHost(hostId));
-    ["region", "accessKey", "secretKey", "host", "service"].forEach(p => {
+    ["host", "service"].forEach(p => {
       if (!hostData[p]) throw `${p} expected as a data property on the ${hostId} host`;
     });
+
+    // if this is an sts request then the tokens will be present
+    let accessKey = context.getProperty("awsAccessKey");
+    let secretKey = context.getProperty("awsSecretKey");
+    let xAmzSecurityToken; 
+
+    if ( !accessKey || !secretKey ) {
+      // if this is not an sts request, then we USE the tokens sts got for us
+      console.log("Using cached tokens")
+      const stsTokensJson = context.getAuthenticationPropertiesFromStep("get-cached-tokens", "stsTokens");
+      creds = JSON.parse(stsTokensJson);
+      accessKey = creds.AccessKeyId;
+      secretKey = creds.SecretAccessKey;
+      xAmzSecurityToken = creds.SessionToken;
+    
+      const doThrow = (what, value) => {
+        if ( !value ) {
+          throw `${what} expected`;
+        }
+      }
+      doThrow("accessKey", accessKey);
+      doThrow("secretKey", secretKey);
+      doThrow("xAmzSecurityToken", xAmzSecurityToken);
+    }
 
     // ----------------------------
     // Helpers (RFC3986 + SigV4)
@@ -143,7 +171,6 @@ doc
 
     const xAmzTarget = getHeaderFirst("x-amz-target"); // JSON-RPC family
     const xAmzContentSha256 = getHeaderFirst("x-amz-content-sha256"); // S3-style often requires this
-    const xAmzSecurityToken = hostData.sessionToken || getHeaderFirst("x-amz-security-token"); // STS creds
 
     // Host header value must match actual request host (SigV4 requires it signed)
     const host = String(hostData.host).trim().replace(/\s+/g, " ");
@@ -152,7 +179,7 @@ doc
     // Build canonical request
     // ----------------------------
 
-    const scope = `${shortDate}/${hostData.region}/${hostData.service}/aws4_request`;
+    const scope = `${shortDate}/${region}/${hostData.service}/aws4_request`;
     const algo = "AWS4-HMAC-SHA256";
 
     const headerMap = {
@@ -198,14 +225,14 @@ doc
     // Sign
     // ----------------------------
 
-    const signingKey = getSignatureKey(hostData.secretKey, shortDate, hostData.region, hostData.service);
+    const signingKey = getSignatureKey(secretKey, shortDate, region, hostData.service);
     const signature = bytes.binaryToHex(
       crypto.hmacSha256(signingKey, bytes.createFromString(stringToSign))
     ).toLowerCase();
 
     const authorization =
       `${algo} ` +
-      `Credential=${hostData.accessKey}/${scope}, ` +
+      `Credential=${accessKey}/${scope}, ` +
       `SignedHeaders=${signedHeaders}, ` +
       `Signature=${signature}`;
 
@@ -216,7 +243,6 @@ doc
     context.setHeader("x-amz-date", awsTime);
 
     console.log(`Content-Type: ${contentType}`)
-    console.log(`Context: ${context}`)
 
     if (contentType) { context.setHeader("Content-Type", contentType); }
     if (xAmzTarget) context.setHeader("x-amz-target", xAmzTarget);
@@ -226,7 +252,7 @@ doc
     context.setHeader("Authorization", authorization);
 
     // Optional debug logs (safe to remove)
-    console.log(`SigV4 host=${host} service=${hostData.service} region=${hostData.region}`);
+    console.log(`SigV4 host=${host} service=${hostData.service} region=${region}`);
     console.log(`SigV4 amzDate=${awsTime}`);
     console.log(`SigV4 signedHeaders=${signedHeaders}`);
     console.log(`SigV4 payloadHash=${hashedPayload}`);

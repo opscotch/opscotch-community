@@ -1,7 +1,7 @@
 [
     {
         "deploymentId" : "aws-service-usage-example",
-        "remoteConfiguration" : "aws-service-usage-example.config.json",
+        "remoteConfiguration" : "/home/jeremy/dev/opscotch/community/opscotch-community/apps/aws-services/aws-services.config.json",
         "allowHttpServerAccess": [
             {
                 "id" : "example",
@@ -18,15 +18,16 @@
     },
     {
         "deploymentId" : "aws-services",
-        "remoteConfiguration" : "aws-services.config.json",
+        "packaging" : {
+            "packageId" : "opscotch-aws-services"
+        },
+        "remoteConfiguration" : "/home/jeremy/dev/opscotch/apps/opscotch-aws-services/opscotch-aws-services-1.0.oapp",
         "allowExternalHostAccess": [
             {
                 "id" : "sqs",
                 "host": "https://sqs.${AWS_REGION}.amazonaws.com",
                 "data" : {
                     "region": "${AWS_REGION}",
-                    "accessKey" : "${AWS_ACCESS_KEY}",
-                    "secretKey" : "${AWS_SECRET_KEY}",
                     "host" : "sqs.${AWS_REGION}.amazonaws.com",
                     "service" : "sqs"
                 }
@@ -36,8 +37,6 @@
                 "host": "https://sns.${AWS_REGION}.amazonaws.com",
                 "data" : {
                     "region": "${AWS_REGION}",
-                    "accessKey" : "${AWS_ACCESS_KEY}",
-                    "secretKey" : "${AWS_SECRET_KEY}",
                     "host" : "sns.${AWS_REGION}.amazonaws.com",
                     "service" : "sns"
                 }
@@ -47,10 +46,10 @@
                 "host": "https://sts.amazonaws.com",
                 "data" : {
                     "region": "us-east-1",
-                    "accessKey" : "${AWS_ACCESS_KEY}",
-                    "secretKey" : "${AWS_SECRET_KEY}",
                     "host" : "sts.amazonaws.com",
-                    "service" : "sts"
+                    "service" : "sts",
+                    "accessKey" : "${AWS_ACCESS_KEY}",
+                    "secretKey" : "${AWS_SECRET_KEY}"
                 }
             },
             {
@@ -58,8 +57,6 @@
                 "host": "https://iam.amazonaws.com",
                 "data" : {
                     "region": "us-east-1",
-                    "accessKey" : "${AWS_ACCESS_KEY}",
-                    "secretKey" : "${AWS_SECRET_KEY}",
                     "host" : "iam.amazonaws.com",
                     "service" : "iam"
                 }
@@ -69,8 +66,6 @@
                 "host": "https://ec2.${AWS_REGION}.amazonaws.com",
                 "data" : {
                     "region": "${AWS_REGION}",
-                    "accessKey" : "${AWS_ACCESS_KEY}",
-                    "secretKey" : "${AWS_SECRET_KEY}",
                     "host" : "ec2.${AWS_REGION}.amazonaws.com",
                     "service" : "ec2"
                 }
@@ -80,8 +75,6 @@
                 "host": "https://autoscaling.${AWS_REGION}.amazonaws.com",
                 "data" : {
                     "region": "${AWS_REGION}",
-                    "accessKey" : "${AWS_ACCESS_KEY}",
-                    "secretKey" : "${AWS_SECRET_KEY}",
                     "host" : "autoscaling.${AWS_REGION}.amazonaws.com",
                     "service" : "autoscaling"
                 }
@@ -91,8 +84,6 @@
                 "host": "https://cloudformation.${AWS_REGION}.amazonaws.com",
                 "data" : {
                     "region": "${AWS_REGION}",
-                    "accessKey" : "${AWS_ACCESS_KEY}",
-                    "secretKey" : "${AWS_SECRET_KEY}",
                     "host" : "cloudformation.${AWS_REGION}.amazonaws.com",
                     "service" : "cloudformation"
                 }
@@ -102,8 +93,6 @@
                 "host": "https://monitoring.${AWS_REGION}.amazonaws.com",
                 "data" : {
                     "region": "${AWS_REGION}",
-                    "accessKey" : "${AWS_ACCESS_KEY}",
-                    "secretKey" : "${AWS_SECRET_KEY}",
                     "host" : "monitoring.${AWS_REGION}.amazonaws.com",
                     "service" : "monitoring"
                 }
@@ -113,8 +102,6 @@
                 "host": "https://elasticloadbalancing.${AWS_REGION}.amazonaws.com",
                 "data" : {
                     "region": "${AWS_REGION}",
-                    "accessKey" : "${AWS_ACCESS_KEY}",
-                    "secretKey" : "${AWS_SECRET_KEY}",
                     "host" : "elasticloadbalancing.${AWS_REGION}.amazonaws.com",
                     "service" : "elasticloadbalancing"
                 }
@@ -124,8 +111,6 @@
                 "host": "https://sdb.${AWS_REGION}.amazonaws.com",
                 "data" : {
                     "region": "${AWS_REGION}",
-                    "accessKey" : "${AWS_ACCESS_KEY}",
-                    "secretKey" : "${AWS_SECRET_KEY}",
                     "host" : "sdb.${AWS_REGION}.amazonaws.com",
                     "service" : "sdb"
                 }
@@ -139,7 +124,9 @@
             }
         ],
         "data" : {
-            "aws_account" : "${AWS_ACCOUNT}"
+            "awsAccount" : "${AWS_ACCOUNT}",
+            "awsRoleSessionName" : "awsOpscotchTest",
+            "awsRoleArn" : "arn:aws:iam::502641903487:role/opscotch-service"
         }
     }
 ]

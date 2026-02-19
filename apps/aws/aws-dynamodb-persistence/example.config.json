@@ -1,0 +1,36 @@
+{
+    "workflows" : [
+        {
+            "name" : "dynamodb example",
+            "steps" : [
+                {
+                    "stepId" : "dynamodb-example",
+                    "trigger" : {
+                        "http": {
+                            "method": "POST",
+                            "path": "/dynamodb-send",
+                            "server" : "example"
+                        }
+                    },
+                    "resultsProcessor" : { 
+                        "processors" : [
+                            {
+                                "script" : "context.setProperty(`status`, context.sendToStep(`aws-dynamodb-persistence`, `table-check`, ``).getProperty(`status`))"
+                            },
+                            {
+                                "script" : "const status = context.getProperty(`status`); if ( status != `ready`) { context.setBody(status); context.end(); }"
+                            },
+                            {
+                                "comment" : "get the current value version, then do a atomic put",
+                                "script" : "const k = `example`; const r = context.sendToStep(`aws-dynamodb-persistence`, `get`, k); let v = r.getProperty(`version`) ?? null; context.sendToStep(`aws-dynamodb-persistence`, `put`, JSON.stringify( { currentVersion : v, key : k, value : JSON.parse(context.getBody()).body } ))"
+                            },
+                            {
+                                "script" : "context.setBody(context.sendToStep(`aws-dynamodb-persistence`, `get`, `example`).getBody())"
+                            }
+                        ]
+                    }
+                }
+            ]
+        }
+    ]
+}
