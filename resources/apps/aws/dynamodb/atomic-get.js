@@ -1,8 +1,11 @@
 doc
     .inSchema(
         {
-            type : "string",
-            description : "Key to get"
+            type : "array",
+            items : {
+                type : "string"
+            },
+            description : "List of keys to get"
         }
     )
     .dataSchema(
@@ -36,44 +39,77 @@ doc
 
         const awsServices = context.getData("awsServicesId") ?? "aws-services" ;
         const tableName = context.getData("tableName");
-        const value = context.getBody();
+        const keys = JSON.parse(context.getBody());
+        const keyField = context.getData("keyField");
+        const keyFieldType = context.getData("keyFieldType");
+        const valueType = context.getData("valueType");
 
         /*
         Expected body format:
 
         {
-            "TableName": "kv_store",
-            "Key": {
-                "k": { "S": "license:family123" }
-            },
-            "ConsistentRead": true
+            "RequestItems": {
+                "kv_store": {
+                    "Keys": [
+                        { "k": { "S": "example1" } },
+                        { "k": { "S": "example2" } },
+                        { "k": { "S": "example3" } }
+                    ],
+                    "ConsistentRead": true
+                }
+            }
         }
+
         */
         const body = {
-            TableName : tableName,
-            ConsistentRead : true,
-            Key : {}
+            RequestItems : {}
         };
-        const key = {};
-        key[context.getData("keyFieldType")] = value;
-        body.Key[context.getData("keyField")] = key;
+
+        body.RequestItems[tableName] = {
+            Keys : [],
+            ConsistentRead: true
+        }
+        
+        keys.forEach(value => {
+            const keyValue = {};
+            keyValue[keyFieldType] = value;
+
+            const key = {};
+            key[keyField] = keyValue;
+
+            body.RequestItems[tableName].Keys.push(key);
+        });
 
         const ddbResponse = JSON.parse(context.sendToStep(
             awsServices, 
             "dynamodb-request",
             JSON.stringify(
                 {
-                    operationName : "GetItem",
+                    operationName : "BatchGetItem",
                     body : body
                 }
             )
         ).getBody());
 
-        if (ddbResponse.Item) {
-            context.setProperty("version", ddbResponse.Item.version.N);
-            context.setBody(ddbResponse.Item.v[context.getData("valueType")]);
-        } else {
-            context.setBody(null);
-        }
+        if (ddbResponse.Responses[tableName]) {
 
+            const responses = {}
+
+            ddbResponse.Responses[tableName].forEach(item => {
+
+                const key = item[keyField][keyFieldType];
+                const value = item.v[valueType];
+
+                responses[key] = {
+                    value : value,
+                    version : item.version.N
+                }
+
+            });
+
+            console.log(JSON.stringify(responses));
+            context.setBody(JSON.stringify(responses));
+        } else {
+            context.setBody("{}");
+        }
     });

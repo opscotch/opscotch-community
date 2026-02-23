@@ -22,10 +22,10 @@
                             },
                             {
                                 "comment" : "get the current value version, then do a atomic put",
-                                "script" : "const k = `example`; const r = context.sendToStep(`aws-dynamodb-persistence`, `get`, k); let v = r.getProperty(`version`) ?? null; context.sendToStep(`aws-dynamodb-persistence`, `put`, JSON.stringify( { currentVersion : v, key : k, value : JSON.parse(context.getBody()).body } ))"
+                                "script" : "const k = `example`; const r = JSON.parse(context.sendToStep(`aws-dynamodb-persistence`, `get`, JSON.stringify([k])).getBody()); r[k] ? version = r[k].version : null; context.sendToStep(`aws-dynamodb-persistence`, `put`, JSON.stringify( { currentVersion : r[k].version, key : k, value : JSON.parse(context.getBody()).body } ))"
                             },
                             {
-                                "script" : "context.setBody(context.sendToStep(`aws-dynamodb-persistence`, `get`, `example`).getBody())"
+                                "script" : "context.setBody(JSON.parse(context.sendToStep(`aws-dynamodb-persistence`, `get`, JSON.stringify([`example`])).getBody()).example.value)"
                             }
                         ]
                     }

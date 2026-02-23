@@ -49,7 +49,7 @@ doc
 
         const input = JSON.parse(context.getBody());
         const currentVersion = input.currentVersion;
-        const nextVersion = currentVersion + 1;
+        const nextVersion = parseInt(currentVersion) + 1;
 
         /*
         Expected body format:

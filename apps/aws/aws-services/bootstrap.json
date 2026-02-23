@@ -224,6 +224,14 @@
                     "host": "metering.marketplace.amazonaws.com",
                     "service": "meteringmarketplace"
                 }
+            },
+            {
+                "id": "ses",
+                "host": "https://email.${AWS_REGION}.amazonaws.com",
+                "data": {
+                    "host": "email.${AWS_REGION}.amazonaws.com",
+                    "service": "ses"
+                }
             }
         ],
         "allowDeploymentAccess": [

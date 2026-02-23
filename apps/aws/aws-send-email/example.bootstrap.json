@@ -1,24 +1,13 @@
 [
     {
-        "deploymentId" : "example",
+        "deploymentId" : "email-sender",
         "remoteConfiguration" : "example.config.json",
         "allowHttpServerAccess": [
             {
-                "id" : "example",
+                "id" : "email-sender",
                 "port" : 9000
             }
         ],
-        "allowDeploymentAccess" : [
-            {
-                "id" : "aws-dynamodb-persistence",
-                "access" : "call",
-                "deploymentId" : "aws-dynamodb-persistence"
-            }
-        ]
-    },
-    {
-        "deploymentId" : "aws-dynamodb-persistence",
-        "remoteConfiguration" : "/home/jeremy/dev/opscotch/community/opscotch-community/apps/aws/aws-dynamodb-persistence/aws-dynamodb-persistence.config.json",
         "allowDeploymentAccess" : [
             {
                 "id" : "aws-services",
@@ -26,13 +15,39 @@
                 "deploymentId" : "aws-services"
             },
             {
-                "id" : "callers",
+                "id" : "aws-lambda-callback",
                 "access" : "receive",
-                "deploymentId" : "example"
+                "deploymentId" : "aws-services"
             }
         ],
         "data" : {
-            "tableName" : "test-persistence3"
+            "fromAddress" : "noreply@opscotch.co",
+            "toAddress" : [ "jeremy.scott@opscotch.co", "glen.patrick@opscotch.co" ],
+            "subject" : "New website contact",
+            "responseMessage" : "Thank-you. Your message has been received."
+        }
+    },
+    {
+        "deploymentId" : "lambda",
+        "remoteConfiguration" : "/home/jeremy/dev/opscotch/community/opscotch-community/apps/aws/aws-lambda/lambda.config.json",
+        "allowExternalHostAccess": [
+            {
+                "id" : "aws-lambda-runtime-api",
+                "host": "${AWS_LAMBDA_RUNTIME_API}"
+            }
+        ],
+        "allowDeploymentAccess" : [
+            {
+                "id" : "aws-lambda-callback",
+                "access" : "call",
+                "deploymentId" : "email-sender"
+            }
+        ],
+        "data" : {
+            "lambdaEventCallback" : {
+                "deploymentAccessId" : "aws-lambda-callback",
+                "stepId" : "send-email"
+            }
         }
     },
     {
@@ -54,11 +69,11 @@
                 }
             },
             {
-                "id": "dynamodb",
-                "host": "https://dynamodb.${AWS_REGION}.amazonaws.com",
+                "id": "ses",
+                "host": "https://email.${AWS_REGION}.amazonaws.com",
                 "data": {
-                    "host": "dynamodb.${AWS_REGION}.amazonaws.com",
-                    "service": "dynamodb"
+                    "host": "email.${AWS_REGION}.amazonaws.com",
+                    "service": "ses"
                 }
             }
         ],

@@ -385,6 +385,54 @@
                     }
                 }
             ]
+        },
+        {
+            "name" : "REST-JSON",
+            "defaultStepProperties" : {
+                "debug" : true,
+                "trigger" : {
+                    "deploymentAccess" : {
+                        "ids" : [
+                            "callers" 
+                        ]
+                    }
+                },
+                "authenticationProcessor" : {
+                    "processors" : [
+                        {
+                            "script" : "context.sendToStep(`get-cached-tokens`, ``)"
+                        },
+                        {
+                            "resource" : "apps/aws/authentication/sigv4.js"
+                        }
+                    ]
+                },
+                "urlGenerator" : {
+                    "script" : "const path = JSON.parse(context.getBody()).path; context.setUrl(context.getData(`hostId`), path); context.setProperty(`uri`, path); context.setProperty(`queryString`, ``);"
+                },
+                "payloadGenerator" : {
+                    "resource" : "apps/aws/rest-json-api-payloadgenerator.js"
+                },
+                "httpStatusHandling": {
+                    "0-399" : {
+                        "script" : "context.setProperty(`status_code`, 200)" 
+                    },
+                    "400" : {
+                        "script" : "context.setProperty(`status_code`, 400);"
+                    },
+                    "401-599" : {
+                        "script" : "context.setProperty(`status_code`, 500);"
+                    }
+                }
+            },
+            "steps" : [
+                {
+                    "stepId": "ses-request",
+                    "data": {
+                        "hostId": "ses"
+                    }
+                }
+            ]
         }
     ]
 }
