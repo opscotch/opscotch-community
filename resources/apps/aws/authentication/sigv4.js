@@ -24,29 +24,26 @@ doc
       if (!hostData[p]) throw `${p} expected as a data property on the ${hostId} host`;
     });
 
-    // if this is an sts request then the tokens will be present
-    let accessKey = context.getProperty("awsAccessKey");
-    let secretKey = context.getProperty("awsSecretKey");
-    let xAmzSecurityToken; 
-
-    if ( !accessKey || !secretKey ) {
-      // if this is not an sts request, then we USE the tokens sts got for us
-      console.log("Using cached tokens")
-      const stsTokensJson = context.getAuthenticationPropertiesFromStep("get-cached-tokens", "stsTokens");
-      creds = JSON.parse(stsTokensJson);
-      accessKey = creds.AccessKeyId;
-      secretKey = creds.SecretAccessKey;
-      xAmzSecurityToken = creds.SessionToken;
+    console.log("Using cached tokens")
+    const stsTokensJson = context.getAuthenticationPropertiesFromStep("get-cached-tokens", "stsTokens");
     
-      const doThrow = (what, value) => {
-        if ( !value ) {
-          throw `${what} expected`;
-        }
+    const doThrow = (what, value) => {
+      if ( !value ) {
+        throw `${what} expected`;
       }
-      doThrow("accessKey", accessKey);
-      doThrow("secretKey", secretKey);
-      doThrow("xAmzSecurityToken", xAmzSecurityToken);
     }
+
+    doThrow("cached tokens", stsTokensJson);
+
+    creds = JSON.parse(stsTokensJson);
+    accessKey = creds.AccessKeyId;
+    secretKey = creds.SecretAccessKey;
+    xAmzSecurityToken = creds.SessionToken;
+  
+    doThrow("accessKey", accessKey);
+    doThrow("secretKey", secretKey);
+    doThrow("xAmzSecurityToken", xAmzSecurityToken);
+ 
 
     // ----------------------------
     // Helpers (RFC3986 + SigV4)

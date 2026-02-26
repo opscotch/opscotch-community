@@ -1,7 +1,11 @@
 [
     {
         "deploymentId" : "email-sender",
-        "remoteConfiguration" : "aws-email-sender.config.json",
+        "packaging" : {
+            "packageId" : "opscotch-website-email-service"
+        },
+        "remoteConfiguration" : "/home/jeremy/dev/opscotch/apps/opscotch-website-email-service/opscotch-website-email-service.oapp",
+        "frequency" : 0,
         "allowDeploymentAccess" : [
             {
                 "id" : "aws-services",
@@ -24,7 +28,11 @@
     },
     {
         "deploymentId" : "lambda",
-        "remoteConfiguration" : "/home/jeremy/dev/opscotch/community/opscotch-community/apps/aws/aws-lambda/lambda.config.json",
+        "packaging" : {
+            "packageId" : "opscotch-aws-lambda"
+        },
+        "remoteConfiguration" : "/home/jeremy/dev/opscotch/apps/opscotch-aws-lambda/opscotch-aws-lambda.oapp",
+        "frequency" : 0,
         "allowExternalHostAccess": [
             {
                 "id" : "aws-lambda-runtime-api",
@@ -56,7 +64,8 @@
         "packaging" : {
             "packageId" : "opscotch-aws-services"
         },
-        "remoteConfiguration" : "/home/jeremy/dev/opscotch/community/opscotch-community/apps/aws/aws-services/aws-services.config.json",
+        "remoteConfiguration" : "/home/jeremy/dev/opscotch/apps/opscotch-aws-services/opscotch-aws-services.oapp",
+        "frequency" : 0,
         "allowExternalHostAccess": [
             {
                 "id" : "sts",
@@ -97,8 +106,8 @@
         "data" : {
             "awsRegion" : "${AWS_REGION}",
             "awsAccount" : "${AWS_ACCOUNT}",
-            "awsRoleSessionName" : "awsOpscotchTest",
-            "awsRoleArn" : "arn:aws:iam::${AWS_ACCOUNT}:role/opscotch-service"
+            "awsRoleSessionName" : "awsOpscotchEmailService",
+            "awsRoleArn" : "${AWS_ROLE_ARN}"
         }
     }
 ]

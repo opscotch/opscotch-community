@@ -15,12 +15,27 @@
       }
     },
     {
+      "id" : "sts",
+      "host": "https://sts.amazonaws.com",
+      "data" : {
+        "region": "us-east-1",
+        "host" : "sts.amazonaws.com",
+        "service" : "sts",
+        "accessKey" : "a",
+        "secretKey" : "b",
+        "amzSecurityToken" : "c"
+      }
+    },
+    {
       "id" : "aws-lambda-runtime-api",
       "host": "http://mockserver"
     }
   ],
   "data" : {
-    "lambda-event-processor-deploymentId" : "_test_"
+    "awsRegion" : "r",
+    "awsAccount" : "a",
+    "awsRoleSessionName" : "b",
+    "awsRoleArn" : "c"
   }
 }
 

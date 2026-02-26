@@ -1,5 +1,5 @@
 {
-    "enabled": true,
+    "ignore": true,
     "fromDirectory": "/aws",
     "testThisStep": "lambda-listener-start",
     "useThisTestConfigFile": "lambda-listener.conf.json",

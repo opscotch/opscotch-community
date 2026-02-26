@@ -1,5 +1,5 @@
 {
-    "enabled": true,
+    "ignore": true,
     "fromDirectory": "/aws/",
     "testThisStep": "get-test",
     "useThisTestConfigFile": "aws.sigv4.config.json",

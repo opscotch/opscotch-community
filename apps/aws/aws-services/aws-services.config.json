@@ -14,56 +14,6 @@
             ]
         },
         {
-            "name" : "STS specifc",
-            "steps" : [
-                {
-                    "stepId" : "sts-request",
-                    "data" : {
-                        "aws_query_api_version" : "2011-06-15",
-                        "hostId" : "sts"
-                    },
-                    "debug" : true,
-                    "trigger" : {
-                        "deploymentAccess" : {
-                            "ids" : [
-                                "callers" 
-                            ]
-                        }
-                    },
-                    "authenticationProcessor" : {
-                        "processors" : [
-                            {
-                                "resource" : "apps/aws/authentication/sts-token-cache.js",
-                                "data" : {
-                                    "stsRequest" : true
-                                }
-                            },
-                            {
-                                "resource" : "apps/aws/authentication/sigv4.js"
-                            }
-                        ]
-                    },
-                    "urlGenerator" : {
-                        "script" : "context.setUrl(context.getData(`hostId`),`/`); context.setProperty(`uri`, `/`);"
-                    },
-                    "payloadGenerator" : {
-                        "resource" : "apps/aws/query-api-payloadgenerator.js"
-                    },
-                    "httpStatusHandling": {
-                        "0-399" : {
-                            "script" : "context.setBody(context.xmlToJson(context.getBody())); context.setProperty(`status_code`, 200)" 
-                        },
-                        "400" : {
-                            "script" : "context.setBody(JSON.stringify(JSON.parse(context.xmlToJson(context.getBody())).ErrorResponse)); context.setProperty(`status_code`, 400);"
-                        },
-                        "401-599" : {
-                            "script" : "context.setBody(JSON.stringify(JSON.parse(context.xmlToJson(context.getBody())).ErrorResponse)); context.setProperty(`status_code`, 500);"
-                        }
-                    }
-                }
-            ]
-        },
-        {
             "name" : "SQS specifc url",
             "steps" : [
                 {

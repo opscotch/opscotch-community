@@ -4,6 +4,27 @@
             "name" : "lambda listener",
             "steps" : [
                 {
+                    "enabled" : false,
+                    "stepId" : "localTester",
+                    "trigger" : {
+                        "http" : {
+                            "method" : "POST",
+                            "path" : "/lambda-test",
+                            "server" : "lambda-test"
+                        }
+                    },
+                    "resultsProcessor" : {
+                        "processors" : [
+                            {
+                                "script" : "context.setBody(JSON.parse(context.getBody()).body)"
+                            },
+                            {
+                                "resource" : "apps/aws/lambda-response-processor.js"
+                            } 
+                        ]
+                    }
+                },
+                {
                     "type" : "scripted",
                     "stepId" : "lambda-listener-start",
                     "httpTimeout" : 0,
@@ -19,7 +40,7 @@
                         ]
                     },  
                     "resultsProcessor" : {
-                        "resource" : "aws/lambda-response-processor.js"
+                        "resource" : "apps/aws/lambda-response-processor.js"
                     }
                 },
                 {

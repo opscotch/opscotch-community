@@ -27,8 +27,9 @@
                     "region": "us-east-1",
                     "host": "sts.amazonaws.com",
                     "service": "sts",
-                    "accessKey" : "${AWS_ACCESS_KEY}",
-                    "secretKey" : "${AWS_SECRET_KEY}"
+                    "accessKey" : "${AWS_ACCESS_KEY_ID}",
+                    "secretKey" : "${AWS_SECRET_ACCESS_KEY}",
+                    "amzSecurityToken" : "${AWS_SESSION_TOKEN}"
                 }
             },
             {
