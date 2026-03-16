@@ -1,41 +1,23 @@
 {
-    "workflows" : [
-        {
-            "name" : "cached auth flow",
-            "steps" : [
-                {
-                    "stepId" : "get-cached-tokens",
-                    "debug" : true,
-                    "type" : "scripted-auth",
-                    "resultsProcessor" : {
-                        "resource" : "apps/aws/authentication/sts-token-cache.js"
-                    }
-                }
-            ]
+    "defaultStepProperties" : {
+        "debug" : true,
+        "trigger" : {
+            "deploymentAccess" : {
+                "ids" : [
+                    "callers" 
+                ]
+            }
         },
+        "authenticationProcessor" : {
+            "resource" : "apps/aws/authentication/sigv4.js"
+        }
+    },
+    "workflows" : [
         {
             "name" : "SQS specifc url",
             "steps" : [
                 {
                     "stepId" : "sqs-request",
-                    "debug" : true,
-                    "trigger" : {
-                        "deploymentAccess" : {
-                            "ids" : [
-                                "callers" 
-                            ]
-                        }
-                    },
-                    "authenticationProcessor" : {
-                        "processors" : [
-                            {
-                                "script" : "context.sendToStep(`get-cached-tokens`, ``)"
-                            },
-                            {
-                                "resource" : "apps/aws/authentication/sigv4.js"
-                            }
-                        ]
-                    },
                     "urlGenerator" : {
                         "resource" : "apps/aws/sqs-urlgenerator.js"
                     },
@@ -63,24 +45,6 @@
         {
             "name" : "Standard Query API Url",
             "defaultStepProperties" : {
-                "debug" : true,
-                "trigger" : {
-                    "deploymentAccess" : {
-                        "ids" : [
-                            "callers" 
-                        ]
-                    }
-                },
-                "authenticationProcessor" : {
-                    "processors" : [
-                        {
-                            "script" : "context.sendToStep(`get-cached-tokens`, ``)"
-                        },
-                        {
-                            "resource" : "apps/aws/authentication/sigv4.js"
-                        }
-                    ]
-                },
                 "urlGenerator" : {
                     "script" : "context.setUrl(context.getData(`hostId`),`/`); context.setProperty(`uri`, `/`);"
                 },
@@ -161,24 +125,6 @@
         {
             "name" : "JSON RPC",
             "defaultStepProperties" : {
-                "debug" : true,
-                "trigger" : {
-                    "deploymentAccess" : {
-                        "ids" : [
-                            "callers" 
-                        ]
-                    }
-                },
-                "authenticationProcessor" : {
-                    "processors" : [
-                        {
-                            "script" : "context.sendToStep(`get-cached-tokens`, ``)"
-                        },
-                        {
-                            "resource" : "apps/aws/authentication/sigv4.js"
-                        }
-                    ]
-                },
                 "urlGenerator" : {
                     "script" : "context.setUrl(context.getData(`hostId`),`/`); context.setProperty(`uri`, `/`); context.setProperty(`queryString`, ``);"
                 },
@@ -339,24 +285,6 @@
         {
             "name" : "REST-JSON",
             "defaultStepProperties" : {
-                "debug" : true,
-                "trigger" : {
-                    "deploymentAccess" : {
-                        "ids" : [
-                            "callers" 
-                        ]
-                    }
-                },
-                "authenticationProcessor" : {
-                    "processors" : [
-                        {
-                            "script" : "context.sendToStep(`get-cached-tokens`, ``)"
-                        },
-                        {
-                            "resource" : "apps/aws/authentication/sigv4.js"
-                        }
-                    ]
-                },
                 "urlGenerator" : {
                     "script" : "const path = JSON.parse(context.getBody()).path; context.setUrl(context.getData(`hostId`), path); context.setProperty(`uri`, path); context.setProperty(`queryString`, ``);"
                 },

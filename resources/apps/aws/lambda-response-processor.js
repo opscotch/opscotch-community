@@ -3,6 +3,9 @@ doc
         {
             required : [ "eventRouting"],
             properties : {
+                lambdaDebug : {
+                    type : "boolean"
+                },
                 eventRouting : {
                     minProperties: 1,
                     properties: {
@@ -41,6 +44,10 @@ doc
         }
     )
     .run(() => {
+
+        if (context.getData("lambdaDebug")) {
+            context.diagnosticLog(context.getBody());
+        }
 
         function routeEvent() {
 

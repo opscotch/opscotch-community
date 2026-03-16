@@ -14,6 +14,12 @@ doc
     )
   .run(() => {
 
+    const doThrow = (what, value) => {
+      if ( !value ) {
+        throw `${what} expected`;
+      }
+    }
+
     const bytes = context.bytes();
     const crypto = context.crypto();
 
@@ -24,25 +30,20 @@ doc
       if (!hostData[p]) throw `${p} expected as a data property on the ${hostId} host`;
     });
 
-    console.log("Using cached tokens")
-    const stsTokensJson = context.getAuthenticationPropertiesFromStep("get-cached-tokens", "stsTokens");
-    
-    const doThrow = (what, value) => {
-      if ( !value ) {
-        throw `${what} expected`;
-      }
-    }
+    // we store the tokens on the STS host for now
+    const stsHostData = JSON.parse(context.getRestrictedDataFromHost("sts"));
+    [ "accessKey", "secretKey" ].forEach(p => {
+        if (!stsHostData[p]) throw `${p} expected as a data property on the ${hostId} host`;
+    });
 
-    doThrow("cached tokens", stsTokensJson);
+    accessKey = stsHostData.accessKey;
+    secretKey = stsHostData.secretKey;
 
-    creds = JSON.parse(stsTokensJson);
-    accessKey = creds.AccessKeyId;
-    secretKey = creds.SecretAccessKey;
-    xAmzSecurityToken = creds.SessionToken;
+    // xAmzSecurityToken is optional
+    xAmzSecurityToken = stsHostData.amzSecurityToken;
   
     doThrow("accessKey", accessKey);
     doThrow("secretKey", secretKey);
-    doThrow("xAmzSecurityToken", xAmzSecurityToken);
  
 
     // ----------------------------
