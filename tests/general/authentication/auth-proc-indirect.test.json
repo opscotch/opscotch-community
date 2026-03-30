@@ -1,5 +1,4 @@
 {
-    "ignore" : "true",
     "fromDirectory" : "general/authentication",
     "testThisStep" : "set-auth-headers-indirect",
     "useThisTestConfigFile" : "auth-proc.config.json",
@@ -15,10 +14,14 @@
         }
     ],
     "logsShouldNotContain" : [
-        "secretHeader",
+        "indirectAuthHeader",
         "Xyz123"
     ],
     "theseMetricsShouldHaveBeenSent" : [
+        {
+            "key": "notExfiltrated",
+            "value": 1.0
+        },
         {
             "key": "done",
             "value": 1.0

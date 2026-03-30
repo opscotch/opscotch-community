@@ -5,8 +5,8 @@
             "id" : "protected-host",
             "host": "http://mockserver/noop",
             "data" : {
-                "secretHeader" : "Abc123",
-                "secretHeader1" : "Xyz123"
+                "directAuthHeader" : "Abc123",
+                "indirectAuthHeader" : "Xyz123"
             }
         },
         {
