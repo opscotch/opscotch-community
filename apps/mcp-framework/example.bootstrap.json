@@ -1,0 +1,43 @@
+[
+    {
+        "deploymentId": "mcp-framework",
+        "remoteConfiguration": "workflow.json",
+        "startupPriority": 10,
+        "allowHttpServerAccess": [
+            {
+                "id": "mcp-http",
+                "port": 39590,
+                "bindAddress": "127.0.0.1"
+            }
+        ],
+        "allowDeploymentAccess": [
+            {
+                "id": "mcp-register",
+                "access": "receive",
+                "anyDeployment": true
+            },
+            {
+                "id": "sample-app-callback",
+                "deploymentId": "mcp-sample-app",
+                "access": "call"
+            }
+        ]
+    },
+    {
+        "deploymentId": "mcp-sample-app",
+        "remoteConfiguration": "example.config.json",
+        "startupPriority": 20,
+        "allowDeploymentAccess": [
+            {
+                "id": "mcp-framework",
+                "deploymentId": "mcp-framework",
+                "access": "call"
+            },
+            {
+                "id": "mcp-framework-receive",
+                "deploymentId": "mcp-framework",
+                "access": "receive"
+            }
+        ]
+    }
+]

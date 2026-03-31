@@ -1,0 +1,127 @@
+{
+    "workflows": [
+        {
+            "name": "mcp framework",
+            "steps": [
+                {
+                    "stepId": "mcp-http",
+                    "type": "scripted",
+                    "trigger": {
+                        "http": {
+                            "server": "mcp-http",
+                            "path": "/mcp",
+                            "method": "POST"
+                        }
+                    },
+                    "resultsProcessor": {
+                        "processors": [
+                            {
+                                "script": "console.log(context.getBody());"
+                            },
+                            {
+                                "script": "var event = JSON.parse(context.getBody() || \"{}\"); context.setProperty(\"mcp_http_event\", JSON.stringify(event)); context.setBody(event.body == null ? \"{}\" : String(event.body));"
+                            },
+                            {
+                                "resource": "apps/mcp-framework/router.js"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "stepId": "mcp-http-get",
+                    "type": "scripted",
+                    "trigger": {
+                        "http": {
+                            "server": "mcp-http",
+                            "path": "/mcp",
+                            "method": "GET"
+                        }
+                    },
+                    "resultsProcessor": {
+                        "processors": [
+                            {
+                                "script": "console.log(context.getBody());"
+                            },
+                            {
+                                "script": "var event = JSON.parse(context.getBody() || \"{}\"); context.setProperty(\"mcp_http_event\", JSON.stringify(event)); context.setBody(event.body == null ? \"{}\" : String(event.body));"
+                            },
+                            {
+                                "resource": "apps/mcp-framework/router.js"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "stepId": "register",
+                    "type": "scripted",
+                    "trigger": {
+                        "deploymentAccess": {
+                            "ids": [
+                                "mcp-register"
+                            ]
+                        }
+                    },
+                    "resultsProcessor": {
+                        "resource": "apps/mcp-framework/register.js"
+                    }
+                },
+                {
+                    "stepId": "initialize",
+                    "type": "scripted",
+                    "resultsProcessor": {
+                        "resource": "apps/mcp-framework/initialize.js"
+                    }
+                },
+                {
+                    "stepId": "tools-list",
+                    "type": "scripted",
+                    "resultsProcessor": {
+                        "resource": "apps/mcp-framework/tools-list.js"
+                    }
+                },
+                {
+                    "stepId": "tools-call",
+                    "type": "scripted",
+                    "resultsProcessor": {
+                        "resource": "apps/mcp-framework/tools-call.js"
+                    }
+                },
+                {
+                    "stepId": "resources-list",
+                    "type": "scripted",
+                    "resultsProcessor": {
+                        "resource": "apps/mcp-framework/resources-list.js"
+                    }
+                },
+                {
+                    "stepId": "resources-read",
+                    "type": "scripted",
+                    "resultsProcessor": {
+                        "resource": "apps/mcp-framework/resources-read.js"
+                    }
+                },
+                {
+                    "stepId": "prompts-list",
+                    "type": "scripted",
+                    "resultsProcessor": {
+                        "resource": "apps/mcp-framework/prompts-list.js"
+                    }
+                },
+                {
+                    "stepId": "prompts-get",
+                    "type": "scripted",
+                    "resultsProcessor": {
+                        "resource": "apps/mcp-framework/prompts-get.js"
+                    }
+                },
+                {
+                    "stepId": "registry",
+                    "type": "scripted",
+                    "resultsProcessor": {
+                        "resource": "apps/mcp-framework/registry-common.js"
+                    }
+                }
+            ]
+        }
+    ]
+}
