@@ -26,14 +26,36 @@ doc
         }
     })
     .run(() => {
-        function callbackError(returnedContext) {
-            var message = returnedContext.getFirstError(returnedContext.getAllErrors());
+        function contextError(returnedContext, userCode, systemCode, userFallbackMessage, systemFallbackMessage) {
+            var userErrors = returnedContext.getUserErrors();
+            var allErrors = returnedContext.getAllErrors();
+            var message;
+
+            if (userErrors.length > 0) {
+                message = returnedContext.getFirstError(userErrors);
+
+                return {
+                    ok: false,
+                    error: {
+                        code: userCode,
+                        message: message == null || message === "" ? userFallbackMessage : "" + message,
+                        data: {
+                            userErrors: userErrors
+                        }
+                    }
+                };
+            }
+
+            message = returnedContext.getFirstError(allErrors);
 
             return {
                 ok: false,
                 error: {
-                    code: -32603,
-                    message: message == null || message === "" ? "Tool callback failed" : "" + message
+                    code: systemCode,
+                    message: message == null || message === "" ? systemFallbackMessage : "" + message,
+                    data: allErrors.length === 0 ? undefined : {
+                        errors: allErrors
+                    }
                 }
             };
         }
@@ -122,7 +144,13 @@ doc
                 );
 
                 if (returnedContext.isErrored()) {
-                    context.setBody(JSON.stringify(callbackError(returnedContext)));
+                    context.setBody(JSON.stringify(contextError(
+                        returnedContext,
+                        -32602,
+                        -32603,
+                        "Tool arguments were invalid",
+                        "Tool callback failed"
+                    )));
                     return;
                 }
 

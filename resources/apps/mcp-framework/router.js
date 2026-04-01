@@ -84,6 +84,30 @@ doc
             };
         }
 
+        function contextErrorResponse(id, returnedContext, userCode, systemCode, userFallbackMessage, systemFallbackMessage) {
+            var userErrors = returnedContext.getUserErrors();
+            var allErrors = returnedContext.getAllErrors();
+            var message;
+
+            if (userErrors.length > 0) {
+                message = returnedContext.getFirstError(userErrors);
+                return errorResponse(
+                    id,
+                    userCode,
+                    message == null || message === "" ? userFallbackMessage : "" + message,
+                    { userErrors: userErrors }
+                );
+            }
+
+            message = returnedContext.getFirstError(allErrors);
+            return errorResponse(
+                id,
+                systemCode,
+                message == null || message === "" ? systemFallbackMessage : "" + message,
+                allErrors.length === 0 ? undefined : { errors: allErrors }
+            );
+        }
+
         function finishJson(statusCode, response) {
             setResponse(statusCode, "application/json", JSON.stringify(response));
             endResponse();
@@ -161,6 +185,7 @@ doc
 
         function invokeHandler(request, stepMap) {
             var methodStep = stepMap[request.method];
+            var returnedContext;
             var handlerResponse;
 
             if (methodStep == null) {
@@ -168,7 +193,19 @@ doc
             }
 
             try {
-                handlerResponse = JSON.parse(context.sendToStep(methodStep, JSON.stringify(request)).getBody());
+                returnedContext = context.sendToStep(methodStep, JSON.stringify(request));
+                if (returnedContext.isErrored()) {
+                    return contextErrorResponse(
+                        request.id,
+                        returnedContext,
+                        -32600,
+                        -32603,
+                        "Request was invalid",
+                        "Internal error"
+                    );
+                }
+
+                handlerResponse = JSON.parse(returnedContext.getBody());
             } catch (e) {
                 return errorResponse(request.id, -32603, "Internal error", { detail: e.message });
             }

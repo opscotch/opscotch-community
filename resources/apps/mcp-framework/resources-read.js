@@ -26,13 +26,35 @@ doc
     })
     .run(() => {
         function callbackError(returnedContext) {
-            var message = returnedContext.getFirstError(returnedContext.getAllErrors());
+            var userErrors = returnedContext.getUserErrors();
+            var allErrors = returnedContext.getAllErrors();
+            var message;
+
+            if (userErrors.length > 0) {
+                message = returnedContext.getFirstError(userErrors);
+
+                return {
+                    ok: false,
+                    error: {
+                        code: -32602,
+                        message: message == null || message === "" ? "Resource arguments were invalid" : "" + message,
+                        data: {
+                            userErrors: userErrors
+                        }
+                    }
+                };
+            }
+
+            message = returnedContext.getFirstError(allErrors);
 
             return {
                 ok: false,
                 error: {
                     code: -32603,
-                    message: message == null || message === "" ? "Resource callback failed" : "" + message
+                    message: message == null || message === "" ? "Resource callback failed" : "" + message,
+                    data: allErrors.length === 0 ? undefined : {
+                        errors: allErrors
+                    }
                 }
             };
         }
