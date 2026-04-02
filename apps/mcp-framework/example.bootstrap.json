@@ -2,6 +2,9 @@
     {
         "deploymentId": "mcp-framework",
         "remoteConfiguration": "workflow.json",
+        "data": {
+            "debug_log": false
+        },
         "startupPriority": 10,
         "allowHttpServerAccess": [
             {

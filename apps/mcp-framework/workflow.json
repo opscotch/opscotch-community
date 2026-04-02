@@ -16,7 +16,7 @@
                     "resultsProcessor": {
                         "processors": [
                             {
-                                "script": "console.log(context.getBody());"
+                                "script": "function log(message) { if (context.getData(\"debug_log\")) { console.log(message); } } log(context.getBody());"
                             },
                             {
                                 "script": "var event = JSON.parse(context.getBody() || \"{}\"); context.setProperty(\"mcp_http_event\", JSON.stringify(event)); context.setBody(event.body == null ? \"{}\" : String(event.body));"
@@ -40,7 +40,7 @@
                     "resultsProcessor": {
                         "processors": [
                             {
-                                "script": "console.log(context.getBody());"
+                                "script": "function log(message) { if (context.getData(\"debug_log\")) { console.log(message); } } log(context.getBody());"
                             },
                             {
                                 "script": "var event = JSON.parse(context.getBody() || \"{}\"); context.setProperty(\"mcp_http_event\", JSON.stringify(event)); context.setBody(event.body == null ? \"{}\" : String(event.body));"

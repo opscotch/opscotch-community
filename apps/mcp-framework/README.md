@@ -9,6 +9,11 @@ Reusable Opscotch MCP deployment that exposes a minimal Streamable HTTP-compatib
 - Sibling deployments rebuild registry state by re-registering with `runOnce`
 - Supports `initialize`, `tools/list`, `tools/call`, `resources/list`, `resources/read`, `prompts/list`, `prompts/get`
 - Implements a minimal MCP Streamable HTTP surface for `POST /mcp` and `GET /mcp`
+- Optional `data.debug_log` flag enables request body logging for MCP HTTP entry steps
+
+## Debug Logging
+
+Set deployment `data.debug_log` to `true` to enable the framework's `log(...)` wrapper around request-body `console.log` output. When unset or false, those logs stay silent.
 
 ## Included Files
 
