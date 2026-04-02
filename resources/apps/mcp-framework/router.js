@@ -26,6 +26,12 @@ doc
         ]
     })
     .run(() => {
+        function log(message) {
+            if (context.getData("debug_log")) {
+                console.log(message);
+            }
+        }
+
         function normalizeHeaders(rawHeaders) {
             if (rawHeaders == null || typeof rawHeaders !== "object") {
                 return {};
@@ -277,7 +283,7 @@ doc
             }
 
             rawRequestBody = context.getBody() == null ? "" : String(context.getBody());
-            console.log("mcp raw body: " + rawRequestBody);
+            log("mcp raw body: " + rawRequestBody);
             if (rawRequestBody === "") {
                 finishJson(400, errorResponse(null, -32700, "Parse error", { detail: "Request body must be valid JSON" }));
                 return;
