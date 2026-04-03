@@ -92,6 +92,16 @@ doc
 
         const request = JSON.parse(context.getBody() || "{}");
         const headers = request.headers || {};
+        console.log("forward-http-request incoming payload: " + JSON.stringify({
+            keys: Object.keys(request || {}),
+            path: request.path || request.rawPath || null,
+            queryString: request.queryString || request.rawQueryString || "",
+            method: request.method || (request.requestContext && request.requestContext.http ? request.requestContext.http.method : null),
+            headerKeys: Object.keys(headers),
+            bodyType: request.body == null ? null : typeof request.body,
+            bodyLength: typeof request.body === "string" ? request.body.length : null,
+            isBase64Encoded: request.isBase64Encoded === true
+        }));
 
         context.removeAllHeaders();
         Object.keys(headers).forEach((name) => {
@@ -128,6 +138,13 @@ doc
         const method = typeof request.method === "string" && request.method.length > 0
             ? request.method
             : ((httpContext && httpContext.method) || "POST");
+        console.log("forward-http-request normalized outbound request: " + JSON.stringify({
+            pathWithQuery: pathWithQuery,
+            method: method,
+            headerKeys: Object.keys(headers),
+            bodyType: requestBody == null ? null : typeof requestBody,
+            bodyLength: typeof requestBody === "string" ? requestBody.length : null
+        }));
 
         context.setHttpMethod(method);
         context.setUrl("target-server", pathWithQuery);

@@ -79,6 +79,15 @@ doc
         const bytes = context.bytes();
         
         const event = JSON.parse(context.getBody() || "{}");
+        console.log("apigw-v2-http-bridge incoming event: " + JSON.stringify({
+            rawPath: event.rawPath || null,
+            rawQueryString: event.rawQueryString || "",
+            method: event.requestContext && event.requestContext.http ? event.requestContext.http.method : null,
+            headerKeys: event.headers ? Object.keys(event.headers) : [],
+            bodyType: event.body == null ? null : typeof event.body,
+            bodyLength: typeof event.body === "string" ? event.body.length : null,
+            isBase64Encoded: event.isBase64Encoded === true
+        }));
 
         context.removeAllHeaders();
         const headers = event.headers || {};
@@ -110,6 +119,16 @@ doc
             opscotchRequest.body =
                 typeof requestBody === "string" ? requestBody : JSON.stringify(requestBody);
         }
+        console.log("apigw-v2-http-bridge normalized request: " + JSON.stringify({
+            deploymentAccessId: context.getData("deploymentAccessId") || null,
+            stepId: context.getData("stepId") || null,
+            path: opscotchRequest.path,
+            queryString: opscotchRequest.queryString,
+            method: opscotchRequest.method,
+            headerKeys: Object.keys(opscotchRequest.headers || {}),
+            bodyType: opscotchRequest.body == null ? null : typeof opscotchRequest.body,
+            bodyLength: typeof opscotchRequest.body === "string" ? opscotchRequest.body.length : null
+        }));
 
         const deploymentAccessId = context.getData("deploymentAccessId");
         const response = deploymentAccessId
@@ -126,6 +145,10 @@ doc
             );
 
         const responseBody = response.getBody() || "";
+        console.log("apigw-v2-http-bridge downstream response: " + JSON.stringify({
+            statusCodeProperty: response.getProperty("status_code") || null,
+            bodyLength: responseBody.length
+        }));
 
         try {
             const parsedResponseBody = JSON.parse(responseBody);
@@ -134,6 +157,7 @@ doc
                 && parsedResponseBody.statusCode !== undefined
                 && parsedResponseBody.headers !== undefined
                 && parsedResponseBody.body !== undefined) {
+                console.log("apigw-v2-http-bridge passing through lambda proxy response");
                 context.setProperty("useResponse", "true");
                 context.setBody(responseBody);
                 return;
