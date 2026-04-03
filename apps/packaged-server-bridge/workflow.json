@@ -14,7 +14,10 @@
                         }
                     },
                     "urlGenerator": {
-                        "resource": "/httpserver/forward-http-request.js"
+                        "resource": "/httpserver/forward-http-urlgenerator.js"
+                    },
+                    "payloadGenerator": {
+                        "resource": "/httpserver/forward-http-payloadgenerator.js"
                     },
                     "resultsProcessor": {
                         "processors": [
