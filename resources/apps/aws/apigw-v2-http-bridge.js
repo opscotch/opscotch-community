@@ -96,16 +96,14 @@ doc
         const opscotchPath = proxyPath !== null
             ? `/${proxyPath.replace(/^\/+/, "")}`
             : event.rawPath;
-        const pathWithQuery = event.rawQueryString
-            ? `${opscotchPath}?${event.rawQueryString}`
-            : opscotchPath;
-
         const opscotchRequest = {
-            path: pathWithQuery,
+            path: opscotchPath,
             method: event.requestContext && event.requestContext.http
                 ? event.requestContext.http.method
                 : null,
-            queryStringParameters: event.queryStringParameters || {}
+            queryString: event.rawQueryString || "",
+            headers: headers,
+            isBase64Encoded: false
         };
 
         if (requestBody !== undefined && requestBody !== null) {
@@ -127,6 +125,23 @@ doc
                 headers
             );
 
+        const responseBody = response.getBody() || "";
+
+        try {
+            const parsedResponseBody = JSON.parse(responseBody);
+            if (parsedResponseBody
+                && typeof parsedResponseBody === "object"
+                && parsedResponseBody.statusCode !== undefined
+                && parsedResponseBody.headers !== undefined
+                && parsedResponseBody.body !== undefined) {
+                context.setProperty("useResponse", "true");
+                context.setBody(responseBody);
+                return;
+            }
+        } catch (e) {
+            // not already a lambda proxy response, wrap it below
+        }
+
         const statusCode = parseInt(response.getProperty("status_code") || "200", 10);
         context.setProperty("useResponse", "true");
         context.setBody(JSON.stringify({
@@ -134,7 +149,7 @@ doc
             headers: {
                 "content-type": "application/json"
             },
-            body: response.getBody() || "",
+            body: responseBody,
             isBase64Encoded: false
         }));
     });
