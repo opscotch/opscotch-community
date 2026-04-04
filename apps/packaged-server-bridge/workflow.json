@@ -22,7 +22,7 @@
                     "resultsProcessor": {
                         "processors": [
                             {
-                                "script": "const statusCode = parseInt(context.getProperty(\"status_code\") || \"200\", 10); context.setProperty(\"useResponse\", \"true\"); context.setBody(JSON.stringify({ statusCode, headers: { \"content-type\": \"application/json\" }, body: context.getBody() || \"\", isBase64Encoded: false }));"
+                                "script": "const forwardedRequest = context.getProperty(\"forward_http_request\") || \"\"; let body = context.getBody(); const statusCode = parseInt(context.getProperty(\"status_code\") || \"200\", 10); const reusedForwardedRequest = typeof body === \"string\" && body === forwardedRequest; if (reusedForwardedRequest) { body = \"\"; } context.setProperty(\"useResponse\", \"true\"); context.setBody(JSON.stringify({ statusCode, headers: { \"content-type\": \"application/json\" }, body: body || \"\", isBase64Encoded: false }));"
                             }
                         ]
                     }

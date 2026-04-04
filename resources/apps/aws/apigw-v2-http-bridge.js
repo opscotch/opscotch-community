@@ -145,10 +145,6 @@ doc
             );
 
         const responseBody = response.getBody() || "";
-        console.log("apigw-v2-http-bridge downstream response: " + JSON.stringify({
-            statusCodeProperty: response.getProperty("status_code") || null,
-            bodyLength: responseBody.length
-        }));
 
         try {
             const parsedResponseBody = JSON.parse(responseBody);
@@ -157,7 +153,6 @@ doc
                 && parsedResponseBody.statusCode !== undefined
                 && parsedResponseBody.headers !== undefined
                 && parsedResponseBody.body !== undefined) {
-                console.log("apigw-v2-http-bridge passing through lambda proxy response");
                 context.setProperty("useResponse", "true");
                 context.setBody(responseBody);
                 return;
