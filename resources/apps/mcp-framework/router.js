@@ -199,20 +199,15 @@ doc
                 && message.id != null;
         }
 
-        function invokeHandler(request, stepMap) {
-            var methodStep = stepMap[request.method];
+        function invokeHandler(message, methodStep) {
             var returnedContext;
             var handlerResponse;
 
-            if (methodStep == null) {
-                return errorResponse(request.id, -32601, "Method not found", { method: request.method });
-            }
-
             try {
-                returnedContext = context.sendToStep(methodStep, JSON.stringify(request));
+                returnedContext = context.sendToStep(methodStep, JSON.stringify(message));
                 if (returnedContext.isErrored()) {
                     return contextErrorResponse(
-                        request.id,
+                        message.id,
                         returnedContext,
                         -32600,
                         -32603,
@@ -223,36 +218,50 @@ doc
 
                 handlerResponse = JSON.parse(returnedContext.getBody());
             } catch (e) {
-                return errorResponse(request.id, -32603, "Internal error", { detail: e.message });
+                return errorResponse(message.id, -32603, "Internal error", { detail: e.message });
             }
 
             if (handlerResponse.ok === true) {
-                return successResponse(request.id, handlerResponse.result);
+                return successResponse(message.id, handlerResponse.result);
             }
 
             if (handlerResponse.error != null) {
                 return errorResponse(
-                    request.id,
+                    message.id,
                     handlerResponse.error.code == null ? -32603 : handlerResponse.error.code,
                     handlerResponse.error.message == null ? "Internal error" : handlerResponse.error.message,
                     handlerResponse.error.data
                 );
             }
 
-            return errorResponse(request.id, -32603, "Internal error", { detail: "Handler returned an invalid envelope" });
+            return errorResponse(message.id, -32603, "Internal error", { detail: "Handler returned an invalid envelope" });
         }
 
-        function processMessage(message, stepMap) {
+        function processMessage(message, requestStepMap, notificationStepMap) {
+            var methodStep;
+
             if (isJsonRpcResponse(message)) {
                 return { kind: "accepted" };
             }
 
             if (isJsonRpcNotification(message)) {
+                methodStep = notificationStepMap[message.method];
+                if (methodStep != null) {
+                    invokeHandler(message, methodStep);
+                }
                 return { kind: "accepted" };
             }
 
             if (isJsonRpcRequest(message)) {
-                return { kind: "response", response: invokeHandler(message, stepMap) };
+                methodStep = requestStepMap[message.method];
+                if (methodStep == null) {
+                    return {
+                        kind: "response",
+                        response: errorResponse(message.id, -32601, "Method not found", { method: message.method })
+                    };
+                }
+
+                return { kind: "response", response: invokeHandler(message, methodStep) };
             }
 
             return {
@@ -268,7 +277,7 @@ doc
             var messages;
             var responses;
             var headers;
-            var stepMap = {
+            var requestStepMap = {
                 "initialize": "initialize",
                 "tools/list": "tools-list",
                 "tools/call": "tools-call",
@@ -276,6 +285,9 @@ doc
                 "resources/read": "resources-read",
                 "prompts/list": "prompts-list",
                 "prompts/get": "prompts-get"
+            };
+            var notificationStepMap = {
+                "notifications/initialized": "notifications-initialized"
             };
 
             context.removeAllHeaders();
@@ -313,7 +325,7 @@ doc
 
             messages = Array.isArray(parsedBody) ? parsedBody : [parsedBody];
             responses = messages
-                .map(message => processMessage(message, stepMap))
+                .map(message => processMessage(message, requestStepMap, notificationStepMap))
                 .filter(result => result.kind === "response")
                 .map(result => result.response);
 

@@ -73,6 +73,13 @@
                     }
                 },
                 {
+                    "stepId": "notifications-initialized",
+                    "type": "scripted",
+                    "resultsProcessor": {
+                        "resource": "apps/mcp-framework/notifications-initialized.js"
+                    }
+                },
+                {
                     "stepId": "tools-list",
                     "type": "scripted",
                     "resultsProcessor": {
