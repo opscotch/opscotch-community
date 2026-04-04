@@ -112,7 +112,7 @@ Normalization rules:
 - `POST /mcp`
 - `GET /mcp`
 - `POST /mcp` accepts single JSON-RPC requests, notifications including `notifications/initialized`, response envelopes, and non-empty batches
-- Notification-only and response-only `POST` payloads return `202 Accepted` with no body
+- Notification-only and response-only `POST` payloads return `200 OK` with no body
 - `GET /mcp` returns `200 OK` with a small JSON warm-up payload and does not require an MCP request body
 - Responses are returned as `application/json`; `text/event-stream` is not implemented in this minimal version
 - The framework validates `Origin` and only allows loopback browser origins (`localhost`, `127.0.0.1`, `[::1]`) or no `Origin` header

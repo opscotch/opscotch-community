@@ -120,7 +120,7 @@ doc
         }
 
         function finishAccepted() {
-            setResponse(202, null, null);
+            setResponse(200, null, null);
             endResponse();
         }
 
