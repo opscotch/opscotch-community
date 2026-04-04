@@ -124,6 +124,16 @@ doc
             endResponse();
         }
 
+        function finishWarmup() {
+            setResponse(200, "application/json", JSON.stringify({
+                ok: true,
+                endpoint: "/mcp",
+                method: "GET",
+                warmup: true
+            }));
+            endResponse();
+        }
+
         function finishMethodNotAllowed(allowed) {
             context.removeHeader("content-type");
             context.setHeader("allow", allowed);
@@ -148,7 +158,7 @@ doc
             }
 
             if (event.method === "GET") {
-                finishMethodNotAllowed("POST");
+                finishWarmup();
                 return false;
             }
 

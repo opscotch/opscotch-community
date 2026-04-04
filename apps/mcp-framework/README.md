@@ -6,7 +6,7 @@ Reusable Opscotch MCP deployment that exposes a minimal Streamable HTTP-compatib
 
 - Stateless over restart and config reload
 - Registry is held only in runtime memory via `context.getStepProperties()`
-- Sibling deployments rebuild registry state by re-registering with `runOnce`
+- Sibling deployments rebuild registry state by re-registering with `runOnce` or by explicit composite orchestration
 - Supports `initialize`, `tools/list`, `tools/call`, `resources/list`, `resources/read`, `prompts/list`, `prompts/get`
 - Implements a minimal MCP Streamable HTTP surface for `POST /mcp` and `GET /mcp`
 - Optional `data.debug_log` flag enables request body logging for MCP HTTP entry steps
@@ -32,7 +32,7 @@ The framework deployment should start earlier than sibling deployments using `st
 Each business deployment should:
 
 1. Add an `allowDeploymentAccess` entry with `access: "call"` to deployment `mcp-framework`
-2. Add a `runOnce` step that sends its registration payload to framework step `register`
+2. Add a `runOnce` step that sends its registration payload to framework step `register`, or expose a registration step that a composite orchestrator can call explicitly
 3. Expose any dynamic tool, resource, or prompt handler steps referenced in the registration payload
 
 The framework deployment must also be extended with `allowDeploymentAccess` entries with `access: "call"` for every callback target it must invoke. The generic `bootstrap.json` in this app only includes the open registration receive rule because callback targets are consumer-specific.
@@ -113,7 +113,7 @@ Normalization rules:
 - `GET /mcp`
 - `POST /mcp` accepts single JSON-RPC requests, notifications, response envelopes, and non-empty batches
 - Notification-only and response-only `POST` payloads return `202 Accepted` with no body
-- `GET /mcp` returns `405 Method Not Allowed`; SSE is not implemented in this minimal version
+- `GET /mcp` returns `200 OK` with a small JSON warm-up payload and does not require an MCP request body
 - Responses are returned as `application/json`; `text/event-stream` is not implemented in this minimal version
 - The framework validates `Origin` and only allows loopback browser origins (`localhost`, `127.0.0.1`, `[::1]`) or no `Origin` header
 - The advertised MCP protocol version is `2025-03-26`

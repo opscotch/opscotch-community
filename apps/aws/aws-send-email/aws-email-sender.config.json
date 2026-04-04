@@ -4,34 +4,9 @@
             "name" : "queue based email sender",
             "steps" : [
                 {
-                    "stepId" : "accept-apigw-v2",
-                    "debug" : true,
-                    "comment" : "accept API-GW request and push onto queue",
-                    "trigger" : {
-                        "deploymentAccess" : {
-                            "ids" : [
-                                "aws-lambda-callback" 
-                            ]
-                        }
-                    },
-                    "resultsProcessor" : {
-                        "processors" : [
-                            {
-                                "script" : "var response = context.sendToStep(`aws-services`, `sqs-request`, JSON.stringify( { aws_sqs_queue : context.getData(`emailSqsQueue`), action : 'SendMessage', params : { MessageBody : JSON.parse(context.getBody()).body } }  )); context.setProperty(`status_code`, response.getProperty(`status_code`));"
-                            },
-                            {
-                                "script" : "context.removeAllHeaders(); context.setHeader(`Content-Type`, `application/json`);"
-                            }, 
-                            {
-                                "script" : "context.setProperty(`useResponse`, `true`); const r = { statusCode : parseInt(context.getProperty(`status_code`))}; const b = { status : r.statusCode, message : context.getData(`responseMessage`) }; if (b.status != 200) b.message = `Sorry. An error occurred. Please try again`; r.body = JSON.stringify(b); context.setBody(JSON.stringify(r))"
-                            }
-                        ]
-                    }
-                },
-                {
                     "stepId" : "accept-sqs",
                     "debug" : true,
-                    "comment" : "accept message from SQS and send email",
+                    "comment" : "accept SQS event where each record body is the raw API request body and send email",
                     "trigger" : {
                         "deploymentAccess" : {
                             "ids" : [
@@ -45,10 +20,10 @@
                                 "script" : "console.log(context.getBody())"
                             },
                             {
-                                "script" : "const input = JSON.parse(JSON.parse(context.getBody()).Records[0].body); context.setBody(`This email was sent from the website.\n\n from: ${input.fromName}<${input.fromEmail}>\nCompany: ${input.company}\n\nMessage:\n${input.message}`)"
+                                "script" : "const event = JSON.parse(context.getBody()); const input = JSON.parse(event.Records[0].body); context.setProperty(`senderEmail`, input.fromEmail); context.setBody(`This email was sent from the website.\n\nfrom: ${input.fromName}<${input.fromEmail}>\nCompany: ${input.company}\n\nMessage:\n${input.message}`)"
                             },
                             {
-                                "script" : "context.setProperty(`status_code`, context.sendToStep(`aws-services`, `ses-request`, JSON.stringify( { path : `/v2/email/outbound-emails`, method : `POST`, body : { FromEmailAddress: context.getData(`fromAddress`), Destination : { ToAddresses : JSON.parse(context.getData(`toAddress`))}, Content: { Simple : { Subject: { Data: context.getData(`subject`) }, Body : { Text : { Data : context.getBody() }}}}}})).getProperty(`status_code`))"
+                                "script" : "context.setProperty(`status_code`, context.sendToStep(`aws-services`, `ses-request`, JSON.stringify( { path : `/v2/email/outbound-emails`, method : `POST`, body : { FromEmailAddress: context.getData(`fromAddress`), Destination : { ToAddresses : JSON.parse(context.getData(`toAddress`))}, Content: { Simple : { Subject: { Data: `${context.getData(`subject`)} - ${context.getProperty(`senderEmail`)}` }, Body : { Text : { Data : context.getBody() }}}}}})).getProperty(`status_code`))"
                             }
                         ]
                     }

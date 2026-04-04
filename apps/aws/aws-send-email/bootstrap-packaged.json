@@ -48,10 +48,6 @@
         ],
         "data" : {
             "eventRouting" : {
-                "apigw-v2" : {
-                    "deploymentAccessId" : "aws-lambda-processor",
-                    "stepId" : "accept-apigw-v2"
-                },
                 "sqs" : {
                     "deploymentAccessId" : "aws-lambda-processor",
                     "stepId" : "accept-sqs"
