@@ -118,7 +118,7 @@ doc
             tool = requireObject(tool, "tool");
 
             var localName = requireNonEmptyString(tool.name, "tool.name");
-            var fqName = namespace + "." + localName;
+            var fqName = namespace + "_" + localName;
             var handler = normalizeHandler(tool.handler, "tool.handler");
             var inputSchema = tool.inputSchema == null ? { type: "object", properties: {} } : requireObject(tool.inputSchema, "tool.inputSchema");
 
@@ -187,7 +187,7 @@ doc
             prompt = requireObject(prompt, "prompt");
 
             var localName = requireNonEmptyString(prompt.name, "prompt.name");
-            var fqName = namespace + "." + localName;
+            var fqName = namespace + "_" + localName;
             var source = requireObject(prompt.source, "prompt.source");
             var sourceType = requireNonEmptyString(source.type, "prompt.source.type");
             var normalizedSource;
