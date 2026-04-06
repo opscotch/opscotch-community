@@ -73,6 +73,13 @@
                     }
                 },
                 {
+                    "stepId": "ping",
+                    "type": "scripted",
+                    "resultsProcessor": {
+                        "resource": "apps/mcp-framework/ping.js"
+                    }
+                },
+                {
                     "stepId": "notifications-initialized",
                     "type": "scripted",
                     "resultsProcessor": {

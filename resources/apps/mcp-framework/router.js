@@ -279,6 +279,7 @@ doc
             var headers;
             var requestStepMap = {
                 "initialize": "initialize",
+                "ping": "ping",
                 "tools/list": "tools-list",
                 "tools/call": "tools-call",
                 "resources/list": "resources-list",

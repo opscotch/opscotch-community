@@ -7,7 +7,7 @@ Reusable Opscotch MCP deployment that exposes a minimal Streamable HTTP-compatib
 - Stateless over restart and config reload
 - Registry is held only in runtime memory via `context.getStepProperties()`
 - Sibling deployments rebuild registry state by re-registering with `runOnce` or by explicit composite orchestration
-- Supports `initialize`, `notifications/initialized`, `tools/list`, `tools/call`, `resources/list`, `resources/read`, `prompts/list`, `prompts/get`
+- Supports `initialize`, `ping`, `notifications/initialized`, `tools/list`, `tools/call`, `resources/list`, `resources/read`, `prompts/list`, `prompts/get`
 - Implements a minimal MCP Streamable HTTP surface for `POST /mcp` and `GET /mcp`
 - Optional `data.debug_log` flag enables request body logging for MCP HTTP entry steps
 
@@ -112,6 +112,7 @@ Normalization rules:
 - `POST /mcp`
 - `GET /mcp`
 - `POST /mcp` accepts single JSON-RPC requests, notifications including `notifications/initialized`, response envelopes, and non-empty batches
+- `POST /mcp` supports `ping` and returns an empty MCP result object
 - Notification-only and response-only `POST` payloads return `200 OK` with no body
 - `GET /mcp` returns `200 OK` with a small JSON warm-up payload and does not require an MCP request body
 - Responses are returned as `application/json`; `text/event-stream` is not implemented in this minimal version
