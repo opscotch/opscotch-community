@@ -22,8 +22,6 @@ doc.inSchema({
 })
 .run(() => {
     var request = JSON.parse(context.getBody());
-    console.log(request);
-    console.log(context.files(context.getData("fileId")).list(request.path));
     context.setMessage(context.files(context.getData("fileId")).list(request.path));   
 }).outSchema({
     type : "array",

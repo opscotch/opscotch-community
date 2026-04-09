@@ -1,6 +1,5 @@
 doc
 .description("Takes the body as an object. On the property named by the data 'property' it replaces the string as defined, and returns the object to the body")
-.fromInput(doc.BODY)
 .inSchema(
     {
         type : "object"
@@ -32,7 +31,6 @@ doc
     var _with = context.getData("with");
 
     obj[property] = obj[property].replace(replace, _with);
-    console.log("XX: " + JSON.stringify(obj))
     
     context.setBody(JSON.stringify(obj));
 })

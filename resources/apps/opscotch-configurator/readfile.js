@@ -6,6 +6,14 @@ doc.inSchema({
             type : "string"
         }
     }
+}).dataSchema({
+    type : "object",
+    required : [ "fileId" ],
+    properties : {
+        fileId : {
+            type : "string"
+        }
+    }
 })
 .run(() => {
     var request = JSON.parse(context.getMessageBodyAsString());

@@ -26,7 +26,7 @@ doc.inSchema(
     var request = JSON.parse(context.getBody());
     
     var filePath = request.path;
-    console.log(filePath);
+    
     const contents = context.files(context.getData("fileId")).read(filePath);
 
     if (contents.startsWith('[') || contents.startsWith('{')) {
