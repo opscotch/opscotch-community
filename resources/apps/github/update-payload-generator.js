@@ -57,6 +57,13 @@ doc
             comment: {
                 description: "Comment text for add-comment.",
                 type: "string"
+            },
+            comment_id: {
+                description: "Comment id for delete-comment operation.",
+                oneOf: [
+                    { type: "number" },
+                    { type: "string" }
+                ]
             }
         }
     })
@@ -134,6 +141,12 @@ doc
                 body: commentText
             };
         } else if (operation === "remove-label") {
+            payload = null;
+        } else if (operation === "delete-comment") {
+            var commentId = parseInt(String(input.comment_id), 10);
+            if (isNaN(commentId) || commentId <= 0) {
+                throw new Error("comment_id is required for delete-comment");
+            }
             payload = null;
         } else {
             throw new Error("unsupported operation: " + operation);

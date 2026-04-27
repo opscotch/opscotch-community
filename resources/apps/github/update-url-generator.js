@@ -24,6 +24,13 @@ doc
             label: {
                 description: "Single label used for remove-label operation.",
                 type: "string"
+            },
+            comment_id: {
+                description: "Issue comment id used for delete-comment operation.",
+                oneOf: [
+                    { type: "number" },
+                    { type: "string" }
+                ]
             }
         }
     })
@@ -96,6 +103,13 @@ doc
         } else if (operation === "add-comment") {
             method = "POST";
             path = "/repos/" + repo + "/issues/" + issue + "/comments";
+        } else if (operation === "delete-comment") {
+            var commentId = parseInt(String(input.comment_id), 10);
+            if (isNaN(commentId) || commentId <= 0) {
+                throw new Error("comment_id is required for delete-comment operation");
+            }
+            method = "DELETE";
+            path = "/repos/" + repo + "/issues/comments/" + commentId;
         } else {
             throw new Error("unsupported operation: " + operation);
         }
