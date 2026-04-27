@@ -1,0 +1,63 @@
+{
+  "defaultStepProperties": {
+    "type": "scripted"
+  },
+  "workflows": [
+    {
+      "name": "openclaw agent invoker integration tests",
+      "steps": [
+        {
+          "stepId": "test-invoke-trigger",
+          "trigger": {
+            "timer": {
+              "period": 600000
+            }
+          },
+          "resultsProcessor": {
+            "processors": [
+              {
+                "resource": "/general/standard-data-as-body.js",
+                "data": {
+                  "keyOfBody": "payload",
+                  "payload": {
+                    "agent": "main",
+                    "input": {
+                      "repo": "opscotch/hopscotch",
+                      "issue": 317
+                    },
+                    "metadata": {
+                      "operation": "refine"
+                    }
+                  }
+                }
+              },
+              {
+                "resource": "/general/standard-forwarder.js",
+                "data": {
+                  "processroute": "invoke-openclaw-agent"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "stepId": "invoke-openclaw-agent",
+          "urlGenerator": {
+            "resource": "/apps/openclaw/invoke-url-generator.js"
+          },
+          "payloadGenerator": {
+            "resource": "/apps/openclaw/invoke-payload-generator.js"
+          },
+          "resultsProcessor": {
+            "resource": "/apps/openclaw/invoke-results-processor.js"
+          },
+          "httpStatusHandling": {
+            "300-599": {
+              "resource": "/apps/openclaw/invoke-http-error.js"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

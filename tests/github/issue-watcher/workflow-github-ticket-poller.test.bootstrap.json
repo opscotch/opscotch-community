@@ -1,0 +1,85 @@
+[
+  {
+    "deploymentId": "openclaw-github-ticket-poller",
+    "remoteConfiguration": "workflow-github-ticket-poller.json",
+    "allowExternalHostAccess": [
+      {
+        "id": "github-api",
+        "host": "http://mockserver",
+        "httpTimeout": 15000,
+        "allowList": [
+          {
+            "method": "GET",
+            "uriPattern": "/repos/.+/issues.*"
+          }
+        ],
+        "data": {
+          "githubToken": "integration-test-token"
+        }
+      }
+    ],
+    "allowDeploymentAccess": [
+      {
+        "id": "openclaw-ticket-actions",
+        "deploymentId": "openclaw-ticket-actions",
+        "access": "call"
+      }
+    ],
+    "data": {
+      "hostId": "github-api",
+      "issueHandoffDelaySeconds": 120,
+      "githubIssueWatcherCriteria": [
+        {
+          "label": "triage",
+          "assignee": "machinoal2-cell",
+          "repo": "opscotch/hopscotch",
+          "deploymentId": "openclaw-ticket-actions",
+          "stepId": "dispatch-bmad-refine"
+        },
+        {
+          "label": "dev-review",
+          "assignee": "machinoal2-cell",
+          "repo": "opscotch/hopscotch",
+          "deploymentId": "openclaw-ticket-actions",
+          "stepId": "dispatch-non-triage"
+        },
+        {
+          "label": "dev-ready",
+          "assignee": "machinoal2-cell",
+          "repo": "opscotch/hopscotch",
+          "deploymentId": "openclaw-ticket-actions",
+          "stepId": "dispatch-non-triage"
+        }
+      ]
+    }
+  },
+  {
+    "deploymentId": "openclaw-ticket-actions",
+    "remoteConfiguration": "workflow-openclaw-ticket-actions.json",
+    "allowExternalHostAccess": [
+      {
+        "id": "openclaw-local-gateway",
+        "host": "http://mockserver",
+        "httpTimeout": 120000,
+        "allowList": [
+          {
+            "method": "POST",
+            "uriPattern": "/agents/.+/invoke"
+          }
+        ]
+      }
+    ],
+    "allowDeploymentAccess": [
+      {
+        "id": "github-issue-watcher",
+        "deploymentId": "openclaw-github-ticket-poller",
+        "access": "receive"
+      }
+    ],
+    "data": {
+      "workflowName": "quick-spec",
+      "openclawGatewayHostId": "openclaw-local-gateway",
+      "openclawReviewerAgent": "reviewer"
+    }
+  }
+]

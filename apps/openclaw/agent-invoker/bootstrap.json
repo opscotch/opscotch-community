@@ -1,0 +1,29 @@
+[
+  {
+    "deploymentId": "openclaw-agent-invoker",
+    "remoteConfiguration": "workflow.json",
+    "allowExternalHostAccess": [
+      {
+        "id": "openclaw-local-gateway",
+        "host": "http://127.0.0.1:${OPENCLAW_GATEWAY_PORT}",
+        "httpTimeout": 120000,
+        "allowList": [
+          {
+            "method": "POST",
+            "uriPattern": "/agents/.+/invoke"
+          }
+        ]
+      }
+    ],
+    "allowDeploymentAccess": [
+      {
+        "id": "openclaw-agent-invoker-callers",
+        "deploymentId": "REPLACE_CALLER_DEPLOYMENT_ID",
+        "access": "receive"
+      }
+    ],
+    "data": {
+      "openclawGatewayHostId": "openclaw-local-gateway"
+    }
+  }
+]

@@ -1,0 +1,24 @@
+import path from 'node:path';
+import { createJavascriptContext, runResource } from '@opscotch/resource-testkit';
+import { describe, expect, it } from 'vitest';
+
+const resource = path.resolve(import.meta.dirname, '../../../../resources/apps/github/poll-http-error.js');
+
+describe('poll-http-error', () => {
+  it('records system error and wraps github failure response', async () => {
+    const context = createJavascriptContext({
+      body: 'forbidden',
+      properties: { status_code: '403' },
+    });
+
+    await runResource({ resource, context });
+
+    expect(context.hasSystemErrors()).toBe(true);
+    expect(context.getSystemErrors().join(' ')).toContain('403');
+    expect(JSON.parse(context.getBody() || '{}')).toEqual({
+      status: 'error',
+      status_code: '403',
+      response: 'forbidden',
+    });
+  });
+});

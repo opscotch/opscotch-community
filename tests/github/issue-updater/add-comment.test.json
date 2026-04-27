@@ -1,0 +1,15 @@
+{
+  "enabled": true,
+  "fromDirectory": "/github/issue-updater/",
+  "testThisStep": "test-add-comment-trigger",
+  "useThisTestConfigFile": "workflow-issue-updater.test.config.json",
+  "useThisTestBootstrapFile": "workflow-issue-updater.test.bootstrap.json",
+  "mockEndpointResponses": [
+    {
+      "whenThisIsCalled": "http://mockserver/repos/opscotch/hopscotch/issues/317/comments",
+      "expectedPayload": "{\"body\":\"Integration comment\"}",
+      "returnThisFile": "/github/issue-updater/add-comment.response.json"
+    }
+  ],
+  "theseMetricsShouldHaveBeenSent": []
+}

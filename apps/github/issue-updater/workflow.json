@@ -1,0 +1,46 @@
+{
+  "comment": "Reusable GitHub issue updater app for labels, assignees, issue fields, and comments.",
+  "data": {
+    "hostId": "github-api"
+  },
+  "defaultStepProperties": {
+    "type": "scripted"
+  },
+  "workflows": [
+    {
+      "name": "github issue updater",
+      "steps": [
+        {
+          "stepId": "github-issue-updater",
+          "trigger": {
+            "deploymentAccess": {
+              "ids": [
+                "github-issue-updater-callers"
+              ]
+            }
+          },
+          "urlGenerator": {
+            "resource": "/apps/github/update-url-generator.js"
+          },
+          "payloadGenerator": {
+            "resource": "/apps/github/update-payload-generator.js"
+          },
+          "authenticationProcessor": {
+            "resource": "/apps/github/github-auth-processor.js"
+          },
+          "resultsProcessor": {
+            "resource": "/apps/github/update-results-processor.js"
+          },
+          "httpStatusHandling": {
+            "300-599": {
+              "resource": "/apps/github/http-error.js",
+              "data": {
+                "httpErrorKind": "github-update"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

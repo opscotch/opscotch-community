@@ -1,6 +1,7 @@
 {
   "name": "@opscotch-community/resource-unit-tests",
   "private": true,
+  "main": "index.js",
   "type": "module",
   "scripts": {
     "test": "vitest run",
@@ -8,9 +9,7 @@
     "check": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {
-    "@opscotch/resource-testkit": "0.1.2",
-    "@types/node": "^24.6.0",
-    "typescript": "^5.9.3",
-    "vitest": "^3.2.4"
+    "@opscotch/resource-testkit": "^0.1.2",
+    "vitest": "^4.1.5"
   }
 }

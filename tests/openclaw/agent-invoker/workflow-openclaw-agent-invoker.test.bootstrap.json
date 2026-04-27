@@ -1,0 +1,18 @@
+{
+  "allowExternalHostAccess": [
+    {
+      "id": "openclaw-local-gateway",
+      "host": "http://mockserver",
+      "httpTimeout": 120000,
+      "allowList": [
+        {
+          "method": "POST",
+          "uriPattern": "/agents/.+/invoke"
+        }
+      ]
+    }
+  ],
+  "data": {
+    "openclawGatewayHostId": "openclaw-local-gateway"
+  }
+}

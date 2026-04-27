@@ -1,0 +1,19 @@
+[
+  {
+    "deploymentId": "github-issue-watcher",
+    "remoteConfiguration": "workflow.json",
+    "data": {
+      "hostId": "github-api",
+      "issueHandoffDelaySeconds": 120,
+      "githubIssueWatcherCriteria": [
+        {
+          "label": "triage",
+          "assignee": "machinoal2-cell",
+          "repo": "YOUR_ORG/YOUR_REPO",
+          "deploymentId": "target-deployment-access-id",
+          "stepId": "target-step-id"
+        }
+      ]
+    }
+  }
+]

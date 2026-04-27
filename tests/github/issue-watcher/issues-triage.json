@@ -1,0 +1,19 @@
+[
+  {
+    "number": 317,
+    "title": "Triage this ticket",
+    "html_url": "https://github.com/opscotch/hopscotch/issues/317",
+    "updated_at": "2026-04-24T01:10:00Z",
+    "body": "Please refine this ticket with full context.",
+    "labels": [
+      {
+        "name": "triage"
+      }
+    ],
+    "assignees": [
+      {
+        "login": "machinoal2-cell"
+      }
+    ]
+  }
+]

@@ -1,0 +1,98 @@
+{
+  "defaultStepProperties": {
+    "type": "scripted"
+  },
+  "workflows": [
+    {
+      "name": "github issue updater integration tests",
+      "steps": [
+        {
+          "stepId": "test-add-comment-trigger",
+          "trigger": {
+            "timer": {
+              "period": 600000
+            }
+          },
+          "resultsProcessor": {
+            "processors": [
+              {
+                "resource": "/general/standard-data-as-body.js",
+                "data": {
+                  "keyOfBody": "payload",
+                  "payload": {
+                    "operation": "add-comment",
+                    "repo": "opscotch/hopscotch",
+                    "issue": 317,
+                    "comment": "Integration comment"
+                  }
+                }
+              },
+              {
+                "resource": "/general/standard-forwarder.js",
+                "data": {
+                  "processroute": "github-issue-updater"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "stepId": "test-set-labels-trigger",
+          "trigger": {
+            "timer": {
+              "period": 600000
+            }
+          },
+          "resultsProcessor": {
+            "processors": [
+              {
+                "resource": "/general/standard-data-as-body.js",
+                "data": {
+                  "keyOfBody": "payload",
+                  "payload": {
+                    "operation": "set-labels",
+                    "repo": "opscotch/hopscotch",
+                    "issue": 317,
+                    "labels": [
+                      "triage",
+                      "dev-review"
+                    ]
+                  }
+                }
+              },
+              {
+                "resource": "/general/standard-forwarder.js",
+                "data": {
+                  "processroute": "github-issue-updater"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "stepId": "github-issue-updater",
+          "urlGenerator": {
+            "resource": "/apps/github/update-url-generator.js"
+          },
+          "payloadGenerator": {
+            "resource": "/apps/github/update-payload-generator.js"
+          },
+          "authenticationProcessor": {
+            "resource": "/apps/github/github-auth-processor.js"
+          },
+          "resultsProcessor": {
+            "resource": "/apps/github/update-results-processor.js"
+          },
+          "httpStatusHandling": {
+            "300-599": {
+              "resource": "/apps/github/http-error.js",
+              "data": {
+                "httpErrorKind": "github-update"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
