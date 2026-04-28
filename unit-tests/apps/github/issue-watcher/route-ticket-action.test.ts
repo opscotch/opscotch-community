@@ -27,12 +27,19 @@ describe('route-ticket-action', () => {
 
     await runResource({ resource, context });
 
-    expect(context.__sendToStepCalls).toHaveLength(1);
-    expect(context.__sendToStepCalls[0].deploymentAccessId).toBe('openclaw-ticket-actions');
-    expect(context.__sendToStepCalls[0].stepName).toBe('dispatch-bmad-refine');
-    const sent = JSON.parse(context.__sendToStepCalls[0].body || '{}');
+    expect(context.__sendToStepCalls).toHaveLength(2);
+    expect(context.__sendToStepCalls[0].stepName).toBe('fetch-issue-comments');
+    expect(JSON.parse(context.__sendToStepCalls[0].body || '{}')).toEqual({
+      repo: 'opscotch/hopscotch',
+      issue: 317,
+    });
+    expect(context.__sendToStepCalls[1].deploymentAccessId).toBe('openclaw-ticket-actions');
+    expect(context.__sendToStepCalls[1].stepName).toBe('dispatch-bmad-refine');
+    const sent = JSON.parse(context.__sendToStepCalls[1].body || '{}');
     expect(sent).toMatchObject({
       operation: 'refine',
+      workflow: 'quick-spec',
+      model: 'minimax',
       repo: 'opscotch/hopscotch',
       issue: 317,
       reason: 'criteria-match:triage',
@@ -53,6 +60,34 @@ describe('route-ticket-action', () => {
     });
   });
 
+  it('routes dev review label to refine with implementation-planning and codex-mini', async () => {
+    const context = createJavascriptContext({
+      body: JSON.stringify({
+        repo: 'opscotch/hopscotch',
+        issue_number: 328,
+        labels: ['dev review'],
+        matched_label: 'dev review',
+        action_deployment_id: 'openclaw-ticket-actions',
+        action_step_id: 'dispatch-bmad-refine',
+      }),
+    });
+
+    await runResource({ resource, context });
+
+    expect(context.__sendToStepCalls).toHaveLength(2);
+    expect(context.__sendToStepCalls[0].stepName).toBe('fetch-issue-comments');
+    expect(context.__sendToStepCalls[1].deploymentAccessId).toBe('openclaw-ticket-actions');
+    expect(context.__sendToStepCalls[1].stepName).toBe('dispatch-bmad-refine');
+    expect(JSON.parse(context.__sendToStepCalls[1].body || '{}')).toMatchObject({
+      operation: 'refine',
+      workflow: 'implementation-planning',
+      model: 'codex-mini',
+      repo: 'opscotch/hopscotch',
+      issue: 328,
+      reason: 'criteria-match:dev review',
+    });
+  });
+
   it('routes non-triage labels to remote dispatch-non-triage', async () => {
     const context = createJavascriptContext({
       body: JSON.stringify({
@@ -67,10 +102,11 @@ describe('route-ticket-action', () => {
 
     await runResource({ resource, context });
 
-    expect(context.__sendToStepCalls).toHaveLength(1);
-    expect(context.__sendToStepCalls[0].deploymentAccessId).toBe('openclaw-ticket-actions');
-    expect(context.__sendToStepCalls[0].stepName).toBe('dispatch-non-triage');
-    expect(JSON.parse(context.__sendToStepCalls[0].body || '{}')).toMatchObject({
+    expect(context.__sendToStepCalls).toHaveLength(2);
+    expect(context.__sendToStepCalls[0].stepName).toBe('fetch-issue-comments');
+    expect(context.__sendToStepCalls[1].deploymentAccessId).toBe('openclaw-ticket-actions');
+    expect(context.__sendToStepCalls[1].stepName).toBe('dispatch-non-triage');
+    expect(JSON.parse(context.__sendToStepCalls[1].body || '{}')).toMatchObject({
       operation: 'dev-ready',
       repo: 'opscotch/hopscotch',
       issue: 318,

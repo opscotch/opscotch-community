@@ -43,4 +43,31 @@ describe('github/issue-updater update-payload-generator', () => {
 
     await expect(runResource({ resource, context })).rejects.toThrow('at least one mutable field');
   });
+
+  it('sets empty payload for delete-comment', async () => {
+    const context = createJavascriptContext({
+      body: JSON.stringify({
+        operation: 'delete-comment',
+        repo: 'opscotch/hopscotch',
+        issue: 317,
+        comment_id: 12345,
+      }),
+    });
+
+    await runResource({ resource, context });
+
+    expect(context.getBody()).toBe('');
+  });
+
+  it('requires comment_id for delete-comment', async () => {
+    const context = createJavascriptContext({
+      body: JSON.stringify({
+        operation: 'delete-comment',
+        repo: 'opscotch/hopscotch',
+        issue: 317,
+      }),
+    });
+
+    await expect(runResource({ resource, context })).rejects.toThrow('comment_id is required');
+  });
 });

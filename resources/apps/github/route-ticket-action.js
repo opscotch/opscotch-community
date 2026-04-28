@@ -162,6 +162,20 @@ doc
             return context.sendToStep(stepId, serialized);
         }
 
+        function resolveRefineRoutingConfig(label) {
+            var matched = String(label || "").trim().toLowerCase();
+            if (matched === "dev review") {
+                return {
+                    workflow: "implementation-planning",
+                    model: "codex-mini"
+                };
+            }
+            return {
+                workflow: "quick-spec",
+                model: "minimax"
+            };
+        }
+
         function isDispatchFailure(responseBody) {
             if (!responseBody || typeof responseBody !== "object") {
                 return false;
@@ -202,9 +216,9 @@ doc
             if (contains(labels, "triage")) {
                 actionStepId = "dispatch-bmad-refine";
                 matchedLabel = "triage";
-            } else if (contains(labels, "dev-review")) {
-                actionStepId = "dispatch-non-triage";
-                matchedLabel = "dev-review";
+            } else if (contains(labels, "dev review")) {
+                actionStepId = "dispatch-bmad-refine";
+                matchedLabel = "dev review";
             } else if (contains(labels, "dev-ready")) {
                 actionStepId = "dispatch-non-triage";
                 matchedLabel = "dev-ready";
@@ -234,8 +248,11 @@ doc
         var comments = fetchComments(repo, issueNumber, decisionLoggingEnabled);
 
         if (actionStepId === "dispatch-bmad-refine") {
+            var refineRoutingConfig = resolveRefineRoutingConfig(matchedLabel);
             var refineResponse = sendAction(actionDeploymentId, actionStepId, {
                 operation: "refine",
+                workflow: refineRoutingConfig.workflow,
+                model: refineRoutingConfig.model,
                 repo: repo,
                 issue: issueNumber,
                 updated_at: eventPayload.updated_at || "",

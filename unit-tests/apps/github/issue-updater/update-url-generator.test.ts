@@ -28,4 +28,18 @@ describe('github/issue-updater update-url-generator', () => {
 
     await expect(runResource({ resource, context })).rejects.toThrow('label is required');
   });
+
+  it('builds delete URL for delete-comment', async () => {
+    const context = createJavascriptContext({
+      data: { hostId: 'github-api' },
+      body: JSON.stringify({ operation: 'delete-comment', repo: 'opscotch/hopscotch', issue: 317, comment_id: 12345 }),
+    });
+
+    await runResource({ resource, context });
+
+    expect(context.__method).toBe('DELETE');
+    expect(context.__url?.hostRef).toBe('github-api');
+    expect(context.__url?.path).toBe('/repos/opscotch/hopscotch/issues/comments/12345');
+    expect(context.getProperty('issue_operation')).toBe('delete-comment');
+  });
 });
