@@ -70,4 +70,60 @@ describe('github/issue-updater update-payload-generator', () => {
 
     await expect(runResource({ resource, context })).rejects.toThrow('comment_id is required');
   });
+
+  it('builds create-pr payload', async () => {
+    const context = createJavascriptContext({
+      body: JSON.stringify({
+        operation: 'create-pr',
+        repo: 'opscotch/hopscotch',
+        issue: 317,
+        title: 'Issue #317',
+        head: 'opscotch/issue-317-develop',
+        base: 'main',
+        body: 'PR body',
+      }),
+    });
+
+    await runResource({ resource, context });
+
+    expect(JSON.parse(context.getBody() || '{}')).toEqual({
+      title: 'Issue #317',
+      head: 'opscotch/issue-317-develop',
+      base: 'main',
+      body: 'PR body',
+    });
+  });
+
+  it('sets empty payload for get-open-pr-by-head', async () => {
+    const context = createJavascriptContext({
+      body: JSON.stringify({
+        operation: 'get-open-pr-by-head',
+        repo: 'opscotch/hopscotch',
+        issue: 317,
+        head: 'opscotch/issue-317-develop',
+      }),
+    });
+
+    await runResource({ resource, context });
+
+    expect(context.getBody()).toBe('');
+  });
+
+  it('builds request-reviewers payload', async () => {
+    const context = createJavascriptContext({
+      body: JSON.stringify({
+        operation: 'request-reviewers',
+        repo: 'opscotch/hopscotch',
+        issue: 317,
+        pull_number: 88,
+        reviewers: ['jscottnz'],
+      }),
+    });
+
+    await runResource({ resource, context });
+
+    expect(JSON.parse(context.getBody() || '{}')).toEqual({
+      reviewers: ['jscottnz'],
+    });
+  });
 });

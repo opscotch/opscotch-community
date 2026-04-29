@@ -3,7 +3,7 @@ doc
     .asUserErrors()
     .inSchema({
         type: "object",
-        required: ["operation", "repo", "issue"],
+        required: ["repo", "issue"],
         additionalProperties: true,
         properties: {
             operation: {
@@ -64,6 +64,42 @@ doc
                     { type: "number" },
                     { type: "string" }
                 ]
+            },
+            head: {
+                description: "Head branch for pull request operations.",
+                type: "string"
+            },
+            base: {
+                description: "Base branch for pull request operations.",
+                type: "string"
+            },
+            pull_number: {
+                description: "Pull request number for update/reviewer operations.",
+                oneOf: [
+                    { type: "number" },
+                    { type: "string" }
+                ]
+            },
+            draft: {
+                description: "Draft flag for create/update-pr operation.",
+                type: "boolean"
+            },
+            reviewers: {
+                description: "GitHub reviewers for request-reviewers operation.",
+                type: "array",
+                items: {
+                    type: "string"
+                }
+            }
+        }
+    })
+    .dataSchema({
+        type: "object",
+        additionalProperties: true,
+        properties: {
+            operation: {
+                description: "Optional fixed operation configured at step level.",
+                type: "string"
             }
         }
     })
@@ -94,7 +130,8 @@ doc
         }
 
         var input = parseJson(context.getBody(), {});
-        var operation = String(input.operation || "").trim();
+        var data = parseJson(context.getData(), {});
+        var operation = String(input.operation || data.operation || "").trim();
         var payload = null;
 
         if (operation === "update-issue") {
@@ -148,6 +185,49 @@ doc
                 throw new Error("comment_id is required for delete-comment");
             }
             payload = null;
+        } else if (operation === "get-open-pr-by-head") {
+            var head = String(input.head || "").trim();
+            if (!head) {
+                throw new Error("head is required for get-open-pr-by-head");
+            }
+            payload = null;
+        } else if (operation === "create-pr") {
+            var prTitle = String(input.title || "").trim();
+            var prHead = String(input.head || "").trim();
+            var prBase = String(input.base || "").trim();
+            if (!prTitle) throw new Error("title is required for create-pr");
+            if (!prHead) throw new Error("head is required for create-pr");
+            if (!prBase) throw new Error("base is required for create-pr");
+            payload = {
+                title: prTitle,
+                head: prHead,
+                base: prBase
+            };
+            if (input.body !== undefined) payload.body = String(input.body);
+            if (input.draft !== undefined) payload.draft = !!input.draft;
+        } else if (operation === "update-pr") {
+            var updatePullNumber = parseInt(String(input.pull_number), 10);
+            if (isNaN(updatePullNumber) || updatePullNumber <= 0) {
+                throw new Error("pull_number is required for update-pr");
+            }
+            payload = {};
+            if (input.title !== undefined) payload.title = String(input.title);
+            if (input.body !== undefined) payload.body = String(input.body);
+            if (input.base !== undefined) payload.base = String(input.base);
+            if (input.state !== undefined) payload.state = String(input.state);
+            if (input.draft !== undefined) payload.draft = !!input.draft;
+            if (Object.keys(payload).length === 0) {
+                throw new Error("update-pr requires at least one mutable field");
+            }
+        } else if (operation === "request-reviewers") {
+            var reviewers = normalizeList(input.reviewers, "reviewers");
+            var reviewersPullNumber = parseInt(String(input.pull_number), 10);
+            if (isNaN(reviewersPullNumber) || reviewersPullNumber <= 0) {
+                throw new Error("pull_number is required for request-reviewers");
+            }
+            payload = {
+                reviewers: reviewers
+            };
         } else {
             throw new Error("unsupported operation: " + operation);
         }

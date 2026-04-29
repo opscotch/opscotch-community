@@ -176,6 +176,13 @@ doc
             };
         }
 
+        function resolveDevelopRoutingConfig() {
+            return {
+                workflow: "implementation-planning",
+                model: "codex"
+            };
+        }
+
         function isDispatchFailure(responseBody) {
             if (!responseBody || typeof responseBody !== "object") {
                 return false;
@@ -190,6 +197,46 @@ doc
                 return true;
             }
             return false;
+        }
+
+        function isAuthorApprovalGranted(comments, authorLogin) {
+            var normalizedAuthor = toLower(String(authorLogin || "").trim());
+            if (!normalizedAuthor) {
+                return false;
+            }
+
+            var approved = false;
+            var list = Array.isArray(comments) ? comments : [];
+            var approvePattern = /\b(approve|approved|go ahead|proceed|please apply|please implement|apply changes|implement now|start coding|start implementation|ship it|lgtm)\b/i;
+            var revokePattern = /\b(cancel|hold|stop|do not code|don't code|do not implement|don't implement|wait)\b/i;
+
+            for (var i = 0; i < list.length; i += 1) {
+                var comment = list[i];
+                if (!comment || typeof comment !== "object") {
+                    continue;
+                }
+                var login = toLower(
+                    (comment.user && comment.user.login)
+                    || (comment.author && comment.author.login)
+                    || comment.login
+                    || ""
+                );
+                if (login !== normalizedAuthor) {
+                    continue;
+                }
+                var body = String(comment.body || "");
+                if (!body) {
+                    continue;
+                }
+                if (revokePattern.test(body)) {
+                    approved = false;
+                    continue;
+                }
+                if (approvePattern.test(body)) {
+                    approved = true;
+                }
+            }
+            return approved;
         }
 
         var data = parseJson(context.getData(), {});
@@ -219,6 +266,9 @@ doc
             } else if (contains(labels, "dev review")) {
                 actionStepId = "dispatch-bmad-refine";
                 matchedLabel = "dev review";
+            } else if (contains(labels, "read for dev")) {
+                actionStepId = "dispatch-bmad-develop";
+                matchedLabel = "read for dev";
             } else if (contains(labels, "dev-ready")) {
                 actionStepId = "dispatch-non-triage";
                 matchedLabel = "dev-ready";
@@ -300,6 +350,71 @@ doc
         }));
         return;
     }
+
+        if (actionStepId === "dispatch-bmad-develop") {
+            var issueAuthor = eventPayload.issue_context && eventPayload.issue_context.user && eventPayload.issue_context.user.login;
+            if (!isAuthorApprovalGranted(comments, issueAuthor)) {
+                logDecision(decisionLoggingEnabled, "author-approval-required", {
+                    issue: issueNumber,
+                    author: issueAuthor || "",
+                    comments_count: comments.length
+                });
+                context.setBody(JSON.stringify({
+                    routed: false,
+                    action_deployment_id: actionDeploymentId,
+                    action_step_id: actionStepId,
+                    operation: "develop",
+                    repo: repo,
+                    issue: issueNumber,
+                    error: "author-approval-required"
+                }));
+                return;
+            }
+            var developRoutingConfig = resolveDevelopRoutingConfig();
+            var developResponse = sendAction(actionDeploymentId, actionStepId, {
+                operation: "develop",
+                workflow: developRoutingConfig.workflow,
+                model: developRoutingConfig.model,
+                repo: repo,
+                issue: issueNumber,
+                updated_at: eventPayload.updated_at || "",
+                issue_url: eventPayload.issue_url || "",
+                title: eventPayload.title || "",
+                issue_body: eventPayload.issue_body || "",
+                comments: comments,
+                issue_context: eventPayload.issue_context || {},
+                reason: "criteria-match:" + (matchedLabel || "unknown")
+            });
+            var developBody = parseJson(developResponse ? developResponse.getBody() : "", {});
+            if (isDispatchFailure(developBody)) {
+                logDecision(decisionLoggingEnabled, "dispatch-failed-develop", {
+                    issue: issueNumber,
+                    deployment_id: actionDeploymentId,
+                    step_id: actionStepId,
+                    response: developBody
+                });
+                context.setBody(JSON.stringify({
+                    routed: false,
+                    action_deployment_id: actionDeploymentId,
+                    action_step_id: actionStepId,
+                    operation: "develop",
+                    repo: repo,
+                    issue: issueNumber,
+                    error: "downstream-dispatch-failed",
+                    response: developBody
+                }));
+                return;
+            }
+            context.setBody(JSON.stringify({
+                routed: true,
+                action_deployment_id: actionDeploymentId,
+                action_step_id: actionStepId,
+                operation: "develop",
+                repo: repo,
+                issue: issueNumber
+            }));
+            return;
+        }
 
         var nonTriagePayload = {
             operation: matchedLabel || "none",
