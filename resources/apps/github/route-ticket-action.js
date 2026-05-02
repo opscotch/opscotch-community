@@ -63,6 +63,14 @@ doc
                 description: "Legacy fallback deployment access id for label-routed events.",
                 type: "string"
             },
+            issueUpdaterDeploymentAccessId: {
+                description: "Deployment access id for posting prerequisite reminder comments.",
+                type: "string"
+            },
+            issueUpdaterAddCommentStepId: {
+                description: "Step id for posting prerequisite reminder comments.",
+                type: "string"
+            },
             issueWatcherDecisionLoggingEnabled: {
                 description: "When true, emits diagnostic logs for ticket routing decisions.",
                 type: "boolean"
@@ -181,6 +189,61 @@ doc
                 workflow: "implementation-planning",
                 model: "codex"
             };
+        }
+
+        function extractLastBaseBranch(issueBody, comments) {
+            var pattern = /(?:^|\s)base_branch\s*=\s*([^\s`]+)/ig;
+            var candidate = "";
+
+            var bodyText = String(issueBody || "");
+            var bodyMatch;
+            while ((bodyMatch = pattern.exec(bodyText)) !== null) {
+                if (bodyMatch[1]) {
+                    candidate = String(bodyMatch[1]).trim();
+                }
+            }
+
+            if (!Array.isArray(comments)) {
+                return candidate;
+            }
+
+            for (var i = 0; i < comments.length; i += 1) {
+                var comment = comments[i];
+                var text = "";
+                if (comment && typeof comment === "object" && comment.body !== undefined) {
+                    text = String(comment.body || "");
+                } else if (typeof comment === "string") {
+                    text = comment;
+                }
+                if (!text) {
+                    continue;
+                }
+                var commentMatch;
+                while ((commentMatch = pattern.exec(text)) !== null) {
+                    if (commentMatch[1]) {
+                        candidate = String(commentMatch[1]).trim();
+                    }
+                }
+            }
+            return candidate;
+        }
+
+        function hasDevelopPrereqReminder(comments) {
+            var marker = "development is waiting on prerequisites.";
+            var list = Array.isArray(comments) ? comments : [];
+            for (var i = 0; i < list.length; i += 1) {
+                var comment = list[i];
+                var body = "";
+                if (comment && typeof comment === "object" && comment.body !== undefined) {
+                    body = String(comment.body || "");
+                } else if (typeof comment === "string") {
+                    body = comment;
+                }
+                if (toLower(body).indexOf(marker) >= 0) {
+                    return true;
+                }
+            }
+            return false;
         }
 
         function isDispatchFailure(responseBody) {
@@ -353,11 +416,48 @@ doc
 
         if (actionStepId === "dispatch-bmad-develop") {
             var issueAuthor = eventPayload.issue_context && eventPayload.issue_context.user && eventPayload.issue_context.user.login;
-            if (!isAuthorApprovalGranted(comments, issueAuthor)) {
+            var approvalGranted = isAuthorApprovalGranted(comments, issueAuthor);
+            var baseBranch = extractLastBaseBranch(eventPayload.issue_body || "", comments);
+            var missingApproval = !approvalGranted;
+            var missingBaseBranch = !String(baseBranch || "").trim();
+            if (missingApproval || missingBaseBranch) {
+                if (!hasDevelopPrereqReminder(comments)) {
+                    var reminderDeploymentId = String(data.issueUpdaterDeploymentAccessId || "github-issue-updater").trim();
+                    var reminderStepId = String(data.issueUpdaterAddCommentStepId || "github-issue-add-comment").trim();
+                    if (reminderStepId) {
+                        var required = [];
+                        if (missingBaseBranch) required.push("`base_branch=<branch>` comment");
+                        if (missingApproval) required.push("author approval comment (e.g. `LGTM`)");
+                        try {
+                            sendAction(reminderDeploymentId, reminderStepId, {
+                                repo: repo,
+                                issue: issueNumber,
+                                comment: [
+                                    "Development is waiting on prerequisites.",
+                                    "",
+                                    "Required before dispatch:",
+                                    "- " + required.join("\n- ")
+                                ].join("\n")
+                            });
+                            logDecision(decisionLoggingEnabled, "develop-prereq-reminder-posted", {
+                                issue: issueNumber,
+                                missing_approval: missingApproval,
+                                missing_base_branch: missingBaseBranch
+                            });
+                        } catch (reminderErr) {
+                            logDecision(decisionLoggingEnabled, "develop-prereq-reminder-failed", {
+                                issue: issueNumber,
+                                error: String(reminderErr && reminderErr.message ? reminderErr.message : reminderErr)
+                            });
+                        }
+                    }
+                }
                 logDecision(decisionLoggingEnabled, "author-approval-required", {
                     issue: issueNumber,
                     author: issueAuthor || "",
-                    comments_count: comments.length
+                    comments_count: comments.length,
+                    missing_approval: missingApproval,
+                    missing_base_branch: missingBaseBranch
                 });
                 context.setBody(JSON.stringify({
                     routed: false,
@@ -366,7 +466,7 @@ doc
                     operation: "develop",
                     repo: repo,
                     issue: issueNumber,
-                    error: "author-approval-required"
+                    error: missingBaseBranch ? "develop-prerequisites-missing" : "author-approval-required"
                 }));
                 return;
             }

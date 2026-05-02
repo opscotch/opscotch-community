@@ -38,6 +38,9 @@
         {
           "stepId": "route-ticket-action",
           "httpTimeout": 120000,
+          "data": {
+            "_stepTimeoutMs": "600000"
+          },
           "resultsProcessor": {
             "resource": "/apps/github/route-ticket-action.js"
           }
