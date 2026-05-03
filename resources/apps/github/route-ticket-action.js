@@ -198,18 +198,6 @@ doc
             };
         }
 
-        function normalizeInstructions(input) {
-            var source = Array.isArray(input) ? input : [];
-            var out = [];
-            for (var i = 0; i < source.length; i += 1) {
-                var line = String(source[i] || "").trim();
-                if (line) {
-                    out.push(line);
-                }
-            }
-            return out;
-        }
-
         function extractLastBaseBranch(issueBody, comments) {
             var pattern = /(?:^|\s)base_branch\s*=\s*([^\s`]+)/ig;
             var candidate = "";
@@ -331,7 +319,6 @@ doc
         var actionDeploymentId = String(eventPayload.action_deployment_id || "").trim();
         var actionStepId = String(eventPayload.action_step_id || "").trim();
         var matchedLabel = String(eventPayload.matched_label || "").trim();
-        var instructions = normalizeInstructions(eventPayload.instructions);
         logDecision(decisionLoggingEnabled, "received-event", {
             issue: issueNumber,
             repo: repo,
@@ -392,7 +379,7 @@ doc
                 issue_url: eventPayload.issue_url || "",
                 title: eventPayload.title || "",
                 issue_body: eventPayload.issue_body || "",
-                instructions: instructions.join("\n\n"),
+                matched_label: matchedLabel,
                 comments: comments,
                 issue_context: eventPayload.issue_context || {},
                 reason: "criteria-match:" + (matchedLabel || "unknown")
@@ -502,7 +489,7 @@ doc
                 issue_url: eventPayload.issue_url || "",
                 title: eventPayload.title || "",
                 issue_body: eventPayload.issue_body || "",
-                instructions: instructions.join("\n\n"),
+                matched_label: matchedLabel,
                 comments: comments,
                 issue_context: eventPayload.issue_context || {},
                 reason: "criteria-match:" + (matchedLabel || "unknown")

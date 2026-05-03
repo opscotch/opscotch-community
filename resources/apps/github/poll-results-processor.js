@@ -101,13 +101,6 @@ doc
                         stepId: {
                             description: "Target step id in the destination deployment.",
                             type: "string"
-                        },
-                        instructions: {
-                            description: "Optional prompt preamble lines to pass through to downstream action payloads.",
-                            type: "array",
-                            items: {
-                                type: "string"
-                            }
                         }
                     }
                 }
@@ -193,14 +186,6 @@ doc
                 var label = toLower(item.label || "").trim();
                 var deploymentId = String(item.deploymentId || "").trim();
                 var stepId = String(item.stepId || "").trim();
-                var instructionsInput = Array.isArray(item.instructions) ? item.instructions : [];
-                var instructions = [];
-                for (var j = 0; j < instructionsInput.length; j += 1) {
-                    var line = String(instructionsInput[j] || "").trim();
-                    if (line) {
-                        instructions.push(line);
-                    }
-                }
 
                 if (!repo || repo.indexOf("/") === -1) {
                     continue;
@@ -214,8 +199,7 @@ doc
                     assignee: assignee,
                     label: label,
                     deploymentId: deploymentId,
-                    stepId: stepId,
-                    instructions: instructions
+                    stepId: stepId
                 });
             }
 
@@ -368,7 +352,6 @@ doc
                 matched_label: matchedCriterion.label,
                 action_deployment_id: matchedCriterion.deploymentId,
                 action_step_id: matchedCriterion.stepId,
-                instructions: matchedCriterion.instructions || [],
                 updated_at: updatedAt,
                 issue_context: issue
             };
