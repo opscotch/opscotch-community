@@ -2,12 +2,13 @@ import path from 'node:path';
 import { createJavascriptContext, runResource } from '@opscotch/resource-testkit';
 import { describe, expect, it } from 'vitest';
 
-const resource = path.resolve(import.meta.dirname, '../../../../resources/apps/github/poll-http-error.js');
+const resource = path.resolve(import.meta.dirname, '../../../../resources/apps/github/http-error.js');
 
 describe('poll-http-error', () => {
   it('records system error and wraps github failure response', async () => {
     const context = createJavascriptContext({
       body: 'forbidden',
+      data: { httpErrorKind: 'github-poll' },
       properties: { status_code: '403' },
     });
 

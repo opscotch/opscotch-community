@@ -95,6 +95,7 @@ describe('route-ticket-action', () => {
         issue_number: 329,
         labels: ['read for dev'],
         matched_label: 'read for dev',
+        issue_body: 'base_branch=main',
         issue_context: {
           user: {
             login: 'jscottnz',
@@ -166,14 +167,16 @@ describe('route-ticket-action', () => {
 
     await runResource({ resource, context });
 
-    expect(context.__sendToStepCalls).toHaveLength(1);
+    expect(context.__sendToStepCalls).toHaveLength(2);
     expect(context.__sendToStepCalls[0].stepName).toBe('fetch-issue-comments');
+    expect(context.__sendToStepCalls[1].deploymentAccessId).toBe('github-issue-updater');
+    expect(context.__sendToStepCalls[1].stepName).toBe('github-issue-add-comment');
     expect(JSON.parse(context.getBody() || '{}')).toMatchObject({
       routed: false,
       operation: 'develop',
       repo: 'opscotch/hopscotch',
       issue: 330,
-      error: 'author-approval-required',
+      error: 'develop-prerequisites-missing',
     });
   });
 

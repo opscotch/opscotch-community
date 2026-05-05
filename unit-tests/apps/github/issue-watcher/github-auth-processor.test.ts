@@ -7,7 +7,7 @@ const resource = path.resolve(import.meta.dirname, '../../../../resources/apps/g
 describe('github-auth-processor', () => {
   it('sets bearer authorization from restricted host data', async () => {
     const context = createAuthenticationJavascriptContext({
-      data: { hostId: 'github-api' },
+      data: { githubAuthHostId: 'github-api' },
       restrictedData: {
         'github-api': JSON.stringify({ githubToken: 'secret-token' }),
       },
@@ -20,7 +20,7 @@ describe('github-auth-processor', () => {
 
   it('records system error when token is missing', async () => {
     const context = createAuthenticationJavascriptContext({
-      data: { hostId: 'github-api' },
+      data: { githubAuthHostId: 'github-api' },
       restrictedData: {
         'github-api': JSON.stringify({}),
       },

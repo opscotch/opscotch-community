@@ -2,12 +2,13 @@ import path from 'node:path';
 import { createJavascriptContext, runResource } from '@opscotch/resource-testkit';
 import { describe, expect, it } from 'vitest';
 
-const resource = path.resolve(import.meta.dirname, '../../../../resources/apps/github/update-http-error.js');
+const resource = path.resolve(import.meta.dirname, '../../../../resources/apps/github/http-error.js');
 
 describe('github/issue-updater update-http-error', () => {
   it('records system error and wraps failure payload', async () => {
     const context = createJavascriptContext({
       body: JSON.stringify({ message: 'validation failed' }),
+      data: { httpErrorKind: 'github-update' },
       properties: {
         status_code: '422',
         issue_operation: 'set-labels',
@@ -22,9 +23,6 @@ describe('github/issue-updater update-http-error', () => {
     expect(context.getSystemErrors().join(' ')).toContain('failed with status 422');
     expect(JSON.parse(context.getBody() || '{}')).toEqual({
       status: 'error',
-      operation: 'set-labels',
-      repo: 'opscotch/hopscotch',
-      issue: 317,
       status_code: '422',
       response: JSON.stringify({ message: 'validation failed' }),
     });

@@ -39,6 +39,12 @@ describe('poll-results-processor', () => {
           },
         ],
       },
+      sendToStep: (call) => {
+        if (call.stepName === 'route-ticket-action') {
+          return { body: JSON.stringify({ routed: true }) };
+        }
+        return { body: '{}' };
+      },
     });
 
     await runResource({ resource, context });

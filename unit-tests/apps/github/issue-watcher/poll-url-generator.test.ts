@@ -27,7 +27,7 @@ describe('poll-url-generator', () => {
     expect(context.__url?.hostRef).toBe('github-api');
     expect(context.__url?.path).toContain('/repos/opscotch/hopscotch/issues?');
     expect(context.__url?.path).toContain('assignee=machinoal2-cell');
-    expect(context.__url?.path).toContain('labels=triage');
+    expect(context.__url?.path).not.toContain('labels=');
     expect(context.getHeader('accept')).toBe('application/vnd.github+json');
     expect(context.getHeader('x-github-api-version')).toBe('2022-11-28');
     expect(context.getProperty('gh_repo')).toBe('opscotch/hopscotch');
