@@ -2,9 +2,15 @@
 
 Reusable Opscotch app for mutating GitHub issues from workflows.
 
-## Step
+## Steps
 
 - `github-issue-updater`
+- `github-issue-add-comment`
+- `github-issue-update`
+- `github-issue-delete-comment`
+- `github-pr-create`
+- `github-pr-update`
+- `github-pr-request-reviewers`
 
 ## Input payload
 
@@ -28,6 +34,11 @@ Reusable Opscotch app for mutating GitHub issues from workflows.
 - `add-assignees`
 - `remove-assignees`
 - `add-comment`
+- `delete-comment`
+- `get-open-pr-by-head`
+- `create-pr`
+- `update-pr`
+- `request-reviewers`
 
 ## Bootstrap requirements
 

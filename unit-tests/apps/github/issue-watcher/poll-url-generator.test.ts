@@ -33,4 +33,52 @@ describe('poll-url-generator', () => {
     expect(context.getProperty('gh_repo')).toBe('opscotch/hopscotch');
     expect(context.getProperty('gh_assignee')).toBe('machinoal2-cell');
   });
+
+  it('builds github poll URL for pr watcher criteria', async () => {
+    const context = createJavascriptContext({
+      data: {
+        hostId: 'github-api',
+        watchEntity: 'pr',
+        githubPrWatcherCriteria: [
+          {
+            label: 'ready for dev',
+            assignee: 'machinoal2-cell',
+            repo: 'opscotch/hopscotch',
+            deploymentId: 'openclaw-pr-actions',
+            stepId: 'dispatch-bmad-pr-develop',
+          },
+        ],
+      },
+    });
+
+    await runResource({ resource, context });
+
+    expect(context.__method).toBe('GET');
+    expect(context.__url?.hostRef).toBe('github-api');
+    expect(context.__url?.path).toContain('/repos/opscotch/hopscotch/issues?');
+    expect(context.__url?.path).toContain('assignee=machinoal2-cell');
+    expect(context.getProperty('gh_watch_entity')).toBe('pr');
+    expect(context.getProperty('gh_repo')).toBe('opscotch/hopscotch');
+    expect(context.getProperty('gh_assignee')).toBe('machinoal2-cell');
+  });
+
+  it('rejects unsupported watchEntity', async () => {
+    const context = createJavascriptContext({
+      data: {
+        hostId: 'github-api',
+        watchEntity: 'ticket',
+        githubIssueWatcherCriteria: [
+          {
+            label: 'triage',
+            assignee: 'machinoal2-cell',
+            repo: 'opscotch/hopscotch',
+            deploymentId: 'openclaw-ticket-actions',
+            stepId: 'dispatch-bmad-refine',
+          },
+        ],
+      },
+    });
+
+    await expect(runResource({ resource, context })).rejects.toThrow('watchEntity must be either issue or pr');
+  });
 });

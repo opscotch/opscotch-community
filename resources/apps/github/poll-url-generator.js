@@ -1,10 +1,10 @@
 doc
-    .description("Build GitHub issues polling URL from bootstrap criteria")
+    .description("Build GitHub issues polling URL from bootstrap criteria for issue or pull request watchers")
     .asUserErrors()
     .dataSchema({
         type: "object",
         additionalProperties: true,
-        required: ["hostId", "githubIssueWatcherCriteria"],
+        required: ["hostId"],
         properties: {
             hostId: {
                 description: "Bootstrap host id for GitHub API access.",
@@ -48,6 +48,49 @@ doc
                         }
                     }
                 }
+            },
+            githubPrWatcherCriteria: {
+                description: "Routing criteria list defining label, assignee, repo, and downstream deployment/step target for pull requests.",
+                type: "array",
+                minItems: 1,
+                items: {
+                    type: "object",
+                    additionalProperties: true,
+                    required: ["label", "assignee", "repo", "deploymentId", "stepId"],
+                    properties: {
+                        label: {
+                            description: "Label that must be present on the pull request.",
+                            type: "string",
+                            minLength: 1
+                        },
+                        assignee: {
+                            description: "GitHub assignee login that must own the pull request.",
+                            type: "string",
+                            minLength: 1
+                        },
+                        repo: {
+                            description: "GitHub repository in owner/repo format.",
+                            type: "string",
+                            minLength: 3,
+                            pattern: "^[^/]+\\/[^/]+$"
+                        },
+                        deploymentId: {
+                            description: "Deployment access id to call when this criterion matches.",
+                            type: "string",
+                            minLength: 1
+                        },
+                        stepId: {
+                            description: "Target step id in the destination deployment.",
+                            type: "string",
+                            minLength: 1
+                        }
+                    }
+                }
+            },
+            watchEntity: {
+                description: "Watcher entity type; issue watcher matches only issues, pr watcher matches only pull requests.",
+                type: "string",
+                enum: ["issue", "pr"]
             },
             issueWatcherDecisionLoggingEnabled: {
                 description: "When true, emits diagnostic logs for issue watcher polling URL generation.",
@@ -103,8 +146,20 @@ doc
             console.log(message);
         }
 
-        function normalizeCriteria(data) {
-            var criteria = data["githubIssueWatcherCriteria"];
+        function normalizeEntity(value) {
+            var entity = toLower(String(value || "issue")).trim();
+            if (entity !== "issue" && entity !== "pr") {
+                throw new Error("watchEntity must be either issue or pr");
+            }
+            return entity;
+        }
+
+        function normalizeCriteria(data, watchEntity) {
+            var key = watchEntity === "pr" ? "githubPrWatcherCriteria" : "githubIssueWatcherCriteria";
+            var criteria = data[key];
+            if (!Array.isArray(criteria) || criteria.length === 0) {
+                throw new Error(key + " must be a non-empty array");
+            }
             var normalized = [];
             var i;
 
@@ -136,9 +191,8 @@ doc
         var hostId = context.getData("hostId");
         var data = parseJson(context.getData(), {});
         var decisionLoggingEnabled = toBoolean(data.issueWatcherDecisionLoggingEnabled, false);
-        var criteria = normalizeCriteria({
-            githubIssueWatcherCriteria: data.githubIssueWatcherCriteria
-        });
+        var watchEntity = normalizeEntity(data.watchEntity);
+        var criteria = normalizeCriteria(data, watchEntity);
 
         var primary = criteria[0];
         for (var c = 1; c < criteria.length; c += 1) {
@@ -156,6 +210,7 @@ doc
         var path = "/repos/" + primary.repo + "/issues?" + query;
         logDecision(decisionLoggingEnabled, "poll-request-built", {
             host_id: hostId,
+            watch_entity: watchEntity,
             repo: primary.repo,
             assignee: primary.assignee,
             labels: labels,
@@ -167,6 +222,7 @@ doc
         context.setUrl(hostId, path);
         context.setHeader("Accept", "application/vnd.github+json");
         context.setHeader("X-GitHub-Api-Version", "2022-11-28");
+        context.setProperty("gh_watch_entity", watchEntity);
         context.setProperty("gh_repo", primary.repo);
         context.setProperty("gh_assignee", primary.assignee);
         context.setProperty("gh_issue_watcher_criteria", JSON.stringify(criteria));

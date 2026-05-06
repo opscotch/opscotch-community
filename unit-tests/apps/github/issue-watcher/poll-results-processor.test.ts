@@ -99,7 +99,7 @@ describe('poll-results-processor', () => {
         ],
       },
       persistedItems: {
-        issueUpdatedAtByNumber: JSON.stringify({ '317': '2026-04-23T00:00:00Z' }),
+        issueUpdatedAtByNumber: JSON.stringify({ 'issue:317': '2026-04-23T00:00:00Z' }),
       },
     });
 
@@ -151,6 +151,70 @@ describe('poll-results-processor', () => {
       status: 'ok',
       scanned_issues: 1,
       dispatched_actions: 0,
+    });
+  });
+
+  it('dispatches only pull requests when watchEntity is pr and uses pr watermark keys', async () => {
+    const mixed = [
+      {
+        number: 401,
+        labels: [{ name: 'ready for dev' }],
+        assignees: [{ login: 'machinoal2-cell' }],
+        updated_at: '2026-04-23T00:05:00Z',
+        html_url: 'https://github.com/opscotch/hopscotch/issues/401',
+        title: 'Issue should be ignored in pr mode',
+      },
+      {
+        number: 402,
+        pull_request: {
+          html_url: 'https://github.com/opscotch/hopscotch/pull/402',
+        },
+        body: 'PR follow-up body',
+        labels: [{ name: 'ready for dev' }],
+        assignees: [{ login: 'machinoal2-cell' }],
+        updated_at: '2026-04-23T00:06:00Z',
+        html_url: 'https://github.com/opscotch/hopscotch/pull/402',
+        title: 'PR should dispatch',
+      },
+    ];
+
+    const context = createJavascriptContext({
+      body: JSON.stringify(mixed),
+      data: {
+        watchEntity: 'pr',
+        githubPrWatcherCriteria: [
+          {
+            label: 'ready for dev',
+            assignee: 'machinoal2-cell',
+            repo: 'opscotch/hopscotch',
+            deploymentId: 'openclaw-pr-actions',
+            stepId: 'dispatch-bmad-pr-develop',
+          },
+        ],
+      },
+      sendToStep: (call) => {
+        if (call.stepName === 'route-ticket-action') {
+          return { body: JSON.stringify({ routed: true }) };
+        }
+        return { body: '{}' };
+      },
+    });
+
+    await runResource({ resource, context });
+
+    expect(context.__sendToStepCalls).toHaveLength(1);
+    const sent = JSON.parse(context.__sendToStepCalls[0].body || '{}');
+    expect(sent).toMatchObject({
+      entity_type: 'pr',
+      issue_number: 402,
+      pull_number: 402,
+      pull_url: 'https://github.com/opscotch/hopscotch/pull/402',
+      matched_label: 'ready for dev',
+      action_deployment_id: 'openclaw-pr-actions',
+      action_step_id: 'dispatch-bmad-pr-develop',
+    });
+    expect(JSON.parse(context.getPersistedItem('issueUpdatedAtByNumber') || '{}')).toMatchObject({
+      'pr:402': '2026-04-23T00:06:00Z',
     });
   });
 });

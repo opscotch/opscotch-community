@@ -6,6 +6,10 @@ doc
         required: ["repo", "issue_number"],
         additionalProperties: true,
         properties: {
+            entity_type: {
+                description: "GitHub entity type represented by this event.",
+                type: "string"
+            },
             repo: {
                 description: "GitHub repository in owner/repo format.",
                 type: "string"
@@ -31,6 +35,21 @@ doc
             },
             issue_context: {
                 description: "Full GitHub issue object captured during polling.",
+                type: "object"
+            },
+            pull_number: {
+                description: "Pull request number selected for routing.",
+                oneOf: [
+                    { type: "number" },
+                    { type: "string" }
+                ]
+            },
+            pull_url: {
+                description: "Canonical URL for the pull request.",
+                type: "string"
+            },
+            pull_context: {
+                description: "Full GitHub pull request object captured during polling.",
                 type: "object"
             },
             labels: {
@@ -132,18 +151,22 @@ doc
             console.log(message);
         }
 
-        function fetchComments(repo, issue, loggingEnabled) {
+        function fetchComments(repo, issue, entityType, pullNumber, loggingEnabled) {
             var response;
             var normalized = [];
 
             try {
                 response = context.sendToStep("fetch-issue-comments", JSON.stringify({
                     repo: repo,
-                    issue: issue
+                    issue: issue,
+                    entity_type: entityType,
+                    pull_number: pullNumber
                 }));
             } catch (err) {
                 logDecision(loggingEnabled, "comments-fetch-failed-call", {
                     issue: issue,
+                    entity_type: entityType,
+                    pull_number: pullNumber,
                     error: String(err && err.message ? err.message : err)
                 });
                 return normalized;
@@ -156,6 +179,8 @@ doc
                 }
                 logDecision(loggingEnabled, "comments-fetch-complete", {
                     issue: issue,
+                    entity_type: entityType,
+                    pull_number: pullNumber,
                     comments_count: normalized.length,
                     status: String(result.status || "unknown")
                 });
@@ -163,6 +188,8 @@ doc
             } catch (err2) {
                 logDecision(loggingEnabled, "comments-fetch-failed-parse", {
                     issue: issue,
+                    entity_type: entityType,
+                    pull_number: pullNumber,
                     error: String(err2 && err2.message ? err2.message : err2)
                 });
                 return normalized;
@@ -314,6 +341,10 @@ doc
         var labels = eventPayload.labels || [];
         var issueNumber = eventPayload.issue_number;
         var repo = String(eventPayload.repo || "");
+        var entityType = toLower(String(eventPayload.entity_type || "issue"));
+        var pullNumber = eventPayload.pull_number || issueNumber;
+        var pullUrl = String(eventPayload.pull_url || eventPayload.issue_url || "");
+        var pullContext = eventPayload.pull_context || {};
         var decisionLoggingEnabled = toBoolean(data.issueWatcherDecisionLoggingEnabled, false);
 
         var actionDeploymentId = String(eventPayload.action_deployment_id || "").trim();
@@ -321,6 +352,7 @@ doc
         var matchedLabel = String(eventPayload.matched_label || "").trim();
         logDecision(decisionLoggingEnabled, "received-event", {
             issue: issueNumber,
+            entity_type: entityType,
             repo: repo,
             labels: labels,
             incoming_deployment_id: actionDeploymentId,
@@ -345,6 +377,7 @@ doc
             }
             logDecision(decisionLoggingEnabled, "fallback-routing-evaluated", {
                 issue: issueNumber,
+                entity_type: entityType,
                 selected_deployment_id: actionDeploymentId,
                 selected_step_id: actionStepId,
                 matched_label: matchedLabel
@@ -354,18 +387,20 @@ doc
         if (!actionStepId) {
             logDecision(decisionLoggingEnabled, "no-route-selected", {
                 issue: issueNumber,
+                entity_type: entityType,
                 labels: labels
             });
             context.setBody(JSON.stringify({
                 routed: false,
                 operation: "none",
                 repo: repo,
-                issue: issueNumber
+                issue: issueNumber,
+                pull_number: pullNumber
             }));
             return;
         }
 
-        var comments = fetchComments(repo, issueNumber, decisionLoggingEnabled);
+        var comments = fetchComments(repo, issueNumber, entityType, pullNumber, decisionLoggingEnabled);
 
         if (actionStepId === "dispatch-bmad-refine") {
             var refineRoutingConfig = resolveRefineRoutingConfig(matchedLabel);
@@ -375,13 +410,17 @@ doc
                 model: refineRoutingConfig.model,
                 repo: repo,
                 issue: issueNumber,
+                pull_number: pullNumber,
                 updated_at: eventPayload.updated_at || "",
                 issue_url: eventPayload.issue_url || "",
+                pull_url: pullUrl,
                 title: eventPayload.title || "",
                 issue_body: eventPayload.issue_body || "",
                 matched_label: matchedLabel,
                 comments: comments,
                 issue_context: eventPayload.issue_context || {},
+                pull_context: pullContext,
+                entity_type: entityType,
                 reason: "criteria-match:" + (matchedLabel || "unknown")
             });
             var refineBody = parseJson(refineResponse ? refineResponse.getBody() : "", {});
@@ -399,6 +438,7 @@ doc
                     operation: "refine",
                     repo: repo,
                     issue: issueNumber,
+                    pull_number: pullNumber,
                     error: "downstream-dispatch-failed",
                     response: refineBody
                 }));
@@ -416,11 +456,12 @@ doc
                 action_deployment_id: actionDeploymentId,
                 action_step_id: actionStepId,
                 operation: "refine",
-            repo: repo,
-            issue: issueNumber
-        }));
-        return;
-    }
+                repo: repo,
+                issue: issueNumber,
+                pull_number: pullNumber
+            }));
+            return;
+        }
 
         if (actionStepId === "dispatch-bmad-develop") {
             var issueAuthor = eventPayload.issue_context && eventPayload.issue_context.user && eventPayload.issue_context.user.login;
@@ -485,13 +526,17 @@ doc
                 model: developRoutingConfig.model,
                 repo: repo,
                 issue: issueNumber,
+                pull_number: pullNumber,
                 updated_at: eventPayload.updated_at || "",
                 issue_url: eventPayload.issue_url || "",
+                pull_url: pullUrl,
                 title: eventPayload.title || "",
                 issue_body: eventPayload.issue_body || "",
                 matched_label: matchedLabel,
                 comments: comments,
                 issue_context: eventPayload.issue_context || {},
+                pull_context: pullContext,
+                entity_type: entityType,
                 reason: "criteria-match:" + (matchedLabel || "unknown")
             });
             var developBody = parseJson(developResponse ? developResponse.getBody() : "", {});
@@ -509,6 +554,7 @@ doc
                     operation: "develop",
                     repo: repo,
                     issue: issueNumber,
+                    pull_number: pullNumber,
                     error: "downstream-dispatch-failed",
                     response: developBody
                 }));
@@ -520,7 +566,8 @@ doc
                 action_step_id: actionStepId,
                 operation: "develop",
                 repo: repo,
-                issue: issueNumber
+                issue: issueNumber,
+                pull_number: pullNumber
             }));
             return;
         }
@@ -530,10 +577,14 @@ doc
             repo: repo,
             issue: issueNumber,
             issue_url: eventPayload.issue_url || "",
+            pull_url: pullUrl,
             title: eventPayload.title || "",
             issue_body: eventPayload.issue_body || "",
             comments: comments,
             issue_context: eventPayload.issue_context || {},
+            pull_context: pullContext,
+            entity_type: entityType,
+            pull_number: pullNumber,
             labels: labels,
             action_deployment_id: actionDeploymentId,
             action_step_id: actionStepId
@@ -553,11 +604,12 @@ doc
                 action_deployment_id: actionDeploymentId,
                 action_step_id: actionStepId,
                 operation: nonTriagePayload.operation,
-                repo: repo,
-                issue: issueNumber,
-                error: "downstream-dispatch-failed",
-                response: nonTriageBody
-            }));
+                    repo: repo,
+                    issue: issueNumber,
+                    pull_number: pullNumber,
+                    error: "downstream-dispatch-failed",
+                    response: nonTriageBody
+                }));
             return;
         }
         logDecision(decisionLoggingEnabled, "dispatched-non-triage", {
@@ -574,6 +626,7 @@ doc
             action_step_id: actionStepId,
             operation: nonTriagePayload.operation,
             repo: repo,
-            issue: issueNumber
+            issue: issueNumber,
+            pull_number: pullNumber
         }));
     });

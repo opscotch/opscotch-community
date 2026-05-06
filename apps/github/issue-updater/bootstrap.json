@@ -24,6 +24,22 @@
           {
             "method": "DELETE",
             "uriPattern": "/repos/.+/issues/.+/(labels/.+|assignees)"
+          },
+          {
+            "method": "GET",
+            "uriPattern": "/repos/.+/pulls.*"
+          },
+          {
+            "method": "POST",
+            "uriPattern": "/repos/.+/pulls"
+          },
+          {
+            "method": "PATCH",
+            "uriPattern": "/repos/.+/pulls/.+"
+          },
+          {
+            "method": "POST",
+            "uriPattern": "/repos/.+/pulls/.+/requested_reviewers"
           }
         ],
         "data": {

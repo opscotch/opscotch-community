@@ -32,6 +32,8 @@ describe('route-ticket-action', () => {
     expect(JSON.parse(context.__sendToStepCalls[0].body || '{}')).toEqual({
       repo: 'opscotch/hopscotch',
       issue: 317,
+      entity_type: 'issue',
+      pull_number: 317,
     });
     expect(context.__sendToStepCalls[1].deploymentAccessId).toBe('openclaw-ticket-actions');
     expect(context.__sendToStepCalls[1].stepName).toBe('dispatch-bmad-refine');
@@ -57,6 +59,7 @@ describe('route-ticket-action', () => {
       operation: 'refine',
       repo: 'opscotch/hopscotch',
       issue: 317,
+      pull_number: 317,
     });
   });
 
@@ -212,6 +215,68 @@ describe('route-ticket-action', () => {
       operation: 'dev-ready',
       repo: 'opscotch/hopscotch',
       issue: 318,
+      pull_number: 318,
+    });
+  });
+
+  it('routes PR entity and fetches pull review comments before dispatch', async () => {
+    const context = createJavascriptContext({
+      body: JSON.stringify({
+        entity_type: 'pr',
+        repo: 'opscotch/hopscotch',
+        issue_number: 451,
+        pull_number: 451,
+        pull_url: 'https://github.com/opscotch/hopscotch/pull/451',
+        title: 'Apply review feedback',
+        issue_body: 'PR body',
+        labels: ['ready for dev'],
+        matched_label: 'ready for dev',
+        action_deployment_id: 'openclaw-pr-actions',
+        action_step_id: 'dispatch-bmad-pr-develop',
+        issue_context: {
+          number: 451,
+        },
+        pull_context: {
+          number: 451,
+          head: { ref: 'feature/pr-451' },
+        },
+      }),
+      sendToStep: (call) => {
+        if (call.stepName === 'fetch-issue-comments') {
+          return {
+            body: JSON.stringify({
+              status: 'ok',
+              comments: [{ id: 1, body: 'Needs another test.' }],
+            }),
+          };
+        }
+        return { body: JSON.stringify({ queued: true, status: 'ok' }) };
+      },
+    });
+
+    await runResource({ resource, context });
+
+    expect(context.__sendToStepCalls).toHaveLength(2);
+    expect(context.__sendToStepCalls[0].stepName).toBe('fetch-issue-comments');
+    expect(JSON.parse(context.__sendToStepCalls[0].body || '{}')).toEqual({
+      repo: 'opscotch/hopscotch',
+      issue: 451,
+      entity_type: 'pr',
+      pull_number: 451,
+    });
+    expect(context.__sendToStepCalls[1].deploymentAccessId).toBe('openclaw-pr-actions');
+    expect(context.__sendToStepCalls[1].stepName).toBe('dispatch-bmad-pr-develop');
+    expect(JSON.parse(context.__sendToStepCalls[1].body || '{}')).toMatchObject({
+      operation: 'ready for dev',
+      repo: 'opscotch/hopscotch',
+      issue: 451,
+      pull_number: 451,
+      pull_url: 'https://github.com/opscotch/hopscotch/pull/451',
+      entity_type: 'pr',
+      comments: [{ id: 1, body: 'Needs another test.' }],
+      pull_context: {
+        number: 451,
+      },
     });
   });
 });

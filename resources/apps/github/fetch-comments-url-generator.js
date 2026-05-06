@@ -1,5 +1,5 @@
 doc
-    .description("Build GitHub issue comments URL for an issue event")
+    .description("Build GitHub comments URL for issue or pull request events")
     .asUserErrors()
     .inSchema({
         type: "object",
@@ -16,6 +16,18 @@ doc
                     { type: "number" },
                     { type: "string" }
                 ]
+            },
+            pull_number: {
+                description: "GitHub pull request number for PR review comment retrieval.",
+                oneOf: [
+                    { type: "number" },
+                    { type: "string" }
+                ]
+            },
+            entity_type: {
+                description: "Event entity type (issue or pr).",
+                type: "string",
+                enum: ["issue", "pr"]
             }
         }
     })
@@ -57,8 +69,13 @@ doc
         var hostId = String(data.hostId || "github-api").trim() || "github-api";
         var payload = parseJson(context.getBody(), {});
         var repo = normalizeRepo(payload.repo);
+        var entityType = String(payload.entity_type || "issue").toLowerCase().trim();
         var issue = normalizeIssue(payload.issue);
+        var pullNumber = payload.pull_number !== undefined ? normalizeIssue(payload.pull_number) : issue;
         var path = "/repos/" + repo + "/issues/" + issue + "/comments?per_page=100&sort=updated&direction=asc";
+        if (entityType === "pr") {
+            path = "/repos/" + repo + "/pulls/" + pullNumber + "/comments?per_page=100&sort=updated&direction=asc";
+        }
 
         context.setHttpMethod("GET");
         context.setUrl(hostId, path);

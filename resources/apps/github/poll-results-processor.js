@@ -1,5 +1,5 @@
 doc
-    .description("Normalize polled GitHub issues, dedupe by watermark, and dispatch actionable events")
+    .description("Normalize polled GitHub issues/PRs, dedupe by watermark, and dispatch actionable events")
     .asUserErrors()
     .inSchema({
         type: "array",
@@ -105,6 +105,43 @@ doc
                     }
                 }
             },
+            "githubPrWatcherCriteria": {
+                description: "Routing criteria list defining label, assignee, repo, and downstream deployment/step target for pull requests.",
+                type: "array",
+                minItems: 1,
+                items: {
+                    type: "object",
+                    additionalProperties: true,
+                    required: ["label", "assignee", "repo", "deploymentId", "stepId"],
+                    properties: {
+                        label: {
+                            description: "Label that must be present on the pull request.",
+                            type: "string"
+                        },
+                        assignee: {
+                            description: "GitHub assignee login that must own the pull request.",
+                            type: "string"
+                        },
+                        repo: {
+                            description: "GitHub repository in owner/repo format.",
+                            type: "string"
+                        },
+                        deploymentId: {
+                            description: "Deployment access id to call when this criterion matches.",
+                            type: "string"
+                        },
+                        stepId: {
+                            description: "Target step id in the destination deployment.",
+                            type: "string"
+                        }
+                    }
+                }
+            },
+            "watchEntity": {
+                description: "Watcher entity type; issue watcher matches only issues, pr watcher matches only pull requests.",
+                type: "string",
+                enum: ["issue", "pr"]
+            },
             "issueHandoffDelaySeconds": {
                 description: "Wait period in seconds after issue update before dispatching matched actions.",
                 type: "number",
@@ -126,6 +163,14 @@ doc
 
         function toLower(value) {
             return String(value || "").toLowerCase();
+        }
+
+        function normalizeEntity(value) {
+            var entity = toLower(String(value || "issue")).trim();
+            if (entity !== "issue" && entity !== "pr") {
+                throw new Error("watchEntity must be either issue or pr");
+            }
+            return entity;
         }
 
         function contains(array, value) {
@@ -220,7 +265,9 @@ doc
             return null;
         }
 
-        var criteria = normalizeCriteria(parseJson(context.getData("githubIssueWatcherCriteria"), []));
+        var watchEntity = normalizeEntity(context.getData("watchEntity"));
+        var criteriaKey = watchEntity === "pr" ? "githubPrWatcherCriteria" : "githubIssueWatcherCriteria";
+        var criteria = normalizeCriteria(parseJson(context.getData(criteriaKey), []));
         var issueHandoffDelaySeconds = toNonNegativeNumber(context.getData("issueHandoffDelaySeconds"), 0);
         var issueHandoffDelayMs = issueHandoffDelaySeconds * 1000;
         var decisionLoggingEnabled = toBoolean(context.getData("issueWatcherDecisionLoggingEnabled"), false);
@@ -228,6 +275,7 @@ doc
         var body = parseJson(context.getBody(), []);
         logDecision(decisionLoggingEnabled, "poll-result", {
             polled_items: body.length,
+            watch_entity: watchEntity,
             criteria_count: criteria.length,
             handoff_delay_seconds: issueHandoffDelaySeconds
         });
@@ -246,8 +294,15 @@ doc
 
         for (var i = 0; i < body.length; i += 1) {
             var issue = body[i];
-            if (issue.pull_request) {
-                logDecision(decisionLoggingEnabled, "skip-pull-request", {
+            var isPullRequest = !!issue.pull_request;
+            if (watchEntity === "issue" && isPullRequest) {
+                logDecision(decisionLoggingEnabled, "skip-pr-while-watching-issues", {
+                    issue: issue.number
+                });
+                continue;
+            }
+            if (watchEntity === "pr" && !isPullRequest) {
+                logDecision(decisionLoggingEnabled, "skip-issue-while-watching-prs", {
                     issue: issue.number
                 });
                 continue;
@@ -271,7 +326,7 @@ doc
             }
 
             var matchedCriterion = getMatchedCriterion(criteria, labelNames, assigneeNames);
-            var watermarkKey = String(issueNumber);
+            var watermarkKey = watchEntity + ":" + String(issueNumber);
             var updatedAt = String(issue.updated_at || issue.created_at || "");
             if (!updatedAt) {
                 updatedAt = String(context.getTimestamp());
@@ -341,6 +396,7 @@ doc
             }
 
             var eventPayload = {
+                entity_type: watchEntity,
                 repo: matchedCriterion.repo,
                 issue_number: issueNumber,
                 issue_url: issue.html_url || "",
@@ -353,7 +409,10 @@ doc
                 action_deployment_id: matchedCriterion.deploymentId,
                 action_step_id: matchedCriterion.stepId,
                 updated_at: updatedAt,
-                issue_context: issue
+                issue_context: issue,
+                pull_number: isPullRequest ? issueNumber : undefined,
+                pull_url: isPullRequest ? (issue.pull_request && issue.pull_request.html_url) || issue.html_url || "" : undefined,
+                pull_context: isPullRequest ? issue.pull_request || {} : undefined
             };
 
             logDecision(decisionLoggingEnabled, "dispatch", {
