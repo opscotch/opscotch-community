@@ -15,7 +15,8 @@
           "trigger": {
             "deploymentAccess": {
               "ids": [
-                "github-issue-updater-callers"
+                "github-issue-updater-callers",
+                "github-issue-updater-callers-pr"
               ]
             }
           },
@@ -45,7 +46,8 @@
           "trigger": {
             "deploymentAccess": {
               "ids": [
-                "github-issue-updater-callers"
+                "github-issue-updater-callers",
+                "github-issue-updater-callers-pr"
               ]
             }
           },
@@ -81,7 +83,8 @@
           "trigger": {
             "deploymentAccess": {
               "ids": [
-                "github-issue-updater-callers"
+                "github-issue-updater-callers",
+                "github-issue-updater-callers-pr"
               ]
             }
           },
@@ -117,7 +120,8 @@
           "trigger": {
             "deploymentAccess": {
               "ids": [
-                "github-issue-updater-callers"
+                "github-issue-updater-callers",
+                "github-issue-updater-callers-pr"
               ]
             }
           },
@@ -153,7 +157,8 @@
           "trigger": {
             "deploymentAccess": {
               "ids": [
-                "github-issue-updater-callers"
+                "github-issue-updater-callers",
+                "github-issue-updater-callers-pr"
               ]
             }
           },
@@ -189,7 +194,8 @@
           "trigger": {
             "deploymentAccess": {
               "ids": [
-                "github-issue-updater-callers"
+                "github-issue-updater-callers",
+                "github-issue-updater-callers-pr"
               ]
             }
           },
@@ -225,7 +231,8 @@
           "trigger": {
             "deploymentAccess": {
               "ids": [
-                "github-issue-updater-callers"
+                "github-issue-updater-callers",
+                "github-issue-updater-callers-pr"
               ]
             }
           },

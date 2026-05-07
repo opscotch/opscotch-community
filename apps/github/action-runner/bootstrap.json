@@ -1,0 +1,42 @@
+[
+  {
+    "deploymentId": "github-action-runner",
+    "remoteConfiguration": "workflow.json",
+    "allowExternalHostAccess": [
+      {
+        "id": "github-api",
+        "host": "https://api.github.com",
+        "authenticationHost": true,
+        "httpTimeout": 15000,
+        "allowList": [
+          {
+            "method": "POST",
+            "uriPattern": "/repos/.+/actions/workflows/.+/dispatches"
+          },
+          {
+            "method": "GET",
+            "uriPattern": "/repos/.+/actions/workflows/.+/runs.*"
+          },
+          {
+            "method": "GET",
+            "uriPattern": "/repos/.+/actions/runs/.+"
+          }
+        ],
+        "data": {
+          "githubToken": "REPLACE_ME_WITH_GH_TOKEN"
+        }
+      }
+    ],
+    "allowDeploymentAccess": [
+      {
+        "id": "github-action-runner-callers",
+        "deploymentId": "REPLACE_CALLER_DEPLOYMENT_ID",
+        "access": "receive"
+      }
+    ],
+    "data": {
+      "hostId": "github-api",
+      "githubAuthHostId": "github-api"
+    }
+  }
+]

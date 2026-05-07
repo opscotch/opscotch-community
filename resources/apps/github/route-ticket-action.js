@@ -574,6 +574,7 @@ doc
 
         var nonTriagePayload = {
             operation: matchedLabel || "none",
+            matched_label: matchedLabel,
             repo: repo,
             issue: issueNumber,
             issue_url: eventPayload.issue_url || "",

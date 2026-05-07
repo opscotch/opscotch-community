@@ -1,73 +1,90 @@
 doc
-    .description("Normalize polled GitHub issues/PRs, dedupe by watermark, and dispatch actionable events")
+    .description("Normalize polled GitHub issues/PRs (including search API responses), dedupe by watermark, and dispatch actionable events")
     .asUserErrors()
     .inSchema({
-        type: "array",
-        items: {
-            type: "object",
-            additionalProperties: true,
-            properties: {
-                number: {
-                    description: "Issue number returned by GitHub.",
-                    oneOf: [
-                        { type: "number" },
-                        { type: "string" }
-                    ]
-                },
-                pull_request: {
-                    description: "Present when the item is a pull request rather than an issue.",
-                    type: "object"
-                },
-                labels: {
-                    description: "Issue labels used to determine routing eligibility.",
-                    type: "array",
-                    items: {
-                        type: "object",
-                        additionalProperties: true,
-                        properties: {
-                            name: {
-                                description: "Label name as returned by GitHub.",
-                                type: "string"
+        oneOf: [
+            {
+                type: "array",
+                items: {
+                    type: "object",
+                    additionalProperties: true,
+                    properties: {
+                        number: {
+                            description: "Issue number returned by GitHub.",
+                            oneOf: [
+                                { type: "number" },
+                                { type: "string" }
+                            ]
+                        },
+                        pull_request: {
+                            description: "Present when the item is a pull request rather than an issue.",
+                            type: "object"
+                        },
+                        labels: {
+                            description: "Issue labels used to determine routing eligibility.",
+                            type: "array",
+                            items: {
+                                type: "object",
+                                additionalProperties: true,
+                                properties: {
+                                    name: {
+                                        description: "Label name as returned by GitHub.",
+                                        type: "string"
+                                    }
+                                }
                             }
+                        },
+                        assignees: {
+                            description: "Assignees currently associated with the issue.",
+                            type: "array",
+                            items: {
+                                type: "object",
+                                additionalProperties: true,
+                                properties: {
+                                    login: {
+                                        description: "GitHub login for an assignee.",
+                                        type: "string"
+                                    }
+                                }
+                            }
+                        },
+                        updated_at: {
+                            description: "Issue update timestamp used for dedupe watermarking.",
+                            type: "string"
+                        },
+                        created_at: {
+                            description: "Issue creation timestamp used as fallback watermark.",
+                            type: "string"
+                        },
+                        html_url: {
+                            description: "Canonical URL of the issue.",
+                            type: "string"
+                        },
+                        title: {
+                            description: "Issue title used in downstream payloads.",
+                            type: "string"
+                        },
+                        body: {
+                            description: "Issue body text returned by GitHub.",
+                            type: "string"
                         }
                     }
-                },
-                assignees: {
-                    description: "Assignees currently associated with the issue.",
-                    type: "array",
+                }
+            },
+            {
+                type: "object",
+                additionalProperties: true,
+                properties: {
                     items: {
-                        type: "object",
-                        additionalProperties: true,
-                        properties: {
-                            login: {
-                                description: "GitHub login for an assignee.",
-                                type: "string"
-                            }
+                        type: "array",
+                        items: {
+                            type: "object",
+                            additionalProperties: true
                         }
                     }
-                },
-                updated_at: {
-                    description: "Issue update timestamp used for dedupe watermarking.",
-                    type: "string"
-                },
-                created_at: {
-                    description: "Issue creation timestamp used as fallback watermark.",
-                    type: "string"
-                },
-                html_url: {
-                    description: "Canonical URL of the issue.",
-                    type: "string"
-                },
-                title: {
-                    description: "Issue title used in downstream payloads.",
-                    type: "string"
-                },
-                body: {
-                    description: "Issue body text returned by GitHub.",
-                    type: "string"
                 }
             }
-        }
+        ]
     })
     .dataSchema({
         type: "object",
@@ -272,7 +289,17 @@ doc
         var issueHandoffDelayMs = issueHandoffDelaySeconds * 1000;
         var decisionLoggingEnabled = toBoolean(context.getData("issueWatcherDecisionLoggingEnabled"), false);
 
-        var body = parseJson(context.getBody(), []);
+        var bodyRaw = parseJson(context.getBody(), []);
+        var body = Array.isArray(bodyRaw)
+            ? bodyRaw
+            : (bodyRaw && typeof bodyRaw === "object" && Array.isArray(bodyRaw.items) ? bodyRaw.items : []);
+        logDecision(decisionLoggingEnabled, "poll-response-shape", {
+            response_type: Array.isArray(bodyRaw) ? "array" : (bodyRaw && typeof bodyRaw === "object" ? "object" : typeof bodyRaw),
+            has_items_array: !!(bodyRaw && typeof bodyRaw === "object" && Array.isArray(bodyRaw.items)),
+            normalized_items: body.length,
+            total_count: bodyRaw && typeof bodyRaw === "object" && bodyRaw.total_count !== undefined ? bodyRaw.total_count : null,
+            incomplete_results: bodyRaw && typeof bodyRaw === "object" && bodyRaw.incomplete_results !== undefined ? !!bodyRaw.incomplete_results : null
+        });
         logDecision(decisionLoggingEnabled, "poll-result", {
             polled_items: body.length,
             watch_entity: watchEntity,
@@ -311,8 +338,15 @@ doc
             scanned += 1;
 
             var issueNumber = issue.number;
-            var labels = issue.labels;
-            var assignees = issue.assignees;
+            if (issueNumber === null || issueNumber === undefined || issueNumber === "") {
+                logDecision(decisionLoggingEnabled, "skip-missing-issue-number", {
+                    item_index: i,
+                    item_keys: Object.keys(issue || {})
+                });
+                continue;
+            }
+            var labels = Array.isArray(issue.labels) ? issue.labels : [];
+            var assignees = Array.isArray(issue.assignees) ? issue.assignees : [];
 
             var labelNames = [];
             for (var l = 0; l < labels.length; l += 1) {
@@ -345,6 +379,7 @@ doc
             if (!matchedCriterion) {
                 logDecision(decisionLoggingEnabled, "skip-no-match", {
                     issue: issueNumber,
+                    title: String(issue.title || ""),
                     labels: labelNames,
                     assignees: assigneeNames
                 });
@@ -417,6 +452,7 @@ doc
 
             logDecision(decisionLoggingEnabled, "dispatch", {
                 issue: issueNumber,
+                title: String(issue.title || ""),
                 matched_label: matchedCriterion.label,
                 deployment_id: matchedCriterion.deploymentId,
                 step_id: matchedCriterion.stepId,

@@ -29,6 +29,8 @@ doc
             result.systemError = "GitHub polling request failed with status " + statusCode;
         } else if (kind === "github-update") {
             result.systemError = "GitHub issue update request failed with status " + statusCode;
+        } else if (kind === "github-actions") {
+            result.systemError = "GitHub actions request failed with status " + statusCode;
         } else if (kind === "github-fetch-comments") {
             result.systemError = "GitHub issue comments request failed with status " + statusCode;
             result.body.comments = [];

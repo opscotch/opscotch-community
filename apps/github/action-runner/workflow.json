@@ -1,0 +1,124 @@
+{
+  "comment": "Reusable GitHub Actions app for triggering workflow_dispatch and polling workflow run status.",
+  "data": {
+    "hostId": "github-api"
+  },
+  "defaultStepProperties": {
+    "type": "scripted"
+  },
+  "workflows": [
+    {
+      "name": "github action runner",
+      "steps": [
+        {
+          "stepId": "github-action-trigger",
+          "trigger": {
+            "deploymentAccess": {
+              "ids": [
+                "github-action-runner-callers"
+              ]
+            }
+          },
+          "urlGenerator": {
+            "resource": "/apps/github/actions-url-generator.js",
+            "data": {
+              "operation": "trigger-workflow"
+            }
+          },
+          "payloadGenerator": {
+            "resource": "/apps/github/actions-payload-generator.js",
+            "data": {
+              "operation": "trigger-workflow"
+            }
+          },
+          "authenticationProcessor": {
+            "resource": "/apps/github/github-auth-processor.js"
+          },
+          "resultsProcessor": {
+            "resource": "/apps/github/actions-results-processor.js"
+          },
+          "httpStatusHandling": {
+            "300-599": {
+              "resource": "/apps/github/http-error.js",
+              "data": {
+                "httpErrorKind": "github-actions"
+              }
+            }
+          }
+        },
+        {
+          "stepId": "github-action-list-runs",
+          "trigger": {
+            "deploymentAccess": {
+              "ids": [
+                "github-action-runner-callers"
+              ]
+            }
+          },
+          "urlGenerator": {
+            "resource": "/apps/github/actions-url-generator.js",
+            "data": {
+              "operation": "list-workflow-runs"
+            }
+          },
+          "payloadGenerator": {
+            "resource": "/apps/github/actions-payload-generator.js",
+            "data": {
+              "operation": "list-workflow-runs"
+            }
+          },
+          "authenticationProcessor": {
+            "resource": "/apps/github/github-auth-processor.js"
+          },
+          "resultsProcessor": {
+            "resource": "/apps/github/actions-results-processor.js"
+          },
+          "httpStatusHandling": {
+            "300-599": {
+              "resource": "/apps/github/http-error.js",
+              "data": {
+                "httpErrorKind": "github-actions"
+              }
+            }
+          }
+        },
+        {
+          "stepId": "github-action-get-run",
+          "trigger": {
+            "deploymentAccess": {
+              "ids": [
+                "github-action-runner-callers"
+              ]
+            }
+          },
+          "urlGenerator": {
+            "resource": "/apps/github/actions-url-generator.js",
+            "data": {
+              "operation": "get-workflow-run"
+            }
+          },
+          "payloadGenerator": {
+            "resource": "/apps/github/actions-payload-generator.js",
+            "data": {
+              "operation": "get-workflow-run"
+            }
+          },
+          "authenticationProcessor": {
+            "resource": "/apps/github/github-auth-processor.js"
+          },
+          "resultsProcessor": {
+            "resource": "/apps/github/actions-results-processor.js"
+          },
+          "httpStatusHandling": {
+            "300-599": {
+              "resource": "/apps/github/http-error.js",
+              "data": {
+                "httpErrorKind": "github-actions"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

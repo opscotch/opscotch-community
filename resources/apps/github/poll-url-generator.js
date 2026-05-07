@@ -1,5 +1,5 @@
 doc
-    .description("Build GitHub issues polling URL from bootstrap criteria for issue or pull request watchers")
+    .description("Build GitHub polling URL from bootstrap criteria for issue or pull request watchers")
     .asUserErrors()
     .dataSchema({
         type: "object",
@@ -202,20 +202,36 @@ doc
         }
 
         var labels = uniqueLabels(criteria);
-        var query = "state=open"
-            + "&assignee=" + encode(primary.assignee)
-            + "&sort=updated"
-            + "&direction=asc"
-            + "&per_page=100";
-        var path = "/repos/" + primary.repo + "/issues?" + query;
+        var path = "";
+        var labelFilterMode = "or-in-results-processor";
+        var queryText = "";
+        if (watchEntity === "pr") {
+            var searchTerms = [
+                "repo:" + primary.repo,
+                "is:open",
+                "is:pr"
+            ];
+            queryText = searchTerms.join(" ");
+            path = "/search/issues?q=" + encode(queryText) + "&sort=updated&order=asc&per_page=100";
+            labelFilterMode = "results-processor-only";
+        } else {
+            var query = "state=open"
+                + "&assignee=" + encode(primary.assignee)
+                + "&sort=updated"
+                + "&direction=asc"
+                + "&per_page=100";
+            path = "/repos/" + primary.repo + "/issues?" + query;
+        }
         logDecision(decisionLoggingEnabled, "poll-request-built", {
             host_id: hostId,
             watch_entity: watchEntity,
             repo: primary.repo,
             assignee: primary.assignee,
             labels: labels,
-            label_filter_mode: "or-in-results-processor",
-            path: path
+            label_filter_mode: labelFilterMode,
+            path: path,
+            criteria_count: criteria.length,
+            raw_query: queryText
         });
 
         context.setHttpMethod("GET");
