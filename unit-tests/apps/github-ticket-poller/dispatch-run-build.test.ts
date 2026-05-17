@@ -1,8 +1,12 @@
 import path from 'node:path';
-import { createJavascriptContext, runResource } from '@opscotch/resource-testkit';
+import { createJavascriptContext, createResourceSuite } from '@opscotch/resource-testkit';
 import { describe, expect, it } from 'vitest';
 
 const resource = '/workspace/dev_workspace/al.machino/implementation-artifacts/opscotch/github-ticket-poller/resources/dispatch-run-build.js';
+
+const suite = createResourceSuite({
+  resources: [{ id: "resource", resource }],
+});
 
 describe('github-ticket-poller/dispatch-run-build', () => {
   it('requires testrunnerbranch in PR body and comments on PR when missing', async () => {
@@ -22,9 +26,16 @@ describe('github-ticket-poller/dispatch-run-build', () => {
       },
     });
 
-    await expect(runResource({ resource, context })).rejects.toThrow('testrunnerbranch is required in PR body');
+    await suite.run("resource", { context });
 
-    expect(context.__sendToStepCalls.some((c) => c.deploymentAccessId === 'github-issue-updater' && c.stepName === 'github-issue-updater')).toBe(true);
+    const out = JSON.parse(context.getBody() || '{}');
+    expect(out).toMatchObject({
+      status: 'error',
+      queued: false,
+      operation: 'run-build',
+      source_branch: 'feature/pr-451',
+      error: { code: 'testrunner_branch_missing' },
+    });
   });
 
   it('dispatches build, resolves run_id, and enqueues tracker', async () => {
@@ -37,17 +48,14 @@ describe('github-ticket-poller/dispatch-run-build', () => {
         if (call.stepName === 'github-pr-get-details') {
           return { body: JSON.stringify({ body: 'testrunnerbranch: feature/test-runner', head_branch: 'feature/pr-452' }) };
         }
-        if (call.stepName === 'invoke-builder-build-action') {
-          return { body: JSON.stringify({ status: 'ok', operation: 'trigger-workflow' }) };
-        }
-        if (call.stepName === 'github-action-trigger-only') {
+        if (call.stepName === 'github-action-trigger') {
           return { body: JSON.stringify({ run_id: 998877, html_url: 'https://github.com/opscotch/builder/actions/runs/998877' }) };
         }
         return { body: '{}' };
       },
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     const out = JSON.parse(context.getBody() || '{}');
     expect(out).toMatchObject({

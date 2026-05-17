@@ -1,8 +1,12 @@
 import path from 'node:path';
-import { createAuthenticationJavascriptContext, runResource } from '@opscotch/resource-testkit';
+import { createAuthenticationJavascriptContext, createResourceSuite } from '@opscotch/resource-testkit';
 import { describe, expect, it } from 'vitest';
 
 const resource = path.resolve(import.meta.dirname, '../../../../resources/apps/github/github-auth-processor.js');
+
+const suite = createResourceSuite({
+  resources: [{ id: "resource", resource }],
+});
 
 describe('github-auth-processor', () => {
   it('sets bearer authorization from restricted host data', async () => {
@@ -13,7 +17,7 @@ describe('github-auth-processor', () => {
       },
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(context.getHeader('authorization')).toBe('Bearer secret-token');
   });
@@ -26,7 +30,7 @@ describe('github-auth-processor', () => {
       },
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(context.hasSystemErrors()).toBe(true);
     expect(context.getSystemErrors().join(' ')).toContain('github token is missing');

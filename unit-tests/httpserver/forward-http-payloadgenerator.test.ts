@@ -1,7 +1,11 @@
 import path from 'node:path';
-import { createJavascriptContext, runResource } from '@opscotch/resource-testkit';
+import { createJavascriptContext, createResourceSuite } from '@opscotch/resource-testkit';
 
 const resource = path.resolve(import.meta.dirname, '../../resources/httpserver/forward-http-payloadgenerator.js');
+
+const suite = createResourceSuite({
+  resources: [{ id: "resource", resource }],
+});
 
 describe('forward-http-payloadgenerator', () => {
   it('restores headers and decodes a base64 body from the saved request', async () => {
@@ -20,7 +24,7 @@ describe('forward-http-payloadgenerator', () => {
       },
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(context.getHeader('Content-Type')).toBe('text/plain');
     expect(context.getBody()).toBe('hello');

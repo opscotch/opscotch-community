@@ -1,8 +1,12 @@
 import path from 'node:path';
-import { createJavascriptContext, runResource } from '@opscotch/resource-testkit';
+import { createJavascriptContext, createResourceSuite } from '@opscotch/resource-testkit';
 import { describe, expect, it } from 'vitest';
 
 const resource = path.resolve(import.meta.dirname, '../../../resources/apps/opscotch-configurator/property-replace.js');
+
+const suite = createResourceSuite({
+  resources: [{ id: "resource", resource }],
+});
 
 describe('apps/opscotch-configurator/property-replace', () => {
   it('replaces the configured substring on the configured property', async () => {
@@ -15,7 +19,7 @@ describe('apps/opscotch-configurator/property-replace', () => {
       },
     });
 
-    const result = await runResource({ resource, context });
+    const result = await suite.run("resource", { context });
 
     expect(result.doc.dataSchemaValue).toEqual({
       type: 'object',

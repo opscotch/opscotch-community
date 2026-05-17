@@ -1,8 +1,12 @@
 import path from 'node:path';
-import { createJavascriptContext, runResource } from '@opscotch/resource-testkit';
+import { createJavascriptContext, createResourceSuite } from '@opscotch/resource-testkit';
 import { describe, expect, it } from 'vitest';
 
 const resource = path.resolve(import.meta.dirname, '../../../../resources/apps/github/actions/actions-url-generator.js');
+
+const suite = createResourceSuite({
+  resources: [{ id: "resource", resource }],
+});
 
 describe('github/action-runner actions-url-generator', () => {
   it('builds dispatch URL for trigger-workflow', async () => {
@@ -16,7 +20,7 @@ describe('github/action-runner actions-url-generator', () => {
       }),
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(context.__method).toBe('POST');
     expect(context.__url?.hostRef).toBe('github-api');
@@ -35,7 +39,7 @@ describe('github/action-runner actions-url-generator', () => {
       }),
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(context.__method).toBe('GET');
     expect(context.__url?.path).toContain('/repos/opscotch/hopscotch/actions/workflows/ci.yml/runs?');
@@ -54,7 +58,7 @@ describe('github/action-runner actions-url-generator', () => {
       }),
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(context.__method).toBe('GET');
     expect(context.__url?.path).toBe('/repos/opscotch/hopscotch/actions/runs/123456');
@@ -71,7 +75,7 @@ describe('github/action-runner actions-url-generator', () => {
       }),
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(context.__method).toBe('GET');
     expect(context.__url?.path).toBe('/repos/opscotch/hopscotch/actions/runs/123456/jobs?per_page=50');

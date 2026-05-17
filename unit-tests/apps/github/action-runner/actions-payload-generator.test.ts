@@ -1,8 +1,12 @@
 import path from 'node:path';
-import { createJavascriptContext, runResource } from '@opscotch/resource-testkit';
+import { createJavascriptContext, createResourceSuite } from '@opscotch/resource-testkit';
 import { describe, expect, it } from 'vitest';
 
 const resource = path.resolve(import.meta.dirname, '../../../../resources/apps/github/actions/actions-trigger-workflow-payload-generator.js');
+
+const suite = createResourceSuite({
+  resources: [{ id: "resource", resource }],
+});
 
 describe('github/action-runner actions-payload-generator', () => {
   it('builds trigger workflow payload from body input', async () => {
@@ -13,7 +17,7 @@ describe('github/action-runner actions-payload-generator', () => {
       }),
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(context.getHeader('content-type')).toBe('application/json');
     expect(JSON.parse(context.getBody() || '{}')).toEqual({
@@ -27,7 +31,7 @@ describe('github/action-runner actions-payload-generator', () => {
       data: { ref: 'main' },
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(JSON.parse(context.getBody() || '{}').ref).toBe('main');
   });
@@ -37,7 +41,7 @@ describe('github/action-runner actions-payload-generator', () => {
       data: {},
     });
 
-    await expect(runResource({ resource, context })).rejects.toThrow('ref is required');
+    await expect(suite.run("resource", { context })).rejects.toThrow('ref is required');
   });
 
   it('data ref takes precedence over body input', async () => {
@@ -46,7 +50,7 @@ describe('github/action-runner actions-payload-generator', () => {
       body: JSON.stringify({ ref: 'develop' }),
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(JSON.parse(context.getBody() || '{}').ref).toBe('main');
   });

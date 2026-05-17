@@ -1,8 +1,12 @@
 import path from 'node:path';
-import { createJavascriptContext, runResource } from '@opscotch/resource-testkit';
+import { createJavascriptContext, createResourceSuite } from '@opscotch/resource-testkit';
 import { describe, expect, it } from 'vitest';
 
 const resource = path.resolve(import.meta.dirname, '../../../../resources/apps/github/fetch-comments-results-processor.js');
+
+const suite = createResourceSuite({
+  resources: [{ id: "resource", resource }],
+});
 
 describe('fetch-comments-results-processor', () => {
   it('normalizes array responses as ok comments payload', async () => {
@@ -13,7 +17,7 @@ describe('fetch-comments-results-processor', () => {
       ]),
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(JSON.parse(context.getBody() || '{}')).toEqual({
       status: 'ok',
@@ -30,7 +34,7 @@ describe('fetch-comments-results-processor', () => {
       body: JSON.stringify({ message: 'not an array' }),
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(JSON.parse(context.getBody() || '{}')).toEqual({
       status: 'ok',

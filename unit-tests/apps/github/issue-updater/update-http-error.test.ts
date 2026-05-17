@@ -1,8 +1,12 @@
 import path from 'node:path';
-import { createJavascriptContext, runResource } from '@opscotch/resource-testkit';
+import { createJavascriptContext, createResourceSuite } from '@opscotch/resource-testkit';
 import { describe, expect, it } from 'vitest';
 
 const resource = path.resolve(import.meta.dirname, '../../../../resources/apps/github/http-error.js');
+
+const suite = createResourceSuite({
+  resources: [{ id: "resource", resource }],
+});
 
 describe('github/issue-updater update-http-error', () => {
   it('records system error and wraps failure payload', async () => {
@@ -17,7 +21,7 @@ describe('github/issue-updater update-http-error', () => {
       },
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(context.hasSystemErrors()).toBe(true);
     expect(context.getSystemErrors().join(' ')).toContain('failed with status 422');

@@ -1,8 +1,12 @@
 import path from 'node:path';
-import { createJavascriptContext, runResource } from '@opscotch/resource-testkit';
+import { createJavascriptContext, createResourceSuite } from '@opscotch/resource-testkit';
 import { describe, expect, it } from 'vitest';
 
 const resource = path.resolve(import.meta.dirname, '../../../../resources/apps/github/actions/actions-trigger-and-resolve-run.js');
+
+const suite = createResourceSuite({
+  resources: [{ id: "resource", resource }],
+});
 
 describe('github/action-runner actions-trigger-and-resolve-run', () => {
   it('triggers workflow and resolves new run id', async () => {
@@ -20,7 +24,7 @@ describe('github/action-runner actions-trigger-and-resolve-run', () => {
         if (call.stepName === 'github-action-list-runs') {
           // First call returns only old runs (before trigger)
           // Subsequent calls return new run with recent timestamp
-          const triggerCalls = context.__sendToStepCalls?.filter(c => c.stepName === 'github-action-trigger') || [];
+          const triggerCalls = context.__sendToStepCalls?.filter(c => c.stepName === 'github-action-trigger-only') || [];
           if (triggerCalls.length === 0) {
             // First list call - before trigger, return old run only
             return { body: JSON.stringify({ runs: [{ id: 100, run_number: 10, status: 'completed', created_at: new Date(fixedTs - 60000).toISOString() }] }) };
@@ -35,7 +39,7 @@ describe('github/action-runner actions-trigger-and-resolve-run', () => {
       },
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     const out = JSON.parse(context.getBody() || '{}');
     expect(out.status).toBe('ok');
@@ -60,7 +64,7 @@ describe('github/action-runner actions-trigger-and-resolve-run', () => {
       }),
       sendToStep: (call) => {
         if (call.stepName === 'github-action-list-runs') {
-          const triggerCalls = context.__sendToStepCalls?.filter(c => c.stepName === 'github-action-trigger') || [];
+          const triggerCalls = context.__sendToStepCalls?.filter(c => c.stepName === 'github-action-trigger-only') || [];
           if (triggerCalls.length === 0) {
             // Before trigger
             return { body: JSON.stringify({ runs: [{ id: 98, run_number: 9, status: 'completed', created_at: new Date(fixedTs - 120000).toISOString() }] }) };
@@ -81,7 +85,7 @@ describe('github/action-runner actions-trigger-and-resolve-run', () => {
       },
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     const out = JSON.parse(context.getBody() || '{}');
     // Should pick run 101 (newest with created_at = fixedTs)
@@ -101,7 +105,7 @@ describe('github/action-runner actions-trigger-and-resolve-run', () => {
       }),
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(context.__error).toContain('owner/repo format');
   });
@@ -114,7 +118,7 @@ describe('github/action-runner actions-trigger-and-resolve-run', () => {
       }),
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(context.__error).toContain('workflow_id is required');
   });
@@ -127,7 +131,7 @@ describe('github/action-runner actions-trigger-and-resolve-run', () => {
       }),
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(context.__error).toContain('ref is required');
   });

@@ -1,13 +1,16 @@
 import path from 'node:path';
 import {
   createByteContext,
-  createJavascriptContext,
-  runResource,
+  createJavascriptContext, createResourceSuite,
   type ByteBufferHandle,
 } from '@opscotch/resource-testkit';
 import { describe, expect, it } from 'vitest';
 
 const resource = path.resolve(import.meta.dirname, '../../../resources/apps/opscotch-diagnostics/read.js');
+
+const suite = createResourceSuite({
+  resources: [{ id: "resource", resource }],
+});
 
 function writeInt(bytes: ReturnType<typeof createByteContext>, value: number): ByteBufferHandle {
   let byteCount = 1;
@@ -48,7 +51,7 @@ describe('apps/opscotch-diagnostics/read', () => {
       },
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(context.getBody()).toBe(JSON.stringify(['first payload', '{"second":true}']));
   });

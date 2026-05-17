@@ -1,8 +1,12 @@
 import path from 'node:path';
-import { createJavascriptContext, runResource } from '@opscotch/resource-testkit';
+import { createJavascriptContext, createResourceSuite } from '@opscotch/resource-testkit';
 import { describe, expect, it } from 'vitest';
 
 const resource = path.resolve(import.meta.dirname, '../../../../resources/apps/github/poll-results-processor.js');
+
+const suite = createResourceSuite({
+  resources: [{ id: "resource", resource }],
+});
 
 describe('poll-results-processor', () => {
   it('dispatches matching issue and updates watermark', async () => {
@@ -47,7 +51,7 @@ describe('poll-results-processor', () => {
       },
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(context.__sendToStepCalls).toHaveLength(1);
     expect(context.__sendToStepCalls[0].stepName).toBe('route-ticket-action');
@@ -103,7 +107,7 @@ describe('poll-results-processor', () => {
       },
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(context.__sendToStepCalls).toHaveLength(0);
     expect(JSON.parse(context.getBody() || '{}')).toEqual({
@@ -165,7 +169,7 @@ describe('poll-results-processor', () => {
       },
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(context.__sendToStepCalls).toHaveLength(1);
     expect(JSON.parse(context.getPersistedItem('issueUpdatedAtByNumber') || '{}')).toEqual({});
@@ -215,7 +219,7 @@ describe('poll-results-processor', () => {
       },
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(context.__sendToStepCalls).toHaveLength(1);
     expect(JSON.parse(context.getPersistedItem('issueUpdatedAtByNumber') || '{}')).toEqual({});
@@ -256,7 +260,7 @@ describe('poll-results-processor', () => {
       timestamp: Date.parse('2026-04-23T00:02:00Z'),
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(context.__sendToStepCalls).toHaveLength(0);
     expect(context.getPersistedItem('issueUpdatedAtByNumber')).toBe('{}');
@@ -313,7 +317,7 @@ describe('poll-results-processor', () => {
       },
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(context.__sendToStepCalls).toHaveLength(1);
     const sent = JSON.parse(context.__sendToStepCalls[0].body || '{}');

@@ -1,13 +1,17 @@
 import path from 'node:path';
-import { createJavascriptContext, runResource } from '@opscotch/resource-testkit';
+import { createJavascriptContext, createResourceSuite } from '@opscotch/resource-testkit';
 
 const resource = path.resolve(import.meta.dirname, '../../resources/httpserver/response-set-cors.js');
+
+const suite = createResourceSuite({
+  resources: [{ id: "resource", resource }],
+});
 
 describe('response-set-cors', () => {
   it('sets a default cors header when no data override is present', async () => {
     const context = createJavascriptContext();
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(context.getHeader('Access-Control-Allow-Origin')).toBe('*');
   });
@@ -21,7 +25,7 @@ describe('response-set-cors', () => {
       },
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(context.getHeader('Access-Control-Allow-Origin')).toBe('https://example.test');
     expect(context.getHeader('Access-Control-Allow-Methods')).toBe('GET,POST');

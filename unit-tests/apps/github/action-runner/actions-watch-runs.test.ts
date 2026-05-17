@@ -1,8 +1,12 @@
 import path from 'node:path';
-import { createJavascriptContext, runResource } from '@opscotch/resource-testkit';
+import { createJavascriptContext, createResourceSuite } from '@opscotch/resource-testkit';
 import { describe, expect, it } from 'vitest';
 
 const resource = path.resolve(import.meta.dirname, '../../../../resources/apps/github/actions/actions-watch-runs.js');
+
+const suite = createResourceSuite({
+  resources: [{ id: "resource", resource }],
+});
 
 describe('github/action-runner actions-watch-runs', () => {
   it('routes newly completed workflow runs and stores bounded watermark state', async () => {
@@ -55,7 +59,7 @@ describe('github/action-runner actions-watch-runs', () => {
       },
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(context.__sendToStepCalls.some((call) => call.stepName === 'on-build-complete')).toBe(true);
     const out = JSON.parse(context.getBody() || '{}');
@@ -116,7 +120,7 @@ describe('github/action-runner actions-watch-runs', () => {
       },
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(context.__sendToStepCalls.some((call) => call.stepName === 'on-build-complete')).toBe(false);
     const out = JSON.parse(context.getBody() || '{}');

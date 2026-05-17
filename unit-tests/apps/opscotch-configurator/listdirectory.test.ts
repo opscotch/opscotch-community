@@ -1,8 +1,12 @@
 import path from 'node:path';
-import { createJavascriptContext, runResource } from '@opscotch/resource-testkit';
+import { createJavascriptContext, createResourceSuite } from '@opscotch/resource-testkit';
 import { describe, expect, it } from 'vitest';
 
 const resource = path.resolve(import.meta.dirname, '../../../resources/apps/opscotch-configurator/listdirectory.js');
+
+const suite = createResourceSuite({
+  resources: [{ id: "resource", resource }],
+});
 
 describe('apps/opscotch-configurator/listdirectory', () => {
   it('lists the configured directory and returns the filesystem result', async () => {
@@ -22,7 +26,7 @@ describe('apps/opscotch-configurator/listdirectory', () => {
       },
     });
 
-    const result = await runResource({ resource, context });
+    const result = await suite.run("resource", { context });
 
     expect(result.doc.dataSchemaValue).toEqual({
       type: 'object',
@@ -46,7 +50,7 @@ describe('apps/opscotch-configurator/listdirectory', () => {
         },
       },
     });
-    expect(listedPaths).toEqual(['/tmp', '/tmp']);
+    expect(listedPaths).toEqual(['/tmp']);
     expect(context.getBody()).toBe(listing);
   });
 });

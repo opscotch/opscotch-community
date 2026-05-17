@@ -1,12 +1,15 @@
 import path from 'node:path';
 import {
   createJavascriptContext,
-  createJavascriptStateContext,
-  runResource,
+  createJavascriptStateContext, createResourceSuite,
 } from '@opscotch/resource-testkit';
 import { describe, expect, it } from 'vitest';
 
 const resource = path.resolve(import.meta.dirname, '../../../resources/apps/aws/lambda-response-processor.js');
+
+const suite = createResourceSuite({
+  resources: [{ id: "resource", resource }],
+});
 
 describe('apps/aws/lambda-response-processor', () => {
   it('routes an API Gateway v2 event to the configured handler and forwards the lambda response', async () => {
@@ -42,7 +45,7 @@ describe('apps/aws/lambda-response-processor', () => {
       },
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(context.getProperty('awsRequestId')).toBe('req-123');
     expect(context.getProperty('responseType')).toBe('response');

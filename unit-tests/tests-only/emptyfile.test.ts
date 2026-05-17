@@ -1,7 +1,11 @@
 import path from 'node:path';
-import { createJavascriptContext, runResource } from '@opscotch/resource-testkit';
+import { createJavascriptContext, createResourceSuite } from '@opscotch/resource-testkit';
 
 const resource = path.resolve(import.meta.dirname, '../../resources/tests-only/emptyfile.js');
+
+const suite = createResourceSuite({
+  resources: [{ id: "resource", resource }],
+});
 
 describe('tests-only/emptyfile', () => {
   it('runs without changing the context', async () => {
@@ -9,7 +13,7 @@ describe('tests-only/emptyfile', () => {
       body: 'keep-me',
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(context.getBody()).toBe('keep-me');
   });

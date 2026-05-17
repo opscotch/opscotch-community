@@ -1,7 +1,11 @@
 import path from 'node:path';
-import { createJavascriptContext, runResource } from '@opscotch/resource-testkit';
+import { createJavascriptContext, createResourceSuite } from '@opscotch/resource-testkit';
 
 const resource = path.resolve(import.meta.dirname, '../../resources/general/standard-forward-from-headers.js');
+
+const suite = createResourceSuite({
+  resources: [{ id: "resource", resource }],
+});
 
 describe('standard-forward-from-headers', () => {
   it('forwards the body to a route resolved from data and copies configured headers', async () => {
@@ -16,7 +20,7 @@ describe('standard-forward-from-headers', () => {
       },
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(context.__sendToStepCalls).toEqual([
       {

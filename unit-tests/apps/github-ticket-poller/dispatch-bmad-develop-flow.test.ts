@@ -1,10 +1,18 @@
 import path from 'node:path';
-import { createJavascriptContext, runResource } from '@opscotch/resource-testkit';
+import { createJavascriptContext, createResourceSuite } from '@opscotch/resource-testkit';
 import { describe, expect, it } from 'vitest';
 
 const prepareResource = '/workspace/dev_workspace/al.machino/implementation-artifacts/opscotch/github-ticket-poller/resources/dispatch-bmad-develop-prepare.js';
 const flowResource = '/workspace/dev_workspace/al.machino/implementation-artifacts/opscotch/github-ticket-poller/resources/dispatch-bmad-develop.js';
 const invokeResource = '/workspace/dev_workspace/al.machino/implementation-artifacts/opscotch/github-ticket-poller/resources/dispatch-bmad-develop-invoke.js';
+
+const suite = createResourceSuite({
+  resources: [
+    { id: 'prepare', resource: prepareResource },
+    { id: 'flow', resource: flowResource },
+    { id: 'invoke', resource: invokeResource },
+  ],
+});
 
 describe('github-ticket-poller/dispatch-bmad-develop-prepare', () => {
   it('derives workflow/model/work_branch from step data for issue dispatch', async () => {
@@ -41,7 +49,7 @@ describe('github-ticket-poller/dispatch-bmad-develop-prepare', () => {
       },
     });
 
-    await runResource({ resource: prepareResource, context });
+    await suite.run('prepare', { context });
 
     const out = JSON.parse(context.getBody() || '{}');
     expect(out.workflow).toBe('implementation-planning');
@@ -74,7 +82,7 @@ describe('github-ticket-poller/dispatch-bmad-develop', () => {
       },
     });
 
-    await expect(runResource({ resource: flowResource, context })).rejects.toThrow('dispatch-bmad-develop-prepare returned error');
+    await expect(suite.run('flow', { context })).rejects.toThrow('dispatch-bmad-develop-prepare returned error');
 
     const calledSteps = context.__sendToStepCalls.map((c) => c.stepName);
     expect(calledSteps).toContain('dispatch-bmad-develop-prepare');
@@ -108,18 +116,18 @@ describe('github-ticket-poller/dispatch-bmad-develop-invoke', () => {
       }),
       sendToStep: (call) => {
         if (call.stepName === 'invoke-openclaw-developer') {
-          return { body: JSON.stringify({ queued: true, status: 'accepted', request_id: 'req-789' }) };
+          return { body: JSON.stringify({ queued: true, status: 'ok', request_id: 'req-789' }) };
         }
         return { body: JSON.stringify({ status: 'ok' }) };
       },
     });
 
-    await runResource({ resource: invokeResource, context });
+    await suite.run('invoke', { context });
 
     const out = JSON.parse(context.getBody() || '{}');
     expect(out).toMatchObject({
       queued: true,
-      status: 'accepted',
+      status: 'ok',
       request_id: 'req-789',
       run_id: 'run-789',
     });

@@ -1,8 +1,12 @@
 import path from 'node:path';
-import { createJavascriptContext, runResource } from '@opscotch/resource-testkit';
+import { createJavascriptContext, createResourceSuite } from '@opscotch/resource-testkit';
 import { describe, expect, it } from 'vitest';
 
 const resource = path.resolve(import.meta.dirname, '../../../../resources/apps/github/issues/update-results-processor.js');
+
+const suite = createResourceSuite({
+  resources: [{ id: "resource", resource }],
+});
 
 describe('github/issue-updater update-results-processor', () => {
   it('normalizes successful response', async () => {
@@ -16,7 +20,7 @@ describe('github/issue-updater update-results-processor', () => {
       },
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(JSON.parse(context.getBody() || '{}')).toEqual({
       status: 'ok',

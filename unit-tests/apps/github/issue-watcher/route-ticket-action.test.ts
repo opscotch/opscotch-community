@@ -1,8 +1,12 @@
 import path from 'node:path';
-import { createJavascriptContext, runResource } from '@opscotch/resource-testkit';
+import { createJavascriptContext, createResourceSuite } from '@opscotch/resource-testkit';
 import { describe, expect, it } from 'vitest';
 
 const resource = path.resolve(import.meta.dirname, '../../../../resources/apps/github/route-issue-action.js');
+
+const suite = createResourceSuite({
+  resources: [{ id: "resource", resource }],
+});
 
 function baseBody(overrides = {}) {
   return {
@@ -39,7 +43,7 @@ describe('route-issue-action', () => {
   it('routes issue payload only after downstream dispatch explicitly queues it', async () => {
     const context = routeContext({ queued: true, status: 'ok' });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(context.__sendToStepCalls).toHaveLength(2);
     expect(context.__sendToStepCalls[0].stepName).toBe('fetch-issue-comments');
@@ -73,7 +77,7 @@ describe('route-issue-action', () => {
   it('does not acknowledge a stopped downstream dispatch that returns an empty body', async () => {
     const context = routeContext('');
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(JSON.parse(context.getBody() || '{}')).toMatchObject({
       routed: false,
@@ -89,7 +93,7 @@ describe('route-issue-action', () => {
   it('does not acknowledge downstream dispatch without an explicit acceptance marker', async () => {
     const context = routeContext({});
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(JSON.parse(context.getBody() || '{}')).toMatchObject({
       routed: false,
@@ -104,7 +108,7 @@ describe('route-issue-action', () => {
       error: { code: 'rate_limited', message: 'OpenClaw invoke already in progress', retryable: true },
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(JSON.parse(context.getBody() || '{}')).toMatchObject({
       routed: false,
@@ -118,6 +122,6 @@ describe('route-issue-action', () => {
 
   it('throws when downstream dispatch returns a non-JSON token body', async () => {
     const context = routeContext('queued');
-    await expect(runResource({ resource, context })).rejects.toThrow('Invalid JSON body from dispatch-bmad-refine-triage');
+    await expect(suite.run("resource", { context })).rejects.toThrow('Invalid JSON body from dispatch-bmad-refine-triage');
   });
 });

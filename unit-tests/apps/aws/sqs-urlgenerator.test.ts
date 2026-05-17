@@ -1,8 +1,12 @@
 import path from 'node:path';
-import { createJavascriptContext, runResource } from '@opscotch/resource-testkit';
+import { createJavascriptContext, createResourceSuite } from '@opscotch/resource-testkit';
 import { describe, expect, it } from 'vitest';
 
 const resource = path.resolve(import.meta.dirname, '../../../resources/apps/aws/sqs-urlgenerator.js');
+
+const suite = createResourceSuite({
+  resources: [{ id: "resource", resource }],
+});
 
 describe('apps/aws/sqs-urlgenerator', () => {
   it('builds the SQS URL from the account id and queue name', async () => {
@@ -15,7 +19,7 @@ describe('apps/aws/sqs-urlgenerator', () => {
       },
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(context.__url).toEqual({
       hostRef: 'sqs',

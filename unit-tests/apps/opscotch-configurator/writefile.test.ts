@@ -1,21 +1,23 @@
 import path from 'node:path';
-import { createJavascriptContext, runResource } from '@opscotch/resource-testkit';
+import { createJavascriptContext, createResourceSuite } from '@opscotch/resource-testkit';
 import { describe, expect, it } from 'vitest';
 
 const resource = path.resolve(import.meta.dirname, '../../../resources/apps/opscotch-configurator/writefile.js');
 
+const suite = createResourceSuite({
+  resources: [{ id: "resource", resource }],
+});
+
 describe('apps/opscotch-configurator/writefile', () => {
   it('declares the fileId data schema dependency', async () => {
-    const result = await runResource({
-      resource,
-      context: createJavascriptContext({
-        body: JSON.stringify({ path: '/tmp/example.txt', body: 'hello' }),
-        data: { fileId: 'config-files' },
-        files: {
-          write() {},
-        },
-      }),
+    const context = createJavascriptContext({
+      body: JSON.stringify({ path: '/tmp/example.txt', body: 'hello' }),
+      data: { fileId: 'config-files' },
+      files: {
+        write() {},
+      },
     });
+    const result = await suite.run("resource", { context });
 
     expect(result.doc.dataSchemaValue).toEqual({
       type: 'object',
@@ -40,7 +42,7 @@ describe('apps/opscotch-configurator/writefile', () => {
       },
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(context.getBody()).toBe('hello world');
     expect(writes).toEqual([

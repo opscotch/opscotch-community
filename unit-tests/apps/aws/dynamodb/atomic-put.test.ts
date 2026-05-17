@@ -1,12 +1,15 @@
 import path from 'node:path';
 import {
   createJavascriptContext,
-  createJavascriptStateContext,
-  runResource,
+  createJavascriptStateContext, createResourceSuite,
 } from '@opscotch/resource-testkit';
 import { describe, expect, it } from 'vitest';
 
 const resource = path.resolve(import.meta.dirname, '../../../../resources/apps/aws/dynamodb/atomic-put.js');
+
+const suite = createResourceSuite({
+  resources: [{ id: "resource", resource }],
+});
 
 describe('apps/aws/dynamodb/atomic-put', () => {
   it('builds a conditional PutItem request and records the next version on success', async () => {
@@ -40,7 +43,7 @@ describe('apps/aws/dynamodb/atomic-put', () => {
       },
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(context.__sendToStepCalls).toEqual([
       {

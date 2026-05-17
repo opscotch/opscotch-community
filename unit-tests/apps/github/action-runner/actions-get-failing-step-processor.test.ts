@@ -1,8 +1,12 @@
 import path from 'node:path';
-import { createJavascriptContext, runResource } from '@opscotch/resource-testkit';
+import { createJavascriptContext, createResourceSuite } from '@opscotch/resource-testkit';
 import { describe, expect, it } from 'vitest';
 
 const resource = path.resolve(import.meta.dirname, '../../../../resources/apps/github/actions/actions-get-failing-step-processor.js');
+
+const suite = createResourceSuite({
+  resources: [{ id: "resource", resource }],
+});
 
 describe('github/action-runner actions-get-failing-step-processor', () => {
   it('extracts failing step metadata from run jobs payload', async () => {
@@ -41,7 +45,7 @@ describe('github/action-runner actions-get-failing-step-processor', () => {
       }),
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     const out = JSON.parse(context.getBody() || '{}');
     expect(out).toMatchObject({

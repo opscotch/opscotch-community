@@ -1,7 +1,11 @@
 import path from 'node:path';
-import { createJavascriptContext, runResource } from '@opscotch/resource-testkit';
+import { createJavascriptContext, createResourceSuite } from '@opscotch/resource-testkit';
 
 const resource = path.resolve(import.meta.dirname, '../../resources/httpserver/forward-http-request.js');
+
+const suite = createResourceSuite({
+  resources: [{ id: "resource", resource }],
+});
 
 describe('forward-http-request', () => {
   it('normalizes the forwarded request and prepares the outbound call', async () => {
@@ -17,7 +21,7 @@ describe('forward-http-request', () => {
       }),
     });
 
-    const result = await runResource({ resource, context });
+    const result = await suite.run("resource", { context });
 
     expect(result.doc.descriptionValue).toContain('Normalize a forwarded HTTP request');
     expect(context.__url).toEqual({

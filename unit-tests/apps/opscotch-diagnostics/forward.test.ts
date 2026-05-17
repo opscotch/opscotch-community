@@ -1,7 +1,11 @@
 import path from 'node:path';
-import { createJavascriptContext, createJavascriptStateContext, runResource } from '@opscotch/resource-testkit';
+import { createJavascriptContext, createJavascriptStateContext, createResourceSuite } from '@opscotch/resource-testkit';
 
 const resource = path.resolve(import.meta.dirname, '../../../resources/apps/opscotch-diagnostics/forward.js');
+
+const suite = createResourceSuite({
+  resources: [{ id: "resource", resource }],
+});
 
 describe('apps/opscotch-diagnostics/forward', () => {
   it('pushes payloads into the queue and ends when a body is present', async () => {
@@ -20,7 +24,7 @@ describe('apps/opscotch-diagnostics/forward', () => {
       queue,
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(pushed).toEqual(['{"payload":true}']);
     expect(context.__ended).toBe(true);
@@ -46,7 +50,7 @@ describe('apps/opscotch-diagnostics/forward', () => {
       sendToStep: () => createJavascriptStateContext(),
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(context.__sendToStepCalls).toEqual([
       { stepName: 'forwarder', body: 'one', headers: undefined },

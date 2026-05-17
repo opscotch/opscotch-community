@@ -1,7 +1,11 @@
 import path from 'node:path';
-import { createJavascriptContext, runResource } from '@opscotch/resource-testkit';
+import { createJavascriptContext, createResourceSuite } from '@opscotch/resource-testkit';
 
 const resource = path.resolve(import.meta.dirname, '../../resources/general/standard-json-array-item-forwarder.js');
+
+const suite = createResourceSuite({
+  resources: [{ id: "resource", resource }],
+});
 
 describe('standard-json-array-item-forwarder', () => {
   it('forwards each array item to the configured route', async () => {
@@ -10,7 +14,7 @@ describe('standard-json-array-item-forwarder', () => {
       data: { processroute: 'per-item-step' },
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(context.__sendToStepCalls).toEqual([
       { stepName: 'per-item-step', body: '{"a":1}', headers: undefined },

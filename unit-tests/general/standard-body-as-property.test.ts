@@ -1,7 +1,11 @@
 import path from 'node:path';
-import { createJavascriptContext, runResource } from '@opscotch/resource-testkit';
+import { createJavascriptContext, createResourceSuite } from '@opscotch/resource-testkit';
 
 const resource = path.resolve(import.meta.dirname, '../../resources/general/standard-body-as-property.js');
+
+const suite = createResourceSuite({
+  resources: [{ id: "resource", resource }],
+});
 
 describe('standard-body-as-property', () => {
   it('stores the current body in the configured property', async () => {
@@ -10,7 +14,7 @@ describe('standard-body-as-property', () => {
       data: { propertyName: 'savedBody' },
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(context.getProperty('savedBody')).toBe('{"ok":true}');
   });

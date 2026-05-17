@@ -1,7 +1,11 @@
 import path from 'node:path';
-import { createJavascriptContext, runResource } from '@opscotch/resource-testkit';
+import { createJavascriptContext, createResourceSuite } from '@opscotch/resource-testkit';
 
 const resource = path.resolve(import.meta.dirname, '../../resources/general/standard-forward-on-value.js');
+
+const suite = createResourceSuite({
+  resources: [{ id: "resource", resource }],
+});
 
 describe('standard-forward-on-value', () => {
   it('forwards to the route mapped from the selected body field', async () => {
@@ -16,7 +20,7 @@ describe('standard-forward-on-value', () => {
       },
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(context.__sendToStepCalls[0]).toEqual({
       stepName: 'the-story-ends',

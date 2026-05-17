@@ -1,12 +1,15 @@
 import path from 'node:path';
 import {
   createJavascriptContext,
-  createJavascriptStateContext,
-  runResource,
+  createJavascriptStateContext, createResourceSuite,
 } from '@opscotch/resource-testkit';
 import { describe, expect, it } from 'vitest';
 
 const resource = path.resolve(import.meta.dirname, '../../../../resources/apps/aws/dynamodb/atomic-get.js');
+
+const suite = createResourceSuite({
+  resources: [{ id: "resource", resource }],
+});
 
 describe('apps/aws/dynamodb/atomic-get', () => {
   it('fetches keys from DynamoDB and normalizes the response map', async () => {
@@ -41,7 +44,7 @@ describe('apps/aws/dynamodb/atomic-get', () => {
       },
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(context.__sendToStepCalls).toEqual([
       {

@@ -1,8 +1,12 @@
 import path from 'node:path';
-import { createJavascriptContext, runResource } from '@opscotch/resource-testkit';
+import { createJavascriptContext, createResourceSuite } from '@opscotch/resource-testkit';
 import { describe, expect, it } from 'vitest';
 
 const resource = path.resolve(import.meta.dirname, '../../../../resources/apps/openclaw/invoke-url-generator.js');
+
+const suite = createResourceSuite({
+  resources: [{ id: "resource", resource }],
+});
 
 describe('apps/openclaw invoke-url-generator', () => {
   it('uses payload agent and host data', async () => {
@@ -11,7 +15,7 @@ describe('apps/openclaw invoke-url-generator', () => {
       body: JSON.stringify({ agent: 'architect' }),
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(context.__method).toBe('POST');
     expect(context.__url?.hostRef).toBe('openclaw-local-gateway');

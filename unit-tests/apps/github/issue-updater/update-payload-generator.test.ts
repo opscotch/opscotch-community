@@ -1,8 +1,12 @@
 import path from 'node:path';
-import { createJavascriptContext, runResource } from '@opscotch/resource-testkit';
+import { createJavascriptContext, createResourceSuite } from '@opscotch/resource-testkit';
 import { describe, expect, it } from 'vitest';
 
 const resource = path.resolve(import.meta.dirname, '../../../../resources/apps/github/issues/update-payload-generator.js');
+
+const suite = createResourceSuite({
+  resources: [{ id: "resource", resource }],
+});
 
 describe('github/issue-updater update-payload-generator', () => {
   it('builds add-comment body payload', async () => {
@@ -15,7 +19,7 @@ describe('github/issue-updater update-payload-generator', () => {
       }),
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(context.getHeader('content-type')).toBe('application/json');
     expect(JSON.parse(context.getBody() || '{}')).toEqual({ body: 'Please investigate.' });
@@ -31,7 +35,7 @@ describe('github/issue-updater update-payload-generator', () => {
       }),
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(context.getBody()).toBe('');
   });
@@ -41,7 +45,7 @@ describe('github/issue-updater update-payload-generator', () => {
       body: JSON.stringify({ operation: 'update-issue', repo: 'opscotch/hopscotch', issue: 317 }),
     });
 
-    await expect(runResource({ resource, context })).rejects.toThrow('at least one mutable field');
+    await expect(suite.run("resource", { context })).rejects.toThrow('at least one mutable field');
   });
 
   it('sets empty payload for delete-comment', async () => {
@@ -54,7 +58,7 @@ describe('github/issue-updater update-payload-generator', () => {
       }),
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(context.getBody()).toBe('');
   });
@@ -68,7 +72,7 @@ describe('github/issue-updater update-payload-generator', () => {
       }),
     });
 
-    await expect(runResource({ resource, context })).rejects.toThrow('comment_id is required');
+    await expect(suite.run("resource", { context })).rejects.toThrow('comment_id is required');
   });
 
   it('builds create-pr payload', async () => {
@@ -84,7 +88,7 @@ describe('github/issue-updater update-payload-generator', () => {
       }),
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(JSON.parse(context.getBody() || '{}')).toEqual({
       title: 'Issue #317',
@@ -104,7 +108,7 @@ describe('github/issue-updater update-payload-generator', () => {
       }),
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(context.getBody()).toBe('');
   });
@@ -120,7 +124,7 @@ describe('github/issue-updater update-payload-generator', () => {
       }),
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(JSON.parse(context.getBody() || '{}')).toEqual({
       reviewers: ['jscottnz'],

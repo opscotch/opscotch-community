@@ -1,8 +1,12 @@
 import path from 'node:path';
-import { createJavascriptContext, runResource } from '@opscotch/resource-testkit';
+import { createJavascriptContext, createResourceSuite } from '@opscotch/resource-testkit';
 import { describe, expect, it } from 'vitest';
 
 const resource = path.resolve(import.meta.dirname, '../../../resources/apps/mcp-framework/registry-common.js');
+
+const suite = createResourceSuite({
+  resources: [{ id: "resource", resource }],
+});
 
 function createStepPropsStore(initial: Record<string, string> = {}) {
   const store = new Map(Object.entries(initial));
@@ -40,7 +44,7 @@ describe('apps/mcp-framework/registry-common', () => {
     });
     registerContext.getStepProperties = () => stepProps as any;
 
-    await runResource({ resource, context: registerContext });
+    await suite.run("resource", { context: registerContext });
 
     expect(registerContext.getBody()).toBe(JSON.stringify({
       ok: true,
@@ -62,7 +66,7 @@ describe('apps/mcp-framework/registry-common', () => {
     });
     listContext.getStepProperties = () => stepProps as any;
 
-    await runResource({ resource, context: listContext });
+    await suite.run("resource", { context: listContext });
 
     expect(listContext.getBody()).toBe(JSON.stringify({
       ok: true,

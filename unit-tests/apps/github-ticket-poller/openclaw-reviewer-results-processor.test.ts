@@ -1,10 +1,14 @@
 import { existsSync } from 'node:fs';
-import { createJavascriptContext, runResource } from '@opscotch/resource-testkit';
+import { createJavascriptContext, createResourceSuite } from '@opscotch/resource-testkit';
 import { describe, expect, it } from 'vitest';
 
 const mountedResource = '/workspace/dev_workspace/al.machino/implementation-artifacts/opscotch/github-ticket-poller/resources/openclaw-reviewer-results-processor.js';
 const localResource = '/home/jeremy/dev/opscotch/dev_workspace/al.machino/implementation-artifacts/opscotch/github-ticket-poller/resources/openclaw-reviewer-results-processor.js';
 const resource = existsSync(mountedResource) ? mountedResource : localResource;
+
+const suite = createResourceSuite({
+  resources: [{ id: "resource", resource }],
+});
 
 describe('github-ticket-poller/openclaw-reviewer-results-processor', () => {
   it('passes through accepted callback envelope fields and omits error when absent', async () => {
@@ -16,7 +20,7 @@ describe('github-ticket-poller/openclaw-reviewer-results-processor', () => {
       }),
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     const out = JSON.parse(context.getBody() || '{}');
     expect(out).toMatchObject({
@@ -44,7 +48,7 @@ describe('github-ticket-poller/openclaw-reviewer-results-processor', () => {
       }),
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     const out = JSON.parse(context.getBody() || '{}');
     expect(out).toMatchObject({

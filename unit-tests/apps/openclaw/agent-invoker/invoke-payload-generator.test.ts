@@ -1,8 +1,12 @@
 import path from 'node:path';
-import { createJavascriptContext, runResource } from '@opscotch/resource-testkit';
+import { createJavascriptContext, createResourceSuite } from '@opscotch/resource-testkit';
 import { describe, expect, it } from 'vitest';
 
 const resource = path.resolve(import.meta.dirname, '../../../../resources/apps/openclaw/invoke-payload-generator.js');
+
+const suite = createResourceSuite({
+  resources: [{ id: "resource", resource }],
+});
 
 describe('apps/openclaw invoke-payload-generator', () => {
   it('passes through generic input/metadata payload', async () => {
@@ -14,7 +18,7 @@ describe('apps/openclaw invoke-payload-generator', () => {
       }),
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(JSON.parse(context.getBody() || '{}')).toEqual({
       input: { repo: 'opscotch/hopscotch', issue: 317 },
@@ -29,7 +33,7 @@ describe('apps/openclaw invoke-payload-generator', () => {
       }),
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(JSON.parse(context.getBody() || '{}')).toEqual({
       input: { repo: 'opscotch/hopscotch', issue: 317 },

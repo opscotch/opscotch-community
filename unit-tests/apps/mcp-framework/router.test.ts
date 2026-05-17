@@ -1,8 +1,12 @@
 import path from 'node:path';
-import { createJavascriptContext, createJavascriptStateContext, runResource } from '@opscotch/resource-testkit';
+import { createJavascriptContext, createJavascriptStateContext, createResourceSuite } from '@opscotch/resource-testkit';
 import { describe, expect, it } from 'vitest';
 
 const resource = path.resolve(import.meta.dirname, '../../../resources/apps/mcp-framework/router.js');
+
+const suite = createResourceSuite({
+  resources: [{ id: "resource", resource }],
+});
 
 describe('apps/mcp-framework/router', () => {
   it('routes a JSON-RPC ping request and returns a JSON-RPC result envelope', async () => {
@@ -32,7 +36,7 @@ describe('apps/mcp-framework/router', () => {
       },
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(context.getProperty('status_code')).toBe(200);
     expect(context.getHeader('content-type')).toBe('application/json');

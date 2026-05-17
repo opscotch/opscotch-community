@@ -1,8 +1,12 @@
 import path from 'node:path';
-import { createJavascriptContext, runResource } from '@opscotch/resource-testkit';
+import { createJavascriptContext, createResourceSuite } from '@opscotch/resource-testkit';
 import { describe, expect, it } from 'vitest';
 
 const resource = path.resolve(import.meta.dirname, '../../../../resources/apps/github/fetch-comments-url-generator.js');
+
+const suite = createResourceSuite({
+  resources: [{ id: "resource", resource }],
+});
 
 describe('fetch-comments-url-generator', () => {
   it('builds issue comments url by default', async () => {
@@ -16,7 +20,7 @@ describe('fetch-comments-url-generator', () => {
       },
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(context.__method).toBe('GET');
     expect(context.__url?.hostRef).toBe('github-api');
@@ -38,7 +42,7 @@ describe('fetch-comments-url-generator', () => {
       },
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(context.__method).toBe('GET');
     expect(context.__url?.hostRef).toBe('github-api');

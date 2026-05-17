@@ -1,8 +1,12 @@
 import path from 'node:path';
-import { createJavascriptContext, runResource } from '@opscotch/resource-testkit';
+import { createJavascriptContext, createResourceSuite } from '@opscotch/resource-testkit';
 import { describe, expect, it } from 'vitest';
 
 const resource = path.resolve(import.meta.dirname, '../../../../resources/apps/github/poll-url-generator.js');
+
+const suite = createResourceSuite({
+  resources: [{ id: "resource", resource }],
+});
 
 describe('poll-url-generator', () => {
   it('builds github issues query url and headers', async () => {
@@ -21,7 +25,7 @@ describe('poll-url-generator', () => {
       },
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(context.__method).toBe('GET');
     expect(context.__url?.hostRef).toBe('github-api');
@@ -51,7 +55,7 @@ describe('poll-url-generator', () => {
       },
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(context.__method).toBe('GET');
     expect(context.__url?.hostRef).toBe('github-api');
@@ -79,6 +83,6 @@ describe('poll-url-generator', () => {
       },
     });
 
-    await expect(runResource({ resource, context })).rejects.toThrow('watchEntity must be either issue or pr');
+    await expect(suite.run("resource", { context })).rejects.toThrow('watchEntity must be either issue or pr');
   });
 });

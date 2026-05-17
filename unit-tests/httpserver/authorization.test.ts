@@ -1,7 +1,11 @@
 import path from 'node:path';
-import { createJavascriptContext, runResource } from '@opscotch/resource-testkit';
+import { createJavascriptContext, createResourceSuite } from '@opscotch/resource-testkit';
 
 const resource = path.resolve(import.meta.dirname, '../../resources/httpserver/authorization.js');
+
+const suite = createResourceSuite({
+  resources: [{ id: "resource", resource }],
+});
 
 describe('authorization', () => {
   it('allows requests with a configured token value', async () => {
@@ -18,7 +22,7 @@ describe('authorization', () => {
       },
     });
 
-    const result = await runResource({ resource, context });
+    const result = await suite.run("resource", { context });
 
     expect(result.doc.descriptionValue).toContain('authorization');
     expect(context.__ended).toBe(false);
@@ -38,7 +42,7 @@ describe('authorization', () => {
       },
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(context.getProperty('status_code')).toBe(401);
     expect(context.getBody()).toBe('');

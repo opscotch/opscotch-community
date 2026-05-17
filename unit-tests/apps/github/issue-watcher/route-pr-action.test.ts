@@ -1,8 +1,12 @@
 import path from 'node:path';
-import { createJavascriptContext, runResource } from '@opscotch/resource-testkit';
+import { createJavascriptContext, createResourceSuite } from '@opscotch/resource-testkit';
 import { describe, expect, it } from 'vitest';
 
 const resource = path.resolve(import.meta.dirname, '../../../../resources/apps/github/route-pr-action.js');
+
+const suite = createResourceSuite({
+  resources: [{ id: "resource", resource }],
+});
 
 function routeContext(actionResponseBody: unknown) {
   return createJavascriptContext({
@@ -36,19 +40,26 @@ describe('route-pr-action', () => {
   it('routes PR payload only after downstream dispatch explicitly queues it', async () => {
     const context = routeContext({ queued: true, status: 'ok' });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
-    expect(context.__sendToStepCalls).toHaveLength(2);
+    expect(context.__sendToStepCalls).toHaveLength(3);
     expect(context.__sendToStepCalls[0].stepName).toBe('fetch-issue-comments');
     expect(JSON.parse(context.__sendToStepCalls[0].body || '{}')).toEqual({
+      repo: 'opscotch/hopscotch',
+      issue: 451,
+      entity_type: 'issue',
+      pull_number: 451,
+    });
+    expect(context.__sendToStepCalls[1].stepName).toBe('fetch-issue-comments');
+    expect(JSON.parse(context.__sendToStepCalls[1].body || '{}')).toEqual({
       repo: 'opscotch/hopscotch',
       issue: 451,
       entity_type: 'pr',
       pull_number: 451,
     });
-    expect(context.__sendToStepCalls[1].deploymentAccessId).toBe('openclaw-pr-actions');
-    expect(context.__sendToStepCalls[1].stepName).toBe('dispatch-bmad-pr-develop');
-    expect(JSON.parse(context.__sendToStepCalls[1].body || '{}')).toMatchObject({
+    expect(context.__sendToStepCalls[2].deploymentAccessId).toBe('openclaw-pr-actions');
+    expect(context.__sendToStepCalls[2].stepName).toBe('dispatch-bmad-pr-develop');
+    expect(JSON.parse(context.__sendToStepCalls[2].body || '{}')).toMatchObject({
       matched_label: 'ready for dev',
       repo: 'opscotch/hopscotch',
       issue: 451,
@@ -71,7 +82,7 @@ describe('route-pr-action', () => {
   it('does not acknowledge stopped PR dispatch responses', async () => {
     const context = routeContext({});
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(JSON.parse(context.getBody() || '{}')).toMatchObject({
       routed: false,

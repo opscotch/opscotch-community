@@ -1,14 +1,17 @@
 import path from 'node:path';
 import {
   createByteContext,
-  createJavascriptContext,
-  runResource,
+  createJavascriptContext, createResourceSuite,
   type ByteBufferHandle,
   type ByteContextRuntime,
 } from '@opscotch/resource-testkit';
 import { describe, expect, it } from 'vitest';
 
 const resource = path.resolve(import.meta.dirname, '../../../resources/apps/opscotch-diagnostics/save.js');
+
+const suite = createResourceSuite({
+  resources: [{ id: "resource", resource }],
+});
 
 function createCompatibleByteContext(): ByteContextRuntime & {
   createFrom(value: string | number[] | Uint8Array): ByteBufferHandle;
@@ -52,7 +55,7 @@ describe('apps/opscotch-diagnostics/save', () => {
       queue,
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(pushed).toEqual(['{"payload":true}']);
     expect(context.__sendToStepAndForgetCalls).toEqual([
@@ -91,7 +94,7 @@ describe('apps/opscotch-diagnostics/save', () => {
       files,
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(writes).toHaveLength(1);
     expect(writes[0]?.file).toBe('latest');

@@ -1,7 +1,11 @@
 import path from 'node:path';
-import { createJavascriptContext, runResource } from '@opscotch/resource-testkit';
+import { createJavascriptContext, createResourceSuite } from '@opscotch/resource-testkit';
 
 const resource = path.resolve(import.meta.dirname, '../../resources/general/standard-url-generator-v2.js');
+
+const suite = createResourceSuite({
+  resources: [{ id: "resource", resource }],
+});
 
 describe('standard-url-generator-v2', () => {
   it('substitutes data and message variables into the url and method', async () => {
@@ -15,7 +19,7 @@ describe('standard-url-generator-v2', () => {
       passedMessage: JSON.stringify({ userId: '42' }),
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(context.__url).toEqual({
       hostRef: 'service-a',

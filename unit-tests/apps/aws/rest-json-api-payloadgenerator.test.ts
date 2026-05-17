@@ -1,8 +1,12 @@
 import path from 'node:path';
-import { createJavascriptContext, runResource } from '@opscotch/resource-testkit';
+import { createJavascriptContext, createResourceSuite } from '@opscotch/resource-testkit';
 import { describe, expect, it } from 'vitest';
 
 const resource = path.resolve(import.meta.dirname, '../../../resources/apps/aws/rest-json-api-payloadgenerator.js');
+
+const suite = createResourceSuite({
+  resources: [{ id: "resource", resource }],
+});
 
 describe('apps/aws/rest-json-api-payloadgenerator', () => {
   it('sets method and content type and serializes the JSON body', async () => {
@@ -19,7 +23,7 @@ describe('apps/aws/rest-json-api-payloadgenerator', () => {
       },
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(context.__method).toBe('PATCH');
     expect(context.getProperty('method')).toBe('PATCH');

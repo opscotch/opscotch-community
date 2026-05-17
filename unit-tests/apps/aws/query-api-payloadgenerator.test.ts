@@ -1,8 +1,12 @@
 import path from 'node:path';
-import { createJavascriptContext, runResource } from '@opscotch/resource-testkit';
+import { createJavascriptContext, createResourceSuite } from '@opscotch/resource-testkit';
 import { describe, expect, it } from 'vitest';
 
 const resource = path.resolve(import.meta.dirname, '../../../resources/apps/aws/query-api-payloadgenerator.js');
+
+const suite = createResourceSuite({
+  resources: [{ id: "resource", resource }],
+});
 
 describe('apps/aws/query-api-payloadgenerator', () => {
   it('encodes, sorts, and filters query API parameters', async () => {
@@ -24,7 +28,7 @@ describe('apps/aws/query-api-payloadgenerator', () => {
       },
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(context.__method).toBe('POST');
     expect(context.getProperty('method')).toBe('POST');

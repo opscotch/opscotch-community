@@ -1,8 +1,12 @@
 import path from 'node:path';
-import { createJavascriptContext, runResource } from '@opscotch/resource-testkit';
+import { createJavascriptContext, createResourceSuite } from '@opscotch/resource-testkit';
 import { describe, expect, it } from 'vitest';
 
 const resource = path.resolve(import.meta.dirname, '../../../../resources/apps/github/issues/update-url-generator.js');
+
+const suite = createResourceSuite({
+  resources: [{ id: "resource", resource }],
+});
 
 describe('github/issue-updater update-url-generator', () => {
   it('builds patch URL for update-issue', async () => {
@@ -11,7 +15,7 @@ describe('github/issue-updater update-url-generator', () => {
       body: JSON.stringify({ operation: 'update-issue', repo: 'opscotch/hopscotch', issue: 317, body: 'updated body' }),
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(context.__method).toBe('PATCH');
     expect(context.__url?.hostRef).toBe('github-api');
@@ -26,7 +30,7 @@ describe('github/issue-updater update-url-generator', () => {
       body: JSON.stringify({ operation: 'remove-label', repo: 'opscotch/hopscotch', issue: 317 }),
     });
 
-    await expect(runResource({ resource, context })).rejects.toThrow('label is required');
+    await expect(suite.run("resource", { context })).rejects.toThrow('label is required');
   });
 
   it('builds delete URL for delete-comment', async () => {
@@ -35,7 +39,7 @@ describe('github/issue-updater update-url-generator', () => {
       body: JSON.stringify({ operation: 'delete-comment', repo: 'opscotch/hopscotch', issue: 317, comment_id: 12345 }),
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(context.__method).toBe('DELETE');
     expect(context.__url?.hostRef).toBe('github-api');
@@ -49,7 +53,7 @@ describe('github/issue-updater update-url-generator', () => {
       body: JSON.stringify({ operation: 'get-open-pr-by-head', repo: 'opscotch/hopscotch', issue: 317, head: 'opscotch/issue-317-develop' }),
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(context.__method).toBe('GET');
     expect(context.__url?.hostRef).toBe('github-api');
@@ -62,7 +66,7 @@ describe('github/issue-updater update-url-generator', () => {
       body: JSON.stringify({ operation: 'request-reviewers', repo: 'opscotch/hopscotch', issue: 317, pull_number: 88, reviewers: ['jscottnz'] }),
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(context.__method).toBe('POST');
     expect(context.__url?.path).toBe('/repos/opscotch/hopscotch/pulls/88/requested_reviewers');

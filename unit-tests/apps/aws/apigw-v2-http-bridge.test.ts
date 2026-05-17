@@ -1,12 +1,15 @@
 import path from 'node:path';
 import {
   createJavascriptContext,
-  createJavascriptStateContext,
-  runResource,
+  createJavascriptStateContext, createResourceSuite,
 } from '@opscotch/resource-testkit';
 import { describe, expect, it } from 'vitest';
 
 const resource = path.resolve(import.meta.dirname, '../../../resources/apps/aws/apigw-v2-http-bridge.js');
+
+const suite = createResourceSuite({
+  resources: [{ id: "resource", resource }],
+});
 
 describe('apps/aws/apigw-v2-http-bridge', () => {
   it('normalizes the event, forwards it, and wraps the response as lambda proxy output', async () => {
@@ -46,7 +49,7 @@ describe('apps/aws/apigw-v2-http-bridge', () => {
       },
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(context.__sendToStepCalls).toEqual([
       {

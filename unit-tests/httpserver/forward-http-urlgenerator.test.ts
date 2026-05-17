@@ -1,7 +1,11 @@
 import path from 'node:path';
-import { createJavascriptContext, runResource } from '@opscotch/resource-testkit';
+import { createJavascriptContext, createResourceSuite } from '@opscotch/resource-testkit';
 
 const resource = path.resolve(import.meta.dirname, '../../resources/httpserver/forward-http-urlgenerator.js');
+
+const suite = createResourceSuite({
+  resources: [{ id: "resource", resource }],
+});
 
 describe('forward-http-urlgenerator', () => {
   it('prepares the outbound url and persists request details for the payload generator', async () => {
@@ -17,7 +21,7 @@ describe('forward-http-urlgenerator', () => {
       }),
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(context.__url).toEqual({
       hostRef: 'target-server',

@@ -1,7 +1,11 @@
-import { createJavascriptContext, runResource } from '@opscotch/resource-testkit';
+import { createJavascriptContext, createResourceSuite } from '@opscotch/resource-testkit';
 import { describe, expect, it } from 'vitest';
 
 const resource = '/workspace/dev_workspace/al.machino/implementation-artifacts/opscotch/github-ticket-poller/resources/process-run-build-tracking-queue.js';
+
+const suite = createResourceSuite({
+  resources: [{ id: "resource", resource }],
+});
 
 describe('github-ticket-poller/process-run-build-tracking-queue', () => {
   it('enqueues incoming run tracking item', async () => {
@@ -13,7 +17,7 @@ describe('github-ticket-poller/process-run-build-tracking-queue', () => {
       }),
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(JSON.parse(context.getBody() || '{}')).toMatchObject({ queued: true, queue_size: 1 });
     expect(JSON.parse(context.getPersistedItem('builder:run-tracking:queue') || '[]')).toHaveLength(1);
@@ -34,7 +38,7 @@ describe('github-ticket-poller/process-run-build-tracking-queue', () => {
       },
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(JSON.parse(context.getBody() || '{}')).toMatchObject({ processed: true, completed: false, run_id: 123 });
     expect(JSON.parse(context.getPersistedItem('builder:run-tracking:queue') || '[]')).toHaveLength(1);
@@ -77,7 +81,7 @@ describe('github-ticket-poller/process-run-build-tracking-queue', () => {
       },
     });
 
-    await runResource({ resource, context });
+    await suite.run("resource", { context });
 
     expect(JSON.parse(context.getBody() || '{}')).toMatchObject({ processed: true, completed: true, success: true, run_id: 123 });
     expect(JSON.parse(context.getPersistedItem('builder:run-tracking:queue') || '[]')).toHaveLength(0);
