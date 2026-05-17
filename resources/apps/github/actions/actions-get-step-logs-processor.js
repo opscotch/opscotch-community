@@ -27,7 +27,7 @@ doc
     })
     .outSchema({
         type: "object",
-        required: ["status", "operation", "repo", "run_id", "job_id", "step_name", "step_logs"],
+        required: ["status", "operation", "repo", "run_id", "job_id", "step_name", "step_log_lines"],
         properties: {
             status: { type: "string" },
             operation: { type: "string" },
@@ -39,7 +39,20 @@ doc
             step_started_at: { type: "string" },
             step_completed_at: { type: "string" },
             logs_redirect_url: { type: "string" },
-            step_logs: { type: "string" }
+            step_log_lines: {
+                type: "array",
+                items: {
+                    type: "object",
+                    required: ["log", "line_number", "milliseconds_since_first_true_log"],
+                    properties: {
+                        log: { type: "string" },
+                        line_number: { type: "number" },
+                        milliseconds_since_first_true_log: { type: "number" }
+                    }
+                }
+            },
+            synthetic_summary: { type: "string" },
+            exit_code: { type: "number" }
         }
     })
     .run(() => {
@@ -120,6 +133,122 @@ doc
             return include.join("\n");
         }
 
+        function parseStepFailureSummary(stepLogs) {
+            var rawLines = String(stepLogs).split(/\r?\n/);
+            var timestampPrefixRegex = /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z)\s*/;
+            var ansiRegex = /\x1B\[[0-?]*[ -/]*[@-~]/g;
+            var controlPrefixRegex = /^##\[(group|endgroup|debug|command|section|warning|notice|error)\]/;
+            var syntheticRegexA = /^##\[error\]Process completed with exit code (\d+)\.$/;
+            var syntheticRegexB = /^Process completed with exit code (\d+)\.$/;
+            var postFailureGroupRegex = /^##\[group\]Run\s.+/;
+            var discardNoiseRegexes = [
+                /^##\[/,
+                /^Run\s/,
+                /^shell:/,
+                /^env:/,
+                /^\s*$/,
+                /^----- .* -----$/
+            ];
+
+            function parseLineDecorations(line) {
+                var tsMatch = line.match(timestampPrefixRegex);
+                var timestamp = tsMatch ? tsMatch[1] : "";
+                var withoutTimestamp = line.replace(timestampPrefixRegex, "");
+                var cleaned = withoutTimestamp.replace(ansiRegex, "");
+                return {
+                    timestamp: timestamp,
+                    cleaned: cleaned
+                };
+            }
+
+            function isNoiseLine(line) {
+                for (var i = 0; i < discardNoiseRegexes.length; i += 1) {
+                    if (discardNoiseRegexes[i].test(line)) return true;
+                }
+                return false;
+            }
+
+            var normalized = [];
+            var syntheticSummary = "";
+            var exitCode = null;
+            var seenSynthetic = false;
+
+            for (var i = 0; i < rawLines.length; i += 1) {
+                var parsedLine = parseLineDecorations(rawLines[i]);
+                var line = parsedLine.cleaned;
+                var mA = line.match(syntheticRegexA);
+                var mB = line.match(syntheticRegexB);
+                if (mA || mB) {
+                    var code = parseInt((mA ? mA[1] : mB[1]), 10);
+                    syntheticSummary = "Process completed with exit code " + String(code) + ".";
+                    exitCode = isNaN(code) ? null : code;
+                    seenSynthetic = true;
+                    normalized.push({
+                        line: syntheticSummary,
+                        timestamp: parsedLine.timestamp,
+                        is_control: true,
+                        is_synthetic: true
+                    });
+                    continue;
+                }
+
+                if (seenSynthetic && postFailureGroupRegex.test(line)) {
+                    break;
+                }
+
+                var isControl = controlPrefixRegex.test(line);
+                normalized.push({
+                    line: line,
+                    timestamp: parsedLine.timestamp,
+                    is_control: isControl,
+                    is_synthetic: false
+                });
+            }
+
+            var cleaned = [];
+            for (var j = 0; j < normalized.length; j += 1) {
+                var n = normalized[j];
+                if (!isNoiseLine(n.line) || n.is_synthetic) {
+                    cleaned.push(n);
+                }
+            }
+            var firstTrueLogMs = NaN;
+            for (var k = 0; k < cleaned.length; k += 1) {
+                var candidate = cleaned[k];
+                if (candidate.is_control || !candidate.line || !candidate.timestamp) continue;
+                var candidateMs = Date.parse(candidate.timestamp);
+                if (!isNaN(candidateMs)) {
+                    firstTrueLogMs = candidateMs;
+                    break;
+                }
+            }
+
+            var stepLogLines = [];
+            var lineCounter = 0;
+            for (var x = 0; x < cleaned.length; x += 1) {
+                var item = cleaned[x];
+                if (!item.line || item.is_control) continue;
+                lineCounter += 1;
+                var lineMs = item.timestamp ? Date.parse(item.timestamp) : NaN;
+                var offsetMs = 0;
+                if (!isNaN(firstTrueLogMs) && !isNaN(lineMs)) {
+                    offsetMs = lineMs - firstTrueLogMs;
+                    if (offsetMs < 0) offsetMs = 0;
+                }
+                stepLogLines.push({
+                    log: item.line,
+                    line_number: lineCounter,
+                    milliseconds_since_first_true_log: offsetMs
+                });
+            }
+
+            return {
+                step_log_lines: stepLogLines,
+                synthetic_summary: syntheticSummary,
+                exit_code: exitCode
+            };
+        }
+
         var body = JSON.parse(context.getBody());
         var repo = body.repo;
         var runId = body.run_id;
@@ -146,6 +275,7 @@ doc
         var fetchedLogsBody = parseStepBodyStrict(fetchedLogsResponse, logFetchStepId);
         var logsText = fetchedLogsBody.logs;
         var slicedLogs = sliceStepLogsByTimestamp(logsText, stepName, stepStartedAt, stepCompletedAt);
+        var parsed = parseStepFailureSummary(slicedLogs);
 
         context.setBody(assertString(JSON.stringify({
             status: "ok",
@@ -158,6 +288,8 @@ doc
             step_started_at: stepStartedAt,
             step_completed_at: stepCompletedAt,
             logs_redirect_url: redirectUrl,
-            step_logs: slicedLogs
+            step_log_lines: parsed.step_log_lines,
+            synthetic_summary: parsed.synthetic_summary,
+            exit_code: parsed.exit_code
         })));
     });

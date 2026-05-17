@@ -20,7 +20,20 @@ doc
             repo: { type: "string" },
             run_id: { type: "number" },
             failing_step: { type: "object" },
-            step_logs: { type: "string" }
+            step_log_lines: {
+                type: "array",
+                items: {
+                    type: "object",
+                    required: ["log", "line_number", "milliseconds_since_first_true_log"],
+                    properties: {
+                        log: { type: "string" },
+                        line_number: { type: "number" },
+                        milliseconds_since_first_true_log: { type: "number" }
+                    }
+                }
+            },
+            synthetic_summary: { type: "string" },
+            exit_code: { type: "number" }
         }
     })
     .run(() => {
@@ -81,6 +94,8 @@ doc
                 step_started_at: failingStepBody.failing_step_started_at,
                 step_completed_at: failingStepBody.failing_step_completed_at
             },
-            step_logs: stepLogsBody.step_logs
+            step_log_lines: stepLogsBody.step_log_lines,
+            synthetic_summary: stepLogsBody.synthetic_summary,
+            exit_code: stepLogsBody.exit_code
         })));
     });
