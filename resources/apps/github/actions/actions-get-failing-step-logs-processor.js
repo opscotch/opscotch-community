@@ -1,5 +1,5 @@
 doc
-    .description("Resolve failing step metadata for a run, then fetch sliced logs for that step")
+    .description("Resolve failing step metadata for a run, then fetch sliced logs for that step. Actual log fetching must be done outside this app due to host restrictions (gh redirects to an arbitary unknowable host)")
     .asUserErrors()
     .inSchema({
         type: "object",
