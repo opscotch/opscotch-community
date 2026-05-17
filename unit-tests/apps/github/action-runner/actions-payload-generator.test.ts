@@ -2,18 +2,14 @@ import path from 'node:path';
 import { createJavascriptContext, runResource } from '@opscotch/resource-testkit';
 import { describe, expect, it } from 'vitest';
 
-const resource = path.resolve(import.meta.dirname, '../../../../resources/apps/github/actions-payload-generator.js');
+const resource = path.resolve(import.meta.dirname, '../../../../resources/apps/github/actions/actions-trigger-workflow-payload-generator.js');
 
 describe('github/action-runner actions-payload-generator', () => {
-  it('builds trigger workflow payload', async () => {
+  it('builds trigger workflow payload from body input', async () => {
     const context = createJavascriptContext({
       body: JSON.stringify({
-        operation: 'trigger-workflow',
-        repo: 'opscotch/hopscotch',
         ref: 'main',
-        inputs: {
-          issue: '317',
-        },
+        inputs: { issue: '317' },
       }),
     });
 
@@ -22,34 +18,36 @@ describe('github/action-runner actions-payload-generator', () => {
     expect(context.getHeader('content-type')).toBe('application/json');
     expect(JSON.parse(context.getBody() || '{}')).toEqual({
       ref: 'main',
-      inputs: {
-        issue: '317',
-      },
+      inputs: { issue: '317' },
     });
   });
 
-  it('sets empty payload for list-workflow-runs', async () => {
+  it('builds trigger workflow payload with ref in data', async () => {
     const context = createJavascriptContext({
-      body: JSON.stringify({
-        operation: 'list-workflow-runs',
-        repo: 'opscotch/hopscotch',
-        workflow_id: 'ci.yml',
-      }),
+      data: { ref: 'main' },
     });
 
     await runResource({ resource, context });
 
-    expect(context.getBody()).toBe('');
+    expect(JSON.parse(context.getBody() || '{}').ref).toBe('main');
   });
 
-  it('requires ref for trigger-workflow', async () => {
+  it('requires ref - throws error when missing', async () => {
     const context = createJavascriptContext({
-      body: JSON.stringify({
-        operation: 'trigger-workflow',
-        repo: 'opscotch/hopscotch',
-      }),
+      data: {},
     });
 
-    await expect(runResource({ resource, context })).rejects.toThrow('ref is required for trigger-workflow operation');
+    await expect(runResource({ resource, context })).rejects.toThrow('ref is required');
+  });
+
+  it('data ref takes precedence over body input', async () => {
+    const context = createJavascriptContext({
+      data: { ref: 'main' },
+      body: JSON.stringify({ ref: 'develop' }),
+    });
+
+    await runResource({ resource, context });
+
+    expect(JSON.parse(context.getBody() || '{}').ref).toBe('main');
   });
 });

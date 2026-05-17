@@ -1,7 +1,7 @@
 import { createJavascriptContext, runResource } from '@opscotch/resource-testkit';
 import { describe, expect, it } from 'vitest';
 
-const resource = '/home/jeremy/dev/opscotch/dev_workspace/al.machino/implementation-artifacts/opscotch/github-ticket-poller/resources/process-run-build-tracking-queue.js';
+const resource = '/workspace/dev_workspace/al.machino/implementation-artifacts/opscotch/github-ticket-poller/resources/process-run-build-tracking-queue.js';
 
 describe('github-ticket-poller/process-run-build-tracking-queue', () => {
   it('enqueues incoming run tracking item', async () => {
@@ -40,16 +40,38 @@ describe('github-ticket-poller/process-run-build-tracking-queue', () => {
     expect(JSON.parse(context.getPersistedItem('builder:run-tracking:queue') || '[]')).toHaveLength(1);
   });
 
-  it('comments and removes item when run completes', async () => {
+  it('comments and removes tracked item on completed notification', async () => {
     const context = createJavascriptContext({
+      body: JSON.stringify({
+        notification_type: 'github-action-state-change',
+        run: { id: 123, status: 'completed', conclusion: 'success', html_url: 'https://example/runs/123' },
+      }),
       persistedItems: {
         'builder:run-tracking:queue': JSON.stringify([
           { repo: 'opscotch/hopscotch', pull_number: 451, run_id: 123, builder_repo: 'opscotch/builder', started_at_ts: Date.now() },
         ]),
       },
       sendToStep: (call) => {
-        if (call.stepName === 'invoke-builder-get-run') {
-          return { body: JSON.stringify({ completed: true, success: true, run_id: 123, run_conclusion: 'success', html_url: 'https://example/runs/123' }) };
+        if (call.stepName === 'github-action-get-run') {
+          return {
+            body: JSON.stringify({
+              status: 'ok',
+              run_id: 123,
+              run_conclusion: 'success',
+              html_url: 'https://example/runs/123',
+              logs_url: 'https://api.github.com/repos/opscotch/builder/actions/runs/123/logs',
+            }),
+          };
+        }
+        if (call.stepName === 'github-action-get-run-logs') {
+          return {
+            body: JSON.stringify({
+              status: 'ok',
+              status_code: '302',
+              redirect_location: 'https://objects.githubusercontent.com/signed-log.zip',
+              redirect_handled: true,
+            }),
+          };
         }
         return { body: JSON.stringify({ status: 'ok' }) };
       },

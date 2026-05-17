@@ -2,28 +2,42 @@ import path from 'node:path';
 import { createJavascriptContext, runResource } from '@opscotch/resource-testkit';
 import { describe, expect, it } from 'vitest';
 
-const resource = path.resolve(import.meta.dirname, '../../../../resources/apps/github/route-ticket-action.js');
+const resource = path.resolve(import.meta.dirname, '../../../../resources/apps/github/route-issue-action.js');
 
-describe('route-ticket-action', () => {
-  it('routes triage label to remote dispatch-bmad-refine', async () => {
-    const context = createJavascriptContext({
-      body: JSON.stringify({
-        repo: 'opscotch/hopscotch',
-        issue_number: 317,
-        labels: ['triage'],
-        issue_url: 'https://github.com/opscotch/hopscotch/issues/317',
-        title: 'Refine this',
-        issue_body: 'Issue body text',
-        issue_context: {
-          number: 317,
-          body: 'Issue body text',
-          comments: 4,
-        },
-        matched_label: 'triage',
-        action_deployment_id: 'openclaw-ticket-actions',
-        action_step_id: 'dispatch-bmad-refine',
-      }),
-    });
+function baseBody(overrides = {}) {
+  return {
+    repo: 'opscotch/hopscotch',
+    issue_number: 343,
+    entity_type: 'issue',
+    labels: ['triage'],
+    matched_label: 'triage',
+    action_deployment_id: 'openclaw-ticket-actions',
+    action_step_id: 'dispatch-bmad-refine-triage',
+    updated_at: '2026-05-11T02:37:20Z',
+    issue_url: 'https://github.com/opscotch/hopscotch/issues/343',
+    title: 'Refine this',
+    issue_body: 'Issue body text',
+    issue_context: { number: 343, body: 'Issue body text' },
+    ...overrides,
+  };
+}
+
+function routeContext(actionResponseBody: unknown) {
+  return createJavascriptContext({
+    body: JSON.stringify(baseBody()),
+    data: { issueWatcherDecisionLoggingEnabled: true },
+    sendToStep: (call) => {
+      if (call.stepName === 'fetch-issue-comments') {
+        return { body: JSON.stringify({ status: 'ok', comments: [{ id: 1, body: 'comment' }] }) };
+      }
+      return { body: typeof actionResponseBody === 'string' ? actionResponseBody : JSON.stringify(actionResponseBody) };
+    },
+  });
+}
+
+describe('route-issue-action', () => {
+  it('routes issue payload only after downstream dispatch explicitly queues it', async () => {
+    const context = routeContext({ queued: true, status: 'ok' });
 
     await runResource({ resource, context });
 
@@ -31,252 +45,79 @@ describe('route-ticket-action', () => {
     expect(context.__sendToStepCalls[0].stepName).toBe('fetch-issue-comments');
     expect(JSON.parse(context.__sendToStepCalls[0].body || '{}')).toEqual({
       repo: 'opscotch/hopscotch',
-      issue: 317,
+      issue: 343,
       entity_type: 'issue',
-      pull_number: 317,
+      pull_number: 343,
     });
     expect(context.__sendToStepCalls[1].deploymentAccessId).toBe('openclaw-ticket-actions');
-    expect(context.__sendToStepCalls[1].stepName).toBe('dispatch-bmad-refine');
-    const sent = JSON.parse(context.__sendToStepCalls[1].body || '{}');
-    expect(sent).toMatchObject({
-      operation: 'refine',
-      workflow: 'quick-spec',
-      model: 'minimax',
+    expect(context.__sendToStepCalls[1].stepName).toBe('dispatch-bmad-refine-triage');
+    expect(JSON.parse(context.__sendToStepCalls[1].body || '{}')).toMatchObject({
+      matched_label: 'triage',
       repo: 'opscotch/hopscotch',
-      issue: 317,
-      reason: 'criteria-match:triage',
+      issue: 343,
       issue_body: 'Issue body text',
-      issue_context: {
-        number: 317,
-        body: 'Issue body text',
-        comments: 4,
-      },
+      comments: [{ id: 1, body: 'comment' }],
+      action_deployment_id: 'openclaw-ticket-actions',
+      action_step_id: 'dispatch-bmad-refine-triage',
     });
     expect(JSON.parse(context.getBody() || '{}')).toEqual({
       routed: true,
       action_deployment_id: 'openclaw-ticket-actions',
-      action_step_id: 'dispatch-bmad-refine',
-      operation: 'refine',
+      action_step_id: 'dispatch-bmad-refine-triage',
+      matched_label: 'triage',
       repo: 'opscotch/hopscotch',
-      issue: 317,
-      pull_number: 317,
+      issue: 343,
     });
   });
 
-  it('routes dev review label to refine with implementation-planning and codex-mini', async () => {
-    const context = createJavascriptContext({
-      body: JSON.stringify({
-        repo: 'opscotch/hopscotch',
-        issue_number: 328,
-        labels: ['dev review'],
-        matched_label: 'dev review',
-        action_deployment_id: 'openclaw-ticket-actions',
-        action_step_id: 'dispatch-bmad-refine',
-      }),
-    });
+  it('does not acknowledge a stopped downstream dispatch that returns an empty body', async () => {
+    const context = routeContext('');
 
     await runResource({ resource, context });
 
-    expect(context.__sendToStepCalls).toHaveLength(2);
-    expect(context.__sendToStepCalls[0].stepName).toBe('fetch-issue-comments');
-    expect(context.__sendToStepCalls[1].deploymentAccessId).toBe('openclaw-ticket-actions');
-    expect(context.__sendToStepCalls[1].stepName).toBe('dispatch-bmad-refine');
-    expect(JSON.parse(context.__sendToStepCalls[1].body || '{}')).toMatchObject({
-      operation: 'refine',
-      workflow: 'implementation-planning',
-      model: 'codex-mini',
-      repo: 'opscotch/hopscotch',
-      issue: 328,
-      reason: 'criteria-match:dev review',
-    });
-  });
-
-  it('routes read for dev label to develop with implementation-planning and codex', async () => {
-    const context = createJavascriptContext({
-      body: JSON.stringify({
-        repo: 'opscotch/hopscotch',
-        issue_number: 329,
-        labels: ['read for dev'],
-        matched_label: 'read for dev',
-        issue_body: 'base_branch=main',
-        issue_context: {
-          user: {
-            login: 'jscottnz',
-          },
-        },
-        action_deployment_id: 'openclaw-ticket-actions',
-        action_step_id: 'dispatch-bmad-develop',
-      }),
-      sendToStep: (call) => {
-        if (call.stepName === 'fetch-issue-comments') {
-          return {
-            body: JSON.stringify({
-              status: 'ok',
-              comments: [
-                { user: { login: 'jscottnz' }, body: 'Looks good, please implement now.' },
-              ],
-            }),
-          };
-        }
-        return { body: JSON.stringify({ queued: true, status: 'ok' }) };
-      },
-    });
-
-    await runResource({ resource, context });
-
-    expect(context.__sendToStepCalls).toHaveLength(2);
-    expect(context.__sendToStepCalls[0].stepName).toBe('fetch-issue-comments');
-    expect(context.__sendToStepCalls[1].deploymentAccessId).toBe('openclaw-ticket-actions');
-    expect(context.__sendToStepCalls[1].stepName).toBe('dispatch-bmad-develop');
-    expect(JSON.parse(context.__sendToStepCalls[1].body || '{}')).toMatchObject({
-      operation: 'develop',
-      workflow: 'implementation-planning',
-      model: 'codex',
-      repo: 'opscotch/hopscotch',
-      issue: 329,
-      reason: 'criteria-match:read for dev',
-    });
-  });
-
-  it('blocks read for dev routing when issue author approval is missing', async () => {
-    const context = createJavascriptContext({
-      body: JSON.stringify({
-        repo: 'opscotch/hopscotch',
-        issue_number: 330,
-        labels: ['read for dev'],
-        matched_label: 'read for dev',
-        issue_context: {
-          user: {
-            login: 'jscottnz',
-          },
-        },
-        action_deployment_id: 'openclaw-ticket-actions',
-        action_step_id: 'dispatch-bmad-develop',
-      }),
-      sendToStep: (call) => {
-        if (call.stepName === 'fetch-issue-comments') {
-          return {
-            body: JSON.stringify({
-              status: 'ok',
-              comments: [
-                { user: { login: 'jscottnz' }, body: 'Please hold for now.' },
-              ],
-            }),
-          };
-        }
-        return { body: JSON.stringify({ queued: true, status: 'ok' }) };
-      },
-    });
-
-    await runResource({ resource, context });
-
-    expect(context.__sendToStepCalls).toHaveLength(2);
-    expect(context.__sendToStepCalls[0].stepName).toBe('fetch-issue-comments');
-    expect(context.__sendToStepCalls[1].deploymentAccessId).toBe('github-issue-updater');
-    expect(context.__sendToStepCalls[1].stepName).toBe('github-issue-add-comment');
     expect(JSON.parse(context.getBody() || '{}')).toMatchObject({
       routed: false,
-      operation: 'develop',
+      action_deployment_id: 'openclaw-ticket-actions',
+      action_step_id: 'dispatch-bmad-refine-triage',
       repo: 'opscotch/hopscotch',
-      issue: 330,
-      error: 'develop-prerequisites-missing',
+      issue: 343,
+      error: 'downstream-dispatch-failed',
+      response: null,
     });
   });
 
-  it('routes non-triage labels to remote dispatch-non-triage', async () => {
-    const context = createJavascriptContext({
-      body: JSON.stringify({
-        repo: 'opscotch/hopscotch',
-        issue_number: 318,
-        labels: ['dev-ready'],
-        matched_label: 'dev-ready',
-        action_deployment_id: 'openclaw-ticket-actions',
-        action_step_id: 'dispatch-non-triage',
-      }),
+  it('does not acknowledge downstream dispatch without an explicit acceptance marker', async () => {
+    const context = routeContext({});
+
+    await runResource({ resource, context });
+
+    expect(JSON.parse(context.getBody() || '{}')).toMatchObject({
+      routed: false,
+      error: 'downstream-dispatch-not-acknowledged',
+      response: {},
+    });
+  });
+
+  it('preserves rate-limited downstream responses so the poller can stop the tick', async () => {
+    const context = routeContext({
+      queued: false,
+      error: { code: 'rate_limited', message: 'OpenClaw invoke already in progress', retryable: true },
     });
 
     await runResource({ resource, context });
 
-    expect(context.__sendToStepCalls).toHaveLength(2);
-    expect(context.__sendToStepCalls[0].stepName).toBe('fetch-issue-comments');
-    expect(context.__sendToStepCalls[1].deploymentAccessId).toBe('openclaw-ticket-actions');
-    expect(context.__sendToStepCalls[1].stepName).toBe('dispatch-non-triage');
-    expect(JSON.parse(context.__sendToStepCalls[1].body || '{}')).toMatchObject({
-      operation: 'dev-ready',
-      repo: 'opscotch/hopscotch',
-      issue: 318,
-      action_deployment_id: 'openclaw-ticket-actions',
-      action_step_id: 'dispatch-non-triage',
-    });
-    expect(JSON.parse(context.getBody() || '{}')).toEqual({
-      routed: true,
-      action_deployment_id: 'openclaw-ticket-actions',
-      action_step_id: 'dispatch-non-triage',
-      operation: 'dev-ready',
-      repo: 'opscotch/hopscotch',
-      issue: 318,
-      pull_number: 318,
+    expect(JSON.parse(context.getBody() || '{}')).toMatchObject({
+      routed: false,
+      error: 'downstream-dispatch-failed',
+      response: {
+        queued: false,
+        error: { code: 'rate_limited', retryable: true },
+      },
     });
   });
 
-  it('routes PR entity and fetches pull review comments before dispatch', async () => {
-    const context = createJavascriptContext({
-      body: JSON.stringify({
-        entity_type: 'pr',
-        repo: 'opscotch/hopscotch',
-        issue_number: 451,
-        pull_number: 451,
-        pull_url: 'https://github.com/opscotch/hopscotch/pull/451',
-        title: 'Apply review feedback',
-        issue_body: 'PR body',
-        labels: ['ready for dev'],
-        matched_label: 'ready for dev',
-        action_deployment_id: 'openclaw-pr-actions',
-        action_step_id: 'dispatch-bmad-pr-develop',
-        issue_context: {
-          number: 451,
-        },
-        pull_context: {
-          number: 451,
-          head: { ref: 'feature/pr-451' },
-        },
-      }),
-      sendToStep: (call) => {
-        if (call.stepName === 'fetch-issue-comments') {
-          return {
-            body: JSON.stringify({
-              status: 'ok',
-              comments: [{ id: 1, body: 'Needs another test.' }],
-            }),
-          };
-        }
-        return { body: JSON.stringify({ queued: true, status: 'ok' }) };
-      },
-    });
-
-    await runResource({ resource, context });
-
-    expect(context.__sendToStepCalls).toHaveLength(2);
-    expect(context.__sendToStepCalls[0].stepName).toBe('fetch-issue-comments');
-    expect(JSON.parse(context.__sendToStepCalls[0].body || '{}')).toEqual({
-      repo: 'opscotch/hopscotch',
-      issue: 451,
-      entity_type: 'pr',
-      pull_number: 451,
-    });
-    expect(context.__sendToStepCalls[1].deploymentAccessId).toBe('openclaw-pr-actions');
-    expect(context.__sendToStepCalls[1].stepName).toBe('dispatch-bmad-pr-develop');
-    expect(JSON.parse(context.__sendToStepCalls[1].body || '{}')).toMatchObject({
-      operation: 'ready for dev',
-      repo: 'opscotch/hopscotch',
-      issue: 451,
-      pull_number: 451,
-      pull_url: 'https://github.com/opscotch/hopscotch/pull/451',
-      entity_type: 'pr',
-      comments: [{ id: 1, body: 'Needs another test.' }],
-      pull_context: {
-        number: 451,
-      },
-    });
+  it('throws when downstream dispatch returns a non-JSON token body', async () => {
+    const context = routeContext('queued');
+    await expect(runResource({ resource, context })).rejects.toThrow('Invalid JSON body from dispatch-bmad-refine-triage');
   });
 });

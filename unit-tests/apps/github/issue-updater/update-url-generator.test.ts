@@ -2,7 +2,7 @@ import path from 'node:path';
 import { createJavascriptContext, runResource } from '@opscotch/resource-testkit';
 import { describe, expect, it } from 'vitest';
 
-const resource = path.resolve(import.meta.dirname, '../../../../resources/apps/github/update-url-generator.js');
+const resource = path.resolve(import.meta.dirname, '../../../../resources/apps/github/issues/update-url-generator.js');
 
 describe('github/issue-updater update-url-generator', () => {
   it('builds patch URL for update-issue', async () => {

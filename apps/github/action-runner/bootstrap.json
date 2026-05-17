@@ -4,9 +4,16 @@
     "remoteConfiguration": "workflow.json",
     "allowExternalHostAccess": [
       {
-        "id": "github-api",
+        "id": "github-api-auth",
         "host": "https://api.github.com",
         "authenticationHost": true,
+        "data": {
+          "githubToken": "REPLACE_ME_WITH_GH_TOKEN"
+        }
+      },
+      {
+        "id": "github-api",
+        "host": "https://api.github.com",
         "httpTimeout": 15000,
         "allowList": [
           {
@@ -20,11 +27,16 @@
           {
             "method": "GET",
             "uriPattern": "/repos/.+/actions/runs/.+"
+          },
+          {
+            "method": "GET",
+            "uriPattern": "/repos/.+/actions/runs/.+/jobs.*"
+          },
+          {
+            "method": "GET",
+            "uriPattern": "/repos/.+/actions/jobs/.+/logs"
           }
-        ],
-        "data": {
-          "githubToken": "REPLACE_ME_WITH_GH_TOKEN"
-        }
+        ]
       }
     ],
     "allowDeploymentAccess": [
@@ -32,11 +44,16 @@
         "id": "github-action-runner-callers",
         "deploymentId": "REPLACE_CALLER_DEPLOYMENT_ID",
         "access": "receive"
+      },
+      {
+        "id": "REPLACE_NOTIFICATION_TARGET_ACCESS_ID",
+        "deploymentId": "REPLACE_NOTIFICATION_TARGET_DEPLOYMENT_ID",
+        "access": "call"
       }
     ],
     "data": {
       "hostId": "github-api",
-      "githubAuthHostId": "github-api"
+      "githubAuthHostId": "github-api-auth"
     }
   }
 ]

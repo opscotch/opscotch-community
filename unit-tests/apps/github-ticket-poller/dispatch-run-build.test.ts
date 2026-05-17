@@ -2,7 +2,7 @@ import path from 'node:path';
 import { createJavascriptContext, runResource } from '@opscotch/resource-testkit';
 import { describe, expect, it } from 'vitest';
 
-const resource = '/home/jeremy/dev/opscotch/dev_workspace/al.machino/implementation-artifacts/opscotch/github-ticket-poller/resources/dispatch-run-build.js';
+const resource = '/workspace/dev_workspace/al.machino/implementation-artifacts/opscotch/github-ticket-poller/resources/dispatch-run-build.js';
 
 describe('github-ticket-poller/dispatch-run-build', () => {
   it('requires testrunnerbranch in PR body and comments on PR when missing', async () => {
@@ -40,8 +40,8 @@ describe('github-ticket-poller/dispatch-run-build', () => {
         if (call.stepName === 'invoke-builder-build-action') {
           return { body: JSON.stringify({ status: 'ok', operation: 'trigger-workflow' }) };
         }
-        if (call.stepName === 'resolve-builder-run-id') {
-          return { body: JSON.stringify({ run: { run_id: 998877, run_url: 'https://github.com/opscotch/builder/actions/runs/998877' } }) };
+        if (call.stepName === 'github-action-trigger-only') {
+          return { body: JSON.stringify({ run_id: 998877, html_url: 'https://github.com/opscotch/builder/actions/runs/998877' }) };
         }
         return { body: '{}' };
       },

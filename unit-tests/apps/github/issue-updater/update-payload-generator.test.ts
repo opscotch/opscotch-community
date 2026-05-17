@@ -2,7 +2,7 @@ import path from 'node:path';
 import { createJavascriptContext, runResource } from '@opscotch/resource-testkit';
 import { describe, expect, it } from 'vitest';
 
-const resource = path.resolve(import.meta.dirname, '../../../../resources/apps/github/update-payload-generator.js');
+const resource = path.resolve(import.meta.dirname, '../../../../resources/apps/github/issues/update-payload-generator.js');
 
 describe('github/issue-updater update-payload-generator', () => {
   it('builds add-comment body payload', async () => {

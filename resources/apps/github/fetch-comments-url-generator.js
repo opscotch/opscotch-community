@@ -74,7 +74,7 @@ doc
         var pullNumber = payload.pull_number !== undefined ? normalizeIssue(payload.pull_number) : issue;
         var path = "/repos/" + repo + "/issues/" + issue + "/comments?per_page=100&sort=updated&direction=asc";
         if (entityType === "pr") {
-            path = "/repos/" + repo + "/issues/" + pullNumber + "/comments?per_page=100&sort=updated&direction=asc";
+            path = "/repos/" + repo + "/pulls/" + pullNumber + "/comments?per_page=100&sort=updated&direction=asc";
         }
 
         context.setHttpMethod("GET");

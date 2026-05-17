@@ -2,7 +2,7 @@ import path from 'node:path';
 import { createJavascriptContext, runResource } from '@opscotch/resource-testkit';
 import { describe, expect, it } from 'vitest';
 
-const resource = path.resolve(import.meta.dirname, '../../../../resources/apps/github/update-results-processor.js');
+const resource = path.resolve(import.meta.dirname, '../../../../resources/apps/github/issues/update-results-processor.js');
 
 describe('github/issue-updater update-results-processor', () => {
   it('normalizes successful response', async () => {

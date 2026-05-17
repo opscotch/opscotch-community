@@ -1,266 +1,76 @@
 {
   "comment": "Reusable GitHub issue updater app for labels, assignees, issue fields, and comments.",
-  "data": {
-    "hostId": "github-api"
-  },
   "defaultStepProperties": {
-    "type": "scripted"
+    "trigger": {
+      "deploymentAccess": {
+        "ids": [
+          "github-issue-updater-callers",
+          "github-issue-updater-callers-pr"
+        ]
+      }
+    },
+    "authenticationProcessor": {
+      "resource": "/apps/github/github-auth-processor.js"
+    },
+    "urlGenerator": {
+      "resource": "/apps/github/issues/update-url-generator.js"
+    },
+    "payloadGenerator": {
+      "resource": "/apps/github/issues/update-payload-generator.js"
+    },
+    "resultsProcessor": {
+      "resource": "/apps/github/issues/update-results-processor.js"
+    },
+    "httpStatusHandling": {
+      "300-599": {
+        "resource": "/apps/github/http-error.js",
+        "data": {
+          "httpErrorKind": "github-update"
+        }
+      }
+    }
   },
   "workflows": [
     {
       "name": "github issue updater",
       "steps": [
         {
-          "stepId": "github-issue-updater",
-          "trigger": {
-            "deploymentAccess": {
-              "ids": [
-                "github-issue-updater-callers",
-                "github-issue-updater-callers-pr"
-              ]
-            }
-          },
-          "urlGenerator": {
-            "resource": "/apps/github/update-url-generator.js"
-          },
-          "payloadGenerator": {
-            "resource": "/apps/github/update-payload-generator.js"
-          },
-          "authenticationProcessor": {
-            "resource": "/apps/github/github-auth-processor.js"
-          },
-          "resultsProcessor": {
-            "resource": "/apps/github/update-results-processor.js"
-          },
-          "httpStatusHandling": {
-            "300-599": {
-              "resource": "/apps/github/http-error.js",
-              "data": {
-                "httpErrorKind": "github-update"
-              }
-            }
-          }
+          "stepId": "github-issue-updater"
         },
         {
           "stepId": "github-issue-add-comment",
-          "trigger": {
-            "deploymentAccess": {
-              "ids": [
-                "github-issue-updater-callers",
-                "github-issue-updater-callers-pr"
-              ]
-            }
-          },
-          "urlGenerator": {
-            "resource": "/apps/github/update-url-generator.js",
-            "data": {
-              "operation": "add-comment"
-            }
-          },
-          "payloadGenerator": {
-            "resource": "/apps/github/update-payload-generator.js",
-            "data": {
-              "operation": "add-comment"
-            }
-          },
-          "authenticationProcessor": {
-            "resource": "/apps/github/github-auth-processor.js"
-          },
-          "resultsProcessor": {
-            "resource": "/apps/github/update-results-processor.js"
-          },
-          "httpStatusHandling": {
-            "300-599": {
-              "resource": "/apps/github/http-error.js",
-              "data": {
-                "httpErrorKind": "github-update"
-              }
-            }
+          "data": {
+            "operation": "add-comment"
           }
         },
         {
           "stepId": "github-issue-update",
-          "trigger": {
-            "deploymentAccess": {
-              "ids": [
-                "github-issue-updater-callers",
-                "github-issue-updater-callers-pr"
-              ]
-            }
-          },
-          "urlGenerator": {
-            "resource": "/apps/github/update-url-generator.js",
-            "data": {
-              "operation": "update-issue"
-            }
-          },
-          "payloadGenerator": {
-            "resource": "/apps/github/update-payload-generator.js",
-            "data": {
-              "operation": "update-issue"
-            }
-          },
-          "authenticationProcessor": {
-            "resource": "/apps/github/github-auth-processor.js"
-          },
-          "resultsProcessor": {
-            "resource": "/apps/github/update-results-processor.js"
-          },
-          "httpStatusHandling": {
-            "300-599": {
-              "resource": "/apps/github/http-error.js",
-              "data": {
-                "httpErrorKind": "github-update"
-              }
-            }
+          "data": {
+            "operation": "update-issue"
           }
         },
         {
           "stepId": "github-issue-delete-comment",
-          "trigger": {
-            "deploymentAccess": {
-              "ids": [
-                "github-issue-updater-callers",
-                "github-issue-updater-callers-pr"
-              ]
-            }
-          },
-          "urlGenerator": {
-            "resource": "/apps/github/update-url-generator.js",
-            "data": {
-              "operation": "delete-comment"
-            }
-          },
-          "payloadGenerator": {
-            "resource": "/apps/github/update-payload-generator.js",
-            "data": {
-              "operation": "delete-comment"
-            }
-          },
-          "authenticationProcessor": {
-            "resource": "/apps/github/github-auth-processor.js"
-          },
-          "resultsProcessor": {
-            "resource": "/apps/github/update-results-processor.js"
-          },
-          "httpStatusHandling": {
-            "300-599": {
-              "resource": "/apps/github/http-error.js",
-              "data": {
-                "httpErrorKind": "github-update"
-              }
-            }
+          "data": {
+            "operation": "delete-comment"
           }
         },
         {
           "stepId": "github-pr-create",
-          "trigger": {
-            "deploymentAccess": {
-              "ids": [
-                "github-issue-updater-callers",
-                "github-issue-updater-callers-pr"
-              ]
-            }
-          },
-          "urlGenerator": {
-            "resource": "/apps/github/update-url-generator.js",
-            "data": {
-              "operation": "create-pr"
-            }
-          },
-          "payloadGenerator": {
-            "resource": "/apps/github/update-payload-generator.js",
-            "data": {
-              "operation": "create-pr"
-            }
-          },
-          "authenticationProcessor": {
-            "resource": "/apps/github/github-auth-processor.js"
-          },
-          "resultsProcessor": {
-            "resource": "/apps/github/update-results-processor.js"
-          },
-          "httpStatusHandling": {
-            "300-599": {
-              "resource": "/apps/github/http-error.js",
-              "data": {
-                "httpErrorKind": "github-update"
-              }
-            }
+          "data": {
+            "operation": "create-pr"
           }
         },
         {
           "stepId": "github-pr-update",
-          "trigger": {
-            "deploymentAccess": {
-              "ids": [
-                "github-issue-updater-callers",
-                "github-issue-updater-callers-pr"
-              ]
-            }
-          },
-          "urlGenerator": {
-            "resource": "/apps/github/update-url-generator.js",
-            "data": {
-              "operation": "update-pr"
-            }
-          },
-          "payloadGenerator": {
-            "resource": "/apps/github/update-payload-generator.js",
-            "data": {
-              "operation": "update-pr"
-            }
-          },
-          "authenticationProcessor": {
-            "resource": "/apps/github/github-auth-processor.js"
-          },
-          "resultsProcessor": {
-            "resource": "/apps/github/update-results-processor.js"
-          },
-          "httpStatusHandling": {
-            "300-599": {
-              "resource": "/apps/github/http-error.js",
-              "data": {
-                "httpErrorKind": "github-update"
-              }
-            }
+          "data": {
+            "operation": "update-pr"
           }
         },
         {
           "stepId": "github-pr-request-reviewers",
-          "trigger": {
-            "deploymentAccess": {
-              "ids": [
-                "github-issue-updater-callers",
-                "github-issue-updater-callers-pr"
-              ]
-            }
-          },
-          "urlGenerator": {
-            "resource": "/apps/github/update-url-generator.js",
-            "data": {
-              "operation": "request-reviewers"
-            }
-          },
-          "payloadGenerator": {
-            "resource": "/apps/github/update-payload-generator.js",
-            "data": {
-              "operation": "request-reviewers"
-            }
-          },
-          "authenticationProcessor": {
-            "resource": "/apps/github/github-auth-processor.js"
-          },
-          "resultsProcessor": {
-            "resource": "/apps/github/update-results-processor.js"
-          },
-          "httpStatusHandling": {
-            "300-599": {
-              "resource": "/apps/github/http-error.js",
-              "data": {
-                "httpErrorKind": "github-update"
-              }
-            }
+          "data": {
+            "operation": "request-reviewers"
           }
         }
       ]

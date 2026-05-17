@@ -42,7 +42,7 @@
             "_stepTimeoutMs": "600000"
           },
           "resultsProcessor": {
-            "resource": "/apps/github/route-ticket-action.js"
+            "resource": "/apps/github/route-pr-action.js"
           }
         },
         {

@@ -99,100 +99,17 @@ doc
         }
     })
     .run(() => {
-        function parseJson(value, fallback) {
-            if (value === null || value === undefined || value === "") {
-                return fallback;
-            }
-            return JSON.parse(value);
+        var data = JSON.parse(context.getData());
+        var decisionLoggingEnabled = data.issueWatcherDecisionLoggingEnabled ?? false;
+        var watchEntity = data.watchEntity === undefined ? "issue" : String(data.watchEntity || "").toLowerCase();
+        if (watchEntity !== "issue" && watchEntity !== "pr") {
+            throw new Error("watchEntity must be either issue or pr");
         }
-
-        function toLower(value) {
-            return String(value || "").toLowerCase();
+        var criteriaKey = watchEntity === "pr" ? "githubPrWatcherCriteria" : "githubIssueWatcherCriteria";
+        var criteria = data[criteriaKey];
+        if (!Array.isArray(criteria) || criteria.length === 0) {
+            throw new Error(criteriaKey + " must contain at least one criterion");
         }
-
-        function encode(value) {
-            return encodeURIComponent(String(value));
-        }
-
-        function toBoolean(value, fallback) {
-            if (value === null || value === undefined || value === "") {
-                return fallback;
-            }
-
-            if (typeof value === "boolean") {
-                return value;
-            }
-
-            var normalized = toLower(String(value)).trim();
-            if (normalized === "true" || normalized === "1" || normalized === "yes" || normalized === "on") {
-                return true;
-            }
-            if (normalized === "false" || normalized === "0" || normalized === "no" || normalized === "off") {
-                return false;
-            }
-
-            return fallback;
-        }
-
-        function logDecision(enabled, eventName, details) {
-            if (!enabled) {
-                return;
-            }
-            var message = "issue-watcher url " + eventName + ": " + JSON.stringify(details || {});
-            if (typeof context.diagnosticLog === "function") {
-                context.diagnosticLog(message);
-                return;
-            }
-            console.log(message);
-        }
-
-        function normalizeEntity(value) {
-            var entity = toLower(String(value || "issue")).trim();
-            if (entity !== "issue" && entity !== "pr") {
-                throw new Error("watchEntity must be either issue or pr");
-            }
-            return entity;
-        }
-
-        function normalizeCriteria(data, watchEntity) {
-            var key = watchEntity === "pr" ? "githubPrWatcherCriteria" : "githubIssueWatcherCriteria";
-            var criteria = data[key];
-            if (!Array.isArray(criteria) || criteria.length === 0) {
-                throw new Error(key + " must be a non-empty array");
-            }
-            var normalized = [];
-            var i;
-
-            for (i = 0; i < criteria.length; i += 1) {
-                var item = criteria[i];
-                normalized.push({
-                    repo: String(item.repo).trim(),
-                    assignee: toLower(item.assignee).trim(),
-                    label: toLower(item.label).trim(),
-                    deploymentId: String(item.deploymentId).trim(),
-                    stepId: String(item.stepId).trim()
-                });
-            }
-
-            return normalized;
-        }
-
-        function uniqueLabels(criteria) {
-            var labels = [];
-            for (var i = 0; i < criteria.length; i += 1) {
-                var label = criteria[i].label;
-                if (labels.indexOf(label) < 0) {
-                    labels.push(label);
-                }
-            }
-            return labels;
-        }
-
-        var hostId = context.getData("hostId");
-        var data = parseJson(context.getData(), {});
-        var decisionLoggingEnabled = toBoolean(data.issueWatcherDecisionLoggingEnabled, false);
-        var watchEntity = normalizeEntity(data.watchEntity);
-        var criteria = normalizeCriteria(data, watchEntity);
 
         var primary = criteria[0];
         for (var c = 1; c < criteria.length; c += 1) {
@@ -201,41 +118,46 @@ doc
             }
         }
 
-        var labels = uniqueLabels(criteria);
+        var labels = [];
+        for (var i = 0; i < criteria.length; i += 1) {
+            var label = criteria[i].label;
+            if (labels.indexOf(label) < 0) {
+                labels.push(label);
+            }
+        }
+
         var path = "";
         var labelFilterMode = "or-in-results-processor";
         var queryText = "";
-        if (watchEntity === "pr") {
-            var searchTerms = [
-                "repo:" + primary.repo,
-                "is:open",
-                "is:pr"
-            ];
-            queryText = searchTerms.join(" ");
-            path = "/search/issues?q=" + encode(queryText) + "&sort=updated&order=asc&per_page=100";
-            labelFilterMode = "results-processor-only";
-        } else {
-            var query = "state=open"
-                + "&assignee=" + encode(primary.assignee)
-                + "&sort=updated"
-                + "&direction=asc"
-                + "&per_page=100";
-            path = "/repos/" + primary.repo + "/issues?" + query;
+        var query = "state=open"
+            + "&assignee=" + encodeURIComponent(primary.assignee)
+            + "&sort=updated"
+            + "&direction=asc"
+            + "&per_page=100";
+        path = "/repos/" + primary.repo + "/issues?" + query;
+
+        if (decisionLoggingEnabled) {
+            var details = {
+                host_id: data.hostId,
+                watch_entity: watchEntity,
+                repo: primary.repo,
+                assignee: primary.assignee,
+                labels: labels,
+                label_filter_mode: labelFilterMode,
+                path: path,
+                criteria_count: criteria.length,
+                raw_query: queryText
+            };
+            var message = "issue-watcher url poll-request-built: " + JSON.stringify(details);
+            if (typeof context.diagnosticLog === "function") {
+                context.diagnosticLog(message);
+            } else {
+                console.log(message);
+            }
         }
-        logDecision(decisionLoggingEnabled, "poll-request-built", {
-            host_id: hostId,
-            watch_entity: watchEntity,
-            repo: primary.repo,
-            assignee: primary.assignee,
-            labels: labels,
-            label_filter_mode: labelFilterMode,
-            path: path,
-            criteria_count: criteria.length,
-            raw_query: queryText
-        });
 
         context.setHttpMethod("GET");
-        context.setUrl(hostId, path);
+        context.setUrl(data.hostId, path);
         context.setHeader("Accept", "application/vnd.github+json");
         context.setHeader("X-GitHub-Api-Version", "2022-11-28");
         context.setProperty("gh_watch_entity", watchEntity);

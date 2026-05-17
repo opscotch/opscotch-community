@@ -23,7 +23,14 @@
             "resource": "/apps/github/github-auth-processor.js"
           },
           "resultsProcessor": {
-            "resource": "/apps/github/poll-results-processor.js"
+            "processors": [
+                {
+                    "script": "var r = JSON.parse(context.getBody()); context.setBody(JSON.stringify(r.items || r));"
+                },
+                {
+                    "resource": "/apps/github/poll-results-processor.js"
+                }
+            ]
           },
           "httpStatusHandling": {
             "300-599": {
@@ -42,7 +49,7 @@
             "_stepTimeoutMs": "600000"
           },
           "resultsProcessor": {
-            "resource": "/apps/github/route-ticket-action.js"
+            "resource": "/apps/github/route-issue-action.js"
           }
         },
         {

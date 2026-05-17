@@ -113,6 +113,119 @@ describe('poll-results-processor', () => {
     });
   });
 
+  it('stops the current poll tick when downstream OpenClaw dispatch is rate limited', async () => {
+    const issues = [
+      {
+        number: 317,
+        body: 'First issue',
+        labels: [{ name: 'triage' }],
+        assignees: [{ login: 'machinoal2-cell' }],
+        updated_at: '2026-04-23T00:00:00Z',
+        title: 'Busy',
+      },
+      {
+        number: 318,
+        body: 'Second issue',
+        labels: [{ name: 'triage' }],
+        assignees: [{ login: 'machinoal2-cell' }],
+        updated_at: '2026-04-23T00:00:01Z',
+        title: 'Should wait',
+      },
+    ];
+
+    const context = createJavascriptContext({
+      body: JSON.stringify(issues),
+      data: {
+        githubIssueWatcherCriteria: [
+          {
+            label: 'triage',
+            assignee: 'machinoal2-cell',
+            repo: 'opscotch/hopscotch',
+            deploymentId: 'openclaw-ticket-actions',
+            stepId: 'dispatch-bmad-refine',
+          },
+        ],
+      },
+      sendToStep: (call) => {
+        if (call.stepName === 'route-ticket-action') {
+          return {
+            body: JSON.stringify({
+              routed: false,
+              response: {
+                error: {
+                  code: 'rate_limited',
+                  message: 'OpenClaw invoke already in progress',
+                  retryable: true,
+                },
+              },
+            }),
+          };
+        }
+        return { body: '{}' };
+      },
+    });
+
+    await runResource({ resource, context });
+
+    expect(context.__sendToStepCalls).toHaveLength(1);
+    expect(JSON.parse(context.getPersistedItem('issueUpdatedAtByNumber') || '{}')).toEqual({});
+    expect(JSON.parse(context.getBody() || '{}')).toEqual({
+      status: 'ok',
+      scanned_issues: 1,
+      dispatched_actions: 0,
+    });
+  });
+
+  it('does not watermark when route response is marked routed but also contains an error', async () => {
+    const issues = [
+      {
+        number: 343,
+        body: 'Missing base branch',
+        labels: [{ name: 'triage' }],
+        assignees: [{ login: 'machinoal2-cell' }],
+        updated_at: '2026-05-11T02:37:20Z',
+        title: 'Should retry after dispatch failure',
+      },
+    ];
+
+    const context = createJavascriptContext({
+      body: JSON.stringify(issues),
+      data: {
+        githubIssueWatcherCriteria: [
+          {
+            label: 'triage',
+            assignee: 'machinoal2-cell',
+            repo: 'opscotch/hopscotch',
+            deploymentId: 'openclaw-ticket-actions',
+            stepId: 'dispatch-bmad-refine-triage',
+          },
+        ],
+      },
+      sendToStep: (call) => {
+        if (call.stepName === 'route-ticket-action') {
+          return {
+            body: JSON.stringify({
+              routed: true,
+              error: 'downstream-dispatch-failed',
+              response: {},
+            }),
+          };
+        }
+        return { body: '{}' };
+      },
+    });
+
+    await runResource({ resource, context });
+
+    expect(context.__sendToStepCalls).toHaveLength(1);
+    expect(JSON.parse(context.getPersistedItem('issueUpdatedAtByNumber') || '{}')).toEqual({});
+    expect(JSON.parse(context.getBody() || '{}')).toEqual({
+      status: 'ok',
+      scanned_issues: 1,
+      dispatched_actions: 0,
+    });
+  });
+
   it('waits for configured handoff delay before dispatching', async () => {
     const issues = [
       {
