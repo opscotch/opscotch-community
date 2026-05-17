@@ -1,0 +1,29 @@
+{
+    "workflows" : [
+        {
+            "name" : "SQS example",
+            "steps" : [
+                {
+                    "stepId" : "sqs-example",
+                    "trigger" : {
+                        "http": {
+                            "method": "POST",
+                            "path": "/sqs-send",
+                            "server" : "example"
+                        }
+                    },
+                    "resultsProcessor" : { 
+                        "processors" : [
+                            {
+                                "script" : "context.setProperty(`service`, `sqs-request`); context.setProperty(`payload`, JSON.stringify( { aws_sqs_queue : 'test-queue', action : 'SendMessage', params : { MessageBody : JSON.parse(context.getBody()).body } } ))"
+                            },
+                            {
+                                "script" : "var response = context.sendToStep(`aws-services`, context.getProperty(`service`), context.getProperty(`payload`)); context.setProperty(`status_code`, response.getProperty(`status_code`)); context.setBody(response.getBody())"
+                            }
+                        ]
+                    }
+                }
+            ]
+        }
+    ]
+}

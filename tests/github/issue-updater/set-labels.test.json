@@ -1,0 +1,15 @@
+{
+  "enabled": true,
+  "fromDirectory": "/github/issue-updater/",
+  "testThisStep": "test-set-labels-trigger",
+  "useThisTestConfigFile": "workflow-issue-updater.test.config.json",
+  "useThisTestBootstrapFile": "workflow-issue-updater.test.bootstrap.json",
+  "mockEndpointResponses": [
+    {
+      "whenThisIsCalled": "http://mockserver/repos/opscotch/hopscotch/issues/317/labels",
+      "expectedPayload": "{\"labels\":[\"triage\",\"dev-review\"]}",
+      "returnThisFile": "/github/issue-updater/set-labels.response.json"
+    }
+  ],
+  "theseMetricsShouldHaveBeenSent": []
+}

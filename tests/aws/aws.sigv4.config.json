@@ -1,0 +1,61 @@
+{
+    "defaultStepProperties" : {
+        "debug" : true,
+        "authenticationProcessor" : {
+            "processors" : [
+                {
+                    "resource" : "apps/aws/authentication/sigv4.js"
+                }
+            ]
+        },
+        "urlGenerator" : {
+            "processors" : [
+                {
+                    "script" : "context.setUrl(`iamhost`, context.getData(`uri`) + context.getData(`queryString`))"
+                },
+                {
+                    "resource" : "general/standard-set-properties-from-data.js",
+                    "data" : {
+                        "setProperties" : [ "method", "uri", "queryString"]
+                    }
+                }
+            ]
+        },
+        "resultsProcessor" : {
+            "script" : "//noop"
+        }
+    },
+    "workflows" : [
+        {
+            "name" : "sigv4 tests",
+            "steps" : [
+                {
+                    "stepId" : "get-test",
+                    "data" : {
+                        "method" : "GET",
+                        "uri" : "/",
+                        "queryString" : "?Version=2010-05-08&Action=ListUsers",
+                        "hostId" : "iamhost"
+                    }
+                }
+            ]
+        },
+        {
+            "name" : "sigv4 tests",
+            "steps" : [
+                {
+                    "stepId" : "post-test",
+                    "data" : {
+                        "method" : "POST",
+                        "uri" : "/",
+                        "queryString" : "?Version=2010-05-08&Action=ListUsers",
+                        "hostId" : "iamhost"
+                    },
+                    "payloadGenerator" : {
+                        "script" : "context.setBody(`hello world`)"
+                    }
+                }
+            ]
+        }
+    ]
+}

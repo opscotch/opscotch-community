@@ -1,0 +1,34 @@
+{
+    "workflows" : [
+        {
+            "name" : "queue based email sender",
+            "steps" : [
+                {
+                    "stepId" : "accept-sqs",
+                    "debug" : true,
+                    "comment" : "accept SQS event where each record body is the raw API request body and send email",
+                    "trigger" : {
+                        "deploymentAccess" : {
+                            "ids" : [
+                                "aws-lambda-callback" 
+                            ]
+                        }
+                    },
+                    "resultsProcessor" : {
+                        "processors" : [
+                            {
+                                "script" : "console.log(context.getBody())"
+                            },
+                            {
+                                "script" : "const event = JSON.parse(context.getBody()); const input = JSON.parse(event.Records[0].body); context.setProperty(`senderEmail`, input.fromEmail); context.setBody(`This email was sent from the website.\n\nfrom: ${input.fromName}<${input.fromEmail}>\nCompany: ${input.company}\n\nMessage:\n${input.message}`)"
+                            },
+                            {
+                                "script" : "context.setProperty(`status_code`, context.sendToStep(`aws-services`, `ses-request`, JSON.stringify( { path : `/v2/email/outbound-emails`, method : `POST`, body : { FromEmailAddress: context.getData(`fromAddress`), Destination : { ToAddresses : JSON.parse(context.getData(`toAddress`))}, Content: { Simple : { Subject: { Data: `${context.getData(`subject`)} - ${context.getProperty(`senderEmail`)}` }, Body : { Text : { Data : context.getBody() }}}}}})).getProperty(`status_code`))"
+                            }
+                        ]
+                    }
+                }
+            ]
+        }
+    ]
+}

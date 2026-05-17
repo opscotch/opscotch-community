@@ -1,0 +1,22 @@
+{
+    "workflows" : [
+        {
+            "name" : "source",
+            "steps" : [
+                {
+                    "stepId" : "cross-deploy-forward",
+                    "trigger" : {
+                        "http" : {
+                            "method" : "GET",
+                            "path" : "/ping",
+                            "server" : "deployment1"
+                        }
+                    },
+                    "resultsProcessor" : {
+                        "script" : "context.setBody(context.sendToStep(\"otherDeployment\", \"ping\", \"\").getBody());"
+                    }
+                }
+            ]
+        }
+    ]
+}

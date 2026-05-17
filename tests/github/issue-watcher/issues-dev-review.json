@@ -1,0 +1,18 @@
+[
+  {
+    "number": 318,
+    "title": "Developer review requested",
+    "html_url": "https://github.com/opscotch/hopscotch/issues/318",
+    "updated_at": "2026-04-24T01:11:00Z",
+    "labels": [
+      {
+        "name": "dev-review"
+      }
+    ],
+    "assignees": [
+      {
+        "login": "machinoal2-cell"
+      }
+    ]
+  }
+]

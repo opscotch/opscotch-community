@@ -1,0 +1,19 @@
+{
+  "enabled": true,
+  "fromDirectory": "/github/issue-watcher/",
+  "testThisStep": "poll-github-issues",
+  "useThisTestConfigFile": "workflow-github-ticket-poller.json",
+  "useThisTestBootstrapFile": "workflow-github-ticket-poller.test.bootstrap.json",
+  "mockEndpointResponses": [
+    {
+      "whenThisIsCalled": "http://mockserver/repos/opscotch/hopscotch/issues?state=open&assignee=machinoal2-cell&labels=triage%2Cdev-review%2Cdev-ready&sort=updated&direction=asc&per_page=100",
+      "returnThisFile": "/github/issue-watcher/issues-triage.json"
+    },
+    {
+      "whenThisIsCalled": "http://mockserver/agents/reviewer/invoke",
+      "expectedPayload": "{\"input\":{\"repo\":\"opscotch/hopscotch\",\"issue\":317,\"issue_body\":\"Please refine this ticket with full context.\",\"issue_context\":{\"number\":317,\"title\":\"Triage this ticket\",\"html_url\":\"https://github.com/opscotch/hopscotch/issues/317\",\"updated_at\":\"2026-04-24T01:10:00Z\",\"body\":\"Please refine this ticket with full context.\",\"labels\":[{\"name\":\"triage\"}],\"assignees\":[{\"login\":\"machinoal2-cell\"}]}},\"metadata\":{\"workflow\":\"quick-spec\",\"operation\":\"refine\",\"reason\":\"criteria-match:triage\",\"issue_url\":\"https://github.com/opscotch/hopscotch/issues/317\",\"title\":\"Triage this ticket\"}}",
+      "returnThisFile": "/github/issue-watcher/openclaw-reviewer-response.json"
+    }
+  ],
+  "theseMetricsShouldHaveBeenSent": []
+}

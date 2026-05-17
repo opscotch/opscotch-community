@@ -1,0 +1,132 @@
+[
+    {
+        "deploymentId" : "aws-service-usage-example",
+        "remoteConfiguration" : "/home/jeremy/dev/opscotch/community/opscotch-community/apps/aws-services/aws-services.config.json",
+        "allowHttpServerAccess": [
+            {
+                "id" : "example",
+                "port" : 9000
+            }
+        ],
+        "allowDeploymentAccess" : [
+            {
+                "id" : "aws-services",
+                "access" : "call",
+                "deploymentId" : "aws-services"
+            }
+        ]
+    },
+    {
+        "deploymentId" : "aws-services",
+        "packaging" : {
+            "packageId" : "opscotch-aws-services"
+        },
+        "remoteConfiguration" : "/home/jeremy/dev/opscotch/apps/opscotch-aws-services/opscotch-aws-services-1.0.oapp",
+        "allowExternalHostAccess": [
+            {
+                "id" : "sqs",
+                "host": "https://sqs.${AWS_REGION}.amazonaws.com",
+                "data" : {
+                    "region": "${AWS_REGION}",
+                    "host" : "sqs.${AWS_REGION}.amazonaws.com",
+                    "service" : "sqs"
+                }
+            },
+            {
+                "id" : "sns",
+                "host": "https://sns.${AWS_REGION}.amazonaws.com",
+                "data" : {
+                    "region": "${AWS_REGION}",
+                    "host" : "sns.${AWS_REGION}.amazonaws.com",
+                    "service" : "sns"
+                }
+            },
+            {
+                "id" : "sts",
+                "host": "https://sts.amazonaws.com",
+                "data" : {
+                    "region": "us-east-1",
+                    "host" : "sts.amazonaws.com",
+                    "service" : "sts",
+                    "accessKey" : "${AWS_ACCESS_KEY}",
+                    "secretKey" : "${AWS_SECRET_KEY}"
+                }
+            },
+            {
+                "id" : "iam",
+                "host": "https://iam.amazonaws.com",
+                "data" : {
+                    "region": "us-east-1",
+                    "host" : "iam.amazonaws.com",
+                    "service" : "iam"
+                }
+            },
+            {
+                "id" : "ec2",
+                "host": "https://ec2.${AWS_REGION}.amazonaws.com",
+                "data" : {
+                    "region": "${AWS_REGION}",
+                    "host" : "ec2.${AWS_REGION}.amazonaws.com",
+                    "service" : "ec2"
+                }
+            },
+            {
+                "id" : "autoscaling",
+                "host": "https://autoscaling.${AWS_REGION}.amazonaws.com",
+                "data" : {
+                    "region": "${AWS_REGION}",
+                    "host" : "autoscaling.${AWS_REGION}.amazonaws.com",
+                    "service" : "autoscaling"
+                }
+            },
+            {
+                "id" : "cloudformation",
+                "host": "https://cloudformation.${AWS_REGION}.amazonaws.com",
+                "data" : {
+                    "region": "${AWS_REGION}",
+                    "host" : "cloudformation.${AWS_REGION}.amazonaws.com",
+                    "service" : "cloudformation"
+                }
+            },
+            {
+                "id" : "monitoring",
+                "host": "https://monitoring.${AWS_REGION}.amazonaws.com",
+                "data" : {
+                    "region": "${AWS_REGION}",
+                    "host" : "monitoring.${AWS_REGION}.amazonaws.com",
+                    "service" : "monitoring"
+                }
+            },
+            {
+                "id" : "elasticloadbalancing",
+                "host": "https://elasticloadbalancing.${AWS_REGION}.amazonaws.com",
+                "data" : {
+                    "region": "${AWS_REGION}",
+                    "host" : "elasticloadbalancing.${AWS_REGION}.amazonaws.com",
+                    "service" : "elasticloadbalancing"
+                }
+            },
+            {
+                "id" : "sdb",
+                "host": "https://sdb.${AWS_REGION}.amazonaws.com",
+                "data" : {
+                    "region": "${AWS_REGION}",
+                    "host" : "sdb.${AWS_REGION}.amazonaws.com",
+                    "service" : "sdb"
+                }
+            }
+        ],
+        "allowDeploymentAccess" : [
+            {
+                "id" : "callers",
+                "access" : "receive",
+                "anyDeployment" : true
+            }
+        ],
+        "data" : {
+            "awsAccount" : "${AWS_ACCOUNT}",
+            "awsRoleSessionName" : "awsOpscotchTest",
+            "awsRoleArn" : "arn:aws:iam::502641903487:role/opscotch-service"
+        }
+    }
+]

@@ -1,0 +1,208 @@
+{
+  "comment": "Reusable GitHub Actions app for triggering workflow_dispatch and polling workflow run status.",
+  "workflows": [
+    {
+      "name": "authed github action runner",
+      "defaultStepProperties" : {
+        "authenticationProcessor": {
+          "resource": "/apps/github/github-auth-processor.js"
+        }
+      },
+      "steps": [
+        {
+          "comment" : "app internal only",
+          "stepId": "github-action-trigger-only",
+          "urlGenerator": {
+            "resource": "/apps/github/actions/actions-url-generator.js",
+            "data": {
+              "operation": "trigger-workflow"
+            }
+          },
+          "payloadGenerator": {
+            "resource": "/apps/github/actions/actions-trigger-workflow-payload-generator.js"
+          },
+          "resultsProcessor": {
+            "resource": "/apps/github/actions/actions-results-processor.js"
+          },
+          "httpStatusHandling": {
+            "400-599": {
+              "resource": "/apps/github/http-error.js",
+              "data": {
+                "httpErrorKind": "github-actions"
+              }
+            }
+          }
+        },
+        {
+          "stepId": "github-action-list-runs",
+          "trigger": {
+            "deploymentAccess": {
+              "ids": [
+                "github-action-runner-callers"
+              ]
+            }
+          },
+          "urlGenerator": {
+            "resource": "/apps/github/actions/actions-url-generator.js",
+            "data": {
+              "operation": "list-workflow-runs"
+            }
+          },
+          "resultsProcessor": {
+            "resource": "/apps/github/actions/actions-list-workflow-runs-processor.js"
+          },
+          "httpStatusHandling": {
+            "300-599": {
+              "resource": "/apps/github/http-error.js",
+              "data": {
+                "httpErrorKind": "github-actions"
+              }
+            }
+          }
+        },
+        {
+          "stepId": "github-action-get-run",
+          "trigger": {
+            "deploymentAccess": {
+              "ids": [
+                "github-action-runner-callers"
+              ]
+            }
+          },
+          "urlGenerator": {
+            "resource": "/apps/github/actions/actions-url-generator.js",
+            "data": {
+              "operation": "get-workflow-run"
+            }
+          },
+          "resultsProcessor": {
+            "resource": "/apps/github/actions/actions-get-workflow-run-processor.js"
+          },
+          "httpStatusHandling": {
+            "300-599": {
+              "resource": "/apps/github/http-error.js",
+              "data": {
+                "httpErrorKind": "github-actions"
+              }
+            }
+          }
+        },
+        {
+          "stepId": "github-action-get-failing-step",
+          "trigger": {
+            "deploymentAccess": {
+              "ids": [
+                "github-action-runner-callers"
+              ]
+            }
+          },
+          "urlGenerator": {
+            "resource": "/apps/github/actions/actions-url-generator.js",
+            "data": {
+              "operation": "get-failing-step"
+            }
+          },
+          "resultsProcessor": {
+            "resource": "/apps/github/actions/actions-get-failing-step-processor.js"
+          },
+          "httpStatusHandling": {
+            "300-599": {
+              "resource": "/apps/github/http-error.js",
+              "data": {
+                "httpErrorKind": "github-actions"
+              }
+            }
+          }
+        },
+        {
+          "stepId": "github-action-get-job-logs",
+          "trigger": {
+            "deploymentAccess": {
+              "ids": [
+                "github-action-runner-callers"
+              ]
+            }
+          },
+          "urlGenerator": {
+            "resource": "/apps/github/actions/actions-url-generator.js",
+            "data": {
+              "operation": "get-workflow-job-logs"
+            }
+          },
+          "resultsProcessor": {
+            "resource": "/apps/github/actions/actions-get-workflow-run-logs-processor.js"
+          },
+          "httpStatusHandling": {
+            "302": {
+              "resource": "/apps/github/actions/actions-get-workflow-run-logs-processor.js"
+            },
+            "400-599": {
+              "resource": "/apps/github/http-error.js",
+              "data": {
+                "httpErrorKind": "github-actions"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "un-authed github action runner",
+      "steps": [
+        {
+          "stepId": "github-action-trigger",
+          "trigger": {
+            "deploymentAccess": {
+              "ids": [
+                "github-action-runner-callers"
+              ]
+            }
+          },
+          "resultsProcessor": {
+            "resource": "/apps/github/actions/actions-trigger-and-resolve-run.js"
+          }
+        },
+        {
+          "stepId": "github-action-watch-runs",
+          "singleThreaded": "return",
+          "trigger": {
+            "timer": {
+              "delay": 15000,
+              "period": 30000
+            }
+          },
+          "resultsProcessor": {
+            "resource": "/apps/github/actions/actions-watch-runs.js"
+          },
+          "persistenceFile": "github-action-watch-runs"
+        },
+        {
+          "stepId": "github-action-get-step-logs",
+          "trigger": {
+            "deploymentAccess": {
+              "ids": [
+                "github-action-runner-callers"
+              ]
+            }
+          },
+          "resultsProcessor": {
+            "resource": "/apps/github/actions/actions-get-step-logs-processor.js"
+          }
+        },
+        {
+          "stepId": "github-action-get-failing-step-logs",
+          "trigger": {
+            "deploymentAccess": {
+              "ids": [
+                "github-action-runner-callers"
+              ]
+            }
+          },
+          "resultsProcessor": {
+            "resource": "/apps/github/actions/actions-get-failing-step-logs-processor.js"
+          }
+        }
+      ]
+    }
+  ]
+}

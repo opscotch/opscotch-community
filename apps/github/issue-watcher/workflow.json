@@ -1,0 +1,78 @@
+{
+  "comment": "Poll GitHub issues for configured label/assignee criteria and route matched tickets to configured deployment step targets.",
+  "defaultStepProperties": {
+    "type": "scripted"
+  },
+  "workflows": [
+    {
+      "name": "github issue watcher",
+      "steps": [
+        {
+          "stepId": "poll-github-issues",
+          "singleThreaded": "return",
+          "trigger": {
+            "timer": {
+              "delay": 10000,
+              "period": 10000
+            }
+          },
+          "urlGenerator": {
+            "resource": "/apps/github/poll-url-generator.js"
+          },
+          "authenticationProcessor": {
+            "resource": "/apps/github/github-auth-processor.js"
+          },
+          "resultsProcessor": {
+            "processors": [
+                {
+                    "script": "var r = JSON.parse(context.getBody()); context.setBody(JSON.stringify(r.items || r));"
+                },
+                {
+                    "resource": "/apps/github/poll-results-processor.js"
+                }
+            ]
+          },
+          "httpStatusHandling": {
+            "300-599": {
+              "resource": "/apps/github/http-error.js",
+              "data": {
+                "httpErrorKind": "github-poll"
+              }
+            }
+          },
+          "persistenceFile": "github-ticket-poller.poll.state"
+        },
+        {
+          "stepId": "route-ticket-action",
+          "httpTimeout": 120000,
+          "data": {
+            "_stepTimeoutMs": "600000"
+          },
+          "resultsProcessor": {
+            "resource": "/apps/github/route-issue-action.js"
+          }
+        },
+        {
+          "stepId": "fetch-issue-comments",
+          "urlGenerator": {
+            "resource": "/apps/github/fetch-comments-url-generator.js"
+          },
+          "authenticationProcessor": {
+            "resource": "/apps/github/github-auth-processor.js"
+          },
+          "resultsProcessor": {
+            "resource": "/apps/github/fetch-comments-results-processor.js"
+          },
+          "httpStatusHandling": {
+            "300-599": {
+              "resource": "/apps/github/http-error.js",
+              "data": {
+                "httpErrorKind": "github-fetch-comments"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

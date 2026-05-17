@@ -1,0 +1,33 @@
+{
+    "workflows": [
+        {
+            "name": "mcp framework sample app",
+            "steps": [
+                {
+                    "stepId": "register-mcp",
+                    "type": "scripted",
+                    "trigger": {
+                        "runOnce": true
+                    },
+                    "resultsProcessor": {
+                        "script": "context.sendToStep(\"mcp-framework\", \"register\", JSON.stringify({ namespace: \"sample\", replace: true, tools: [{ name: \"echo\", title: \"Echo\", description: \"Echoes the supplied text\", inputSchema: { type: \"object\", properties: { text: { type: \"string\" } }, required: [\"text\"] }, handler: { deploymentAccessId: \"sample-app-callback\", stepId: \"mcp-tool-echo\" } }], resources: [{ uri: \"sample://about\", name: \"About Sample\", description: \"Static about content\", mimeType: \"text/plain\", source: { type: \"static\", text: \"Sample app embedded beside the MCP framework deployment.\" } }], prompts: [{ name: \"summarize\", title: \"Summarize\", description: \"Simple static prompt\", arguments: [{ name: \"text\", required: true }], source: { type: \"static\", text: \"Summarize the following text in three bullets.\" } }] }));"
+                    }
+                },
+                {
+                    "stepId": "mcp-tool-echo",
+                    "type": "scripted",
+                    "trigger": {
+                        "deploymentAccess": {
+                            "ids": [
+                                "mcp-framework-receive"
+                            ]
+                        }
+                    },
+                    "resultsProcessor": {
+                        "resource": "apps/mcp-framework/example-echo.js"
+                    }
+                }
+            ]
+        }
+    ]
+}

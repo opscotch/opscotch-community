@@ -1,20 +1,33 @@
 {
-  "hosts": {
-    "elastic": {
-      "data" : {
-        "authorization": "Basic LETMEIN"
-      },
-      "host": "http://mockserver",
-      "headers": {
-        "Content-Type": "application/json;charset=UTF-8",
-        "Accept": "application/json, text/plain, */*"
-      },
-      "allowlist": [
-        ["GET", "/_settings"], 
-        ["GET", "/_ilm/policy"],
-        ["GET", "/_cat/.*"],
-        ["GET", "/.*/_stats"]
-      ]
-    }
-  }
+    "allowExternalHostAccess": [
+        {
+            "id": "elastic",
+            "host": "http://mockserver",
+            "headers": {
+                "Content-Type": "application/json;charset=UTF-8",
+                "Accept": "application/json, text/plain, */*"
+            },
+            "allowList": [
+                {
+                    "method": "GET",
+                    "uriPattern": "/_settings"
+                },
+                {
+                    "method": "GET",
+                    "uriPattern": "/_ilm/policy"
+                },
+                {
+                    "method": "GET",
+                    "uriPattern": "/_cat/.*"
+                },
+                {
+                    "method": "GET",
+                    "uriPattern": "/.*/_stats"
+                }
+            ],
+            "data": {
+                "authorization": "Basic LETMEIN"
+            }
+        }
+    ]
 }

@@ -1,0 +1,30 @@
+{
+    "workflows" : [
+        {
+            "name" : "send email",
+            "steps" : [
+                {
+                    "stepId" : "send-email",
+                    "trigger" : {
+                        "deploymentAccess" : {
+                            "ids" : [ "aws-lambda-callback" ]
+                        }
+                    },
+                    "resultsProcessor" : { 
+                        "processors" : [
+                            {
+                                "script" : "const input = JSON.parse(context.getBody()).body; context.setBody(`This email was sent from the website, from: ${input.fromName}<${input.fromEmail}>\n\n${input.message}`)"
+                            },
+                            {
+                                "script" : "context.sendToStep(`aws-services`, `ses-request`, JSON.stringify( { path : `/v2/email/outbound-emails`, method : `POST`, body : { FromEmailAddress: context.getData(`fromAddress`), Destination : { ToAddresses : JSON.parse(context.getData(`toAddress`))}, Content: { Simple : { Subject: { Data: context.getData(`subject`) }, Body : { Text : { Data : context.getBody() }}}}}}))"
+                            },
+                            {
+                                "script" : "context.removeAllHeaders(); context.setBody( JSON.stringify( { message : context.getData(`responseMessage`) } ));"
+                            }
+                        ]
+                    }
+                }
+            ]
+        }
+    ]
+}

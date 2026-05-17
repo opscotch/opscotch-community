@@ -9,7 +9,7 @@
                     "stepId": "agent-heartbeat",
                     "resultsProcessor": {
                         "resource": "",
-                        "script": "context.sendMetric(\"agent-heartbeat\", 67.0);"
+                        "script": "context.sendMetric(\"agent-heartbeat\", 68.0);"
                     },
                     "trigger": { "timer" : { "period" : 60000 }},
                     "data": {

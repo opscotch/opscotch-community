@@ -1,0 +1,38 @@
+{
+  "comment": "Generic OpenClaw agent invoker via local gateway.",
+  "defaultStepProperties": {
+    "type": "scripted"
+  },
+  "workflows": [
+    {
+      "name": "openclaw agent invoker",
+      "steps": [
+        {
+          "stepId": "invoke-openclaw-agent",
+          "trigger": {
+            "deploymentAccess": {
+              "ids": [
+                "openclaw-agent-invoker-callers"
+              ]
+            }
+          },
+          "urlGenerator": {
+            "resource": "/apps/openclaw/invoke-url-generator.js"
+          },
+          "payloadGenerator": {
+            "resource": "/apps/openclaw/invoke-payload-generator.js"
+          },
+          "resultsProcessor": {
+            "resource": "/apps/openclaw/invoke-results-processor.js"
+          },
+          "httpStatusHandling": {
+            "300-599": {
+              "resource": "/apps/openclaw/invoke-http-error.js"
+            }
+          },
+          "httpTimeout": 120000
+        }
+      ]
+    }
+  ]
+}

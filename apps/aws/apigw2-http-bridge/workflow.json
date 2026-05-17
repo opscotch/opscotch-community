@@ -1,0 +1,23 @@
+{
+  "workflows": [
+    {
+      "name": "api gateway v2 http bridge",
+      "steps": [
+        {
+          "stepId": "accept-apigw-v2",
+          "type": "scripted",
+          "trigger": {
+            "deploymentAccess": {
+              "ids": [
+                "bridge-callback"
+              ]
+            }
+          },
+          "resultsProcessor": {
+            "resource": "apps/aws/apigw-v2-http-bridge.js"
+          }
+        }
+      ]
+    }
+  ]
+}

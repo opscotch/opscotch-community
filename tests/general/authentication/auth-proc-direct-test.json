@@ -14,7 +14,7 @@
         }
     ],
     "logsShouldNotContain" : [
-        "secretHeader",
+        "directAuthHeader",
         "Abc123"
     ],
     "theseMetricsShouldHaveBeenSent" : [

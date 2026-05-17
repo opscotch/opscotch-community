@@ -1,0 +1,27 @@
+{
+    "ignore": true,
+    "fromDirectory": "/aws",
+    "testThisStep": "lambda-listener-start",
+    "useThisTestConfigFile": "lambda-listener.conf.json",
+    "useThisTestBootstrapFile" : "aws.bootstrap.json",
+    "mockEndpointResponses": [
+        {
+            "whenThisIsCalled": "http://mockserver/2018-06-01/runtime/invocation/next",
+            "returnThisStatusCode": 200,
+            "delay" : 1000,
+            "returnThisBody" : "this is the response",
+            "mockedHeaders" : {
+                "Lambda-Runtime-Aws-Request-Id": ["ABCD"]
+            }
+        },
+        {
+            "whenThisIsCalled": "http://mockserver/2018-06-01/runtime/invocation/ABCD/error",
+            "returnThisStatusCode": 200,
+            "expectedPayload" : "{\"errorMessage\":\"it failed\",\"errorType\":\"Exception\"}"
+        }
+    ],
+    "timestampOverride" : 1440912960000,
+    "data" : {
+        "lambda-event-processor-stepId" : "_test_response_failure_"
+    }
+}

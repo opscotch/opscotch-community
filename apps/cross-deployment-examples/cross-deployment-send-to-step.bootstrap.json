@@ -1,0 +1,30 @@
+[
+    {
+        "deploymentId" : "deployment1",
+        "remoteConfiguration" : "sts-deployment1.config.json",
+        "allowHttpServerAccess" : [
+            {
+                "id" : "deployment1",
+                "port" : 11000
+            }
+        ],
+        "allowDeploymentAccess" : [
+            {
+                "id" : "otherDeployment",
+                "deploymentId" : "deployment2",
+                "access" : "call"
+            }
+        ]
+    },
+    {
+        "deploymentId" : "deployment2",
+        "remoteConfiguration" : "sts-deployment2.config.json",
+        "allowDeploymentAccess" : [
+            {
+                "id" : "remoteDeployment",
+                "deploymentId" : "deployment1",
+                "access" : "receive"
+            }
+        ]
+    }
+]

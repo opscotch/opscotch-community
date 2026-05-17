@@ -1,18 +1,17 @@
 {
-  "hosts": {
-    "elastic": {
-      "data" : {
-        "authorization": "Basic LETMEIN"
-      },
-      "host": "http://mockserver",
-      "allowlist": [
-        [
-          "GET",
-          "/_ml/.*"
-        ]
-      ]
-    }
-  }
+    "allowExternalHostAccess": [
+        {
+            "id": "elastic",
+            "host": "http://mockserver",
+            "allowList": [
+                {
+                    "method": "GET",
+                    "uriPattern": "/_ml/.*"
+                }
+            ],
+            "data": {
+                "authorization": "Basic LETMEIN"
+            }
+        }
+    ]
 }
-
-

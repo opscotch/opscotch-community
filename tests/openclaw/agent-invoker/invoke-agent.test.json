@@ -1,0 +1,15 @@
+{
+  "enabled": true,
+  "fromDirectory": "/openclaw/agent-invoker/",
+  "testThisStep": "test-invoke-trigger",
+  "useThisTestConfigFile": "workflow-openclaw-agent-invoker.test.config.json",
+  "useThisTestBootstrapFile": "workflow-openclaw-agent-invoker.test.bootstrap.json",
+  "mockEndpointResponses": [
+    {
+      "whenThisIsCalled": "http://mockserver/agents/main/invoke",
+      "expectedPayload": "{\"input\":{\"repo\":\"opscotch/hopscotch\",\"issue\":317},\"metadata\":{\"operation\":\"refine\"}}",
+      "returnThisFile": "/openclaw/agent-invoker/invoke-agent.response.json"
+    }
+  ],
+  "theseMetricsShouldHaveBeenSent": []
+}

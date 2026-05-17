@@ -1,0 +1,61 @@
+[
+  {
+    "deploymentId": "github-issue-updater",
+    "remoteConfiguration": "workflow.json",
+    "allowExternalHostAccess": [
+      {
+        "id": "github-api",
+        "host": "https://api.github.com",
+        "authenticationHost": true,
+        "httpTimeout": 15000,
+        "allowList": [
+          {
+            "method": "PATCH",
+            "uriPattern": "/repos/.+/issues/.+"
+          },
+          {
+            "method": "POST",
+            "uriPattern": "/repos/.+/issues/.+/(labels|assignees|comments)"
+          },
+          {
+            "method": "PUT",
+            "uriPattern": "/repos/.+/issues/.+/labels"
+          },
+          {
+            "method": "DELETE",
+            "uriPattern": "/repos/.+/issues/.+/(labels/.+|assignees)"
+          },
+          {
+            "method": "GET",
+            "uriPattern": "/repos/.+/pulls.*"
+          },
+          {
+            "method": "POST",
+            "uriPattern": "/repos/.+/pulls"
+          },
+          {
+            "method": "PATCH",
+            "uriPattern": "/repos/.+/pulls/.+"
+          },
+          {
+            "method": "POST",
+            "uriPattern": "/repos/.+/pulls/.+/requested_reviewers"
+          }
+        ],
+        "data": {
+          "githubToken": "REPLACE_ME_WITH_GH_TOKEN"
+        }
+      }
+    ],
+    "allowDeploymentAccess": [
+      {
+        "id": "github-issue-updater-callers",
+        "deploymentId": "REPLACE_CALLER_DEPLOYMENT_ID",
+        "access": "receive"
+      }
+    ],
+    "data": {
+      "hostId": "github-api"
+    }
+  }
+]

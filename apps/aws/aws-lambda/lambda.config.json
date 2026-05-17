@@ -1,0 +1,97 @@
+{
+    "workflows" : [
+        {
+            "name" : "lambda listener",
+            "steps" : [
+                {
+                    "enabled" : false,
+                    "stepId" : "localTester",
+                    "trigger" : {
+                        "http" : {
+                            "method" : "POST",
+                            "path" : "/lambda-test",
+                            "server" : "lambda-test"
+                        }
+                    },
+                    "resultsProcessor" : {
+                        "processors" : [
+                            {
+                                "script" : "context.setBody(JSON.parse(context.getBody()).body)"
+                            },
+                            {
+                                "resource" : "apps/aws/lambda-response-processor.js"
+                            } 
+                        ]
+                    }
+                },
+                {
+                    "type" : "scripted",
+                    "stepId" : "lambda-listener-auto-start",
+                    "trigger" : {
+                        "runOnce" : true
+                    },
+                    "resultsProcessor" : {
+                        "script" : "var disabled = context.getData(\"disableRunOnce\"); if (disabled !== true && disabled !== \"true\") { context.sendToStep(\"activate-listener\", \"\"); }"
+                    }
+                },
+                {
+                    "type" : "scripted",
+                    "stepId" : "activate-listener",
+                    "trigger" : {
+                        "deploymentAccess" : {
+                            "ids" : [
+                                "startup-orchestrator"
+                            ]
+                        }
+                    },
+                    "resultsProcessor" : {
+                        "script" : "context.sendToStepAndForget(\"lambda-listener-start\", \"\")"
+                    }
+                },
+                {
+                    "type" : "scripted",
+                    "stepId" : "lambda-listener-start",
+                    "httpTimeout" : 0,
+                    "comment" : "httpTimeout 0 is blocking forever",
+                    "urlGenerator" : {
+                        "processors" : [
+                            {
+                                "script" : "context.setUrl('aws-lambda-runtime-api', '/2018-06-01/runtime/invocation/next')"
+                            }
+                        ]
+                    },  
+                    "resultsProcessor" : {
+                        "resource" : "apps/aws/lambda-response-processor.js"
+                    }
+                },
+                {
+                    "stepId" : "lambda-listener-response",
+                    "type" : "scripted",
+                    "urlGenerator" : {
+                        "script" : "context.setUrl('aws-lambda-runtime-api', `/2018-06-01/runtime/invocation/${context.getProperty('awsRequestId')}/${context.getProperty('responseType')}`)"
+                    },
+                    "payloadGenerator" : {
+                        "processors" : [
+                            {
+                                "script" : "context.setHttpMethod('POST')"
+                            }
+                        ]
+                    },
+                    "resultsProcessor" : {
+                        "processors" : [
+                            {
+                                "script" : "context.setProperty(\"responseType\", null);"
+                            },
+                            {
+                                "script" : "context.setProperty(\"awsRequestId\", null);"
+                            },
+                            {
+                                "script" : "context.sendToStepAndForget(\"lambda-listener-start\", \"\")"
+                            }
+                        ]
+                    }
+                }
+            ]
+        }
+    ]
+}

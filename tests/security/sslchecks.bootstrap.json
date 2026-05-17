@@ -1,193 +1,214 @@
 {
-    "hosts": {
-        "expired": {
+    "allowExternalHostAccess": [
+        {
+            "id": "expired",
             "host": "https://expired.badssl.com",
-            "allowlist": [
-                [
-                    "GET",
-                    "/"
-                ]
+            "allowList": [
+                {
+                    "method": "GET",
+                    "uriPattern": "/"
+                }
             ]
         },
-        "untrusted-root": {
+        {
+            "id": "untrusted-root",
             "host": "https://untrusted-root.badssl.com",
-            "allowlist": [
-                [
-                    "GET",
-                    "/"
-                ]
+            "allowList": [
+                {
+                    "method": "GET",
+                    "uriPattern": "/"
+                }
             ]
         },
-        "self-signed": {
+        {
+            "id": "self-signed",
             "host": "https://self-signed.badssl.com",
-            "allowlist": [
-                [
-                    "GET",
-                    "/"
-                ]
+            "allowList": [
+                {
+                    "method": "GET",
+                    "uriPattern": "/"
+                }
             ]
         },
-        "wrong.host": {
+        {
+            "id": "wrong.host",
             "host": "https://wrong.host.badssl.com",
-            "allowlist": [
-                [
-                    "GET",
-                    "/"
-                ]
+            "allowList": [
+                {
+                    "method": "GET",
+                    "uriPattern": "/"
+                }
             ]
         },
-        "pinning-test": {
+        {
+            "id": "pinning-test",
             "host": "https://pinning-test.badssl.com",
-            "allowlist": [
-                [
-                    "GET",
-                    "/"
-                ]
+            "allowList": [
+                {
+                    "method": "GET",
+                    "uriPattern": "/"
+                }
             ]
         },
-        "revoked": {
+        {
+            "id": "revoked",
             "host": "https://revoked.badssl.com",
-            "allowlist": [
-                [
-                    "GET",
-                    "/"
-                ]
+            "allowList": [
+                {
+                    "method": "GET",
+                    "uriPattern": "/"
+                }
             ]
         },
-        "no-common-name": {
+        {
+            "id": "no-common-name",
             "host": "https://no-common-name.badssl.com",
-            "allowlist": [
-                [
-                    "GET",
-                    "/"
-                ]
+            "allowList": [
+                {
+                    "method": "GET",
+                    "uriPattern": "/"
+                }
             ]
         },
-        "no-subject": {
+        {
+            "id": "no-subject",
             "host": "https://no-subject.badssl.com",
-            "allowlist": [
-                [
-                    "GET",
-                    "/"
-                ]
+            "allowList": [
+                {
+                    "method": "GET",
+                    "uriPattern": "/"
+                }
             ]
         },
-        "incomplete-chain": {
+        {
+            "id": "incomplete-chain",
             "host": "https://incomplete-chain.badssl.com",
-            "allowlist": [
-                [
-                    "GET",
-                    "/"
-                ]
+            "allowList": [
+                {
+                    "method": "GET",
+                    "uriPattern": "/"
+                }
             ]
         },
-        "rc4-md5": {
+        {
+            "id": "rc4-md5",
             "host": "https://rc4-md5.badssl.com",
-            "allowlist": [
-                [
-                    "GET",
-                    "/"
-                ]
+            "allowList": [
+                {
+                    "method": "GET",
+                    "uriPattern": "/"
+                }
             ]
         },
-        "rc4": {
+        {
+            "id": "rc4",
             "host": "https://rc4.badssl.com",
-            "allowlist": [
-                [
-                    "GET",
-                    "/"
-                ]
+            "allowList": [
+                {
+                    "method": "GET",
+                    "uriPattern": "/"
+                }
             ]
         },
-        "3des": {
+        {
+            "id": "3des",
             "host": "https://3des.badssl.com",
-            "allowlist": [
-                [
-                    "GET",
-                    "/"
-                ]
+            "allowList": [
+                {
+                    "method": "GET",
+                    "uriPattern": "/"
+                }
             ]
         },
-        "null": {
+        {
+            "id": "null",
             "host": "https://null.badssl.com",
-            "allowlist": [
-                [
-                    "GET",
-                    "/"
-                ]
+            "allowList": [
+                {
+                    "method": "GET",
+                    "uriPattern": "/"
+                }
             ]
         },
-        "dh480": {
+        {
+            "id": "dh480",
             "host": "https://dh480.badssl.com",
-            "allowlist": [
-                [
-                    "GET",
-                    "/"
-                ]
+            "allowList": [
+                {
+                    "method": "GET",
+                    "uriPattern": "/"
+                }
             ]
         },
-        "dh512": {
+        {
+            "id": "dh512",
             "host": "https://dh512.badssl.com",
-            "allowlist": [
-                [
-                    "GET",
-                    "/"
-                ]
+            "allowList": [
+                {
+                    "method": "GET",
+                    "uriPattern": "/"
+                }
             ]
         },
-        "dh1024": {
+        {
+            "id": "dh1024",
             "host": "https://dh1024.badssl.com",
-            "allowlist": [
-                [
-                    "GET",
-                    "/"
-                ]
+            "allowList": [
+                {
+                    "method": "GET",
+                    "uriPattern": "/"
+                }
             ]
         },
-        "dh-small-subgroup": {
+        {
+            "id": "dh-small-subgroup",
             "host": "https://dh-small-subgroup.badssl.com",
-            "allowlist": [
-                [
-                    "GET",
-                    "/"
-                ]
+            "allowList": [
+                {
+                    "method": "GET",
+                    "uriPattern": "/"
+                }
             ]
         },
-        "dh-composite": {
+        {
+            "id": "dh-composite",
             "host": "https://dh-composite.badssl.com",
-            "allowlist": [
-                [
-                    "GET",
-                    "/"
-                ]
+            "allowList": [
+                {
+                    "method": "GET",
+                    "uriPattern": "/"
+                }
             ]
         },
-        "no-sct": {
+        {
+            "id": "no-sct",
             "host": "https://no-sct.badssl.com",
-            "allowlist": [
-                [
-                    "GET",
-                    "/"
-                ]
+            "allowList": [
+                {
+                    "method": "GET",
+                    "uriPattern": "/"
+                }
             ]
         },
-        "subdomain.preloaded-hsts": {
+        {
+            "id": "subdomain.preloaded-hsts",
             "host": "https://subdomain.preloaded-hsts.badssl.com",
-            "allowlist": [
-                [
-                    "GET",
-                    "/"
-                ]
+            "allowList": [
+                {
+                    "method": "GET",
+                    "uriPattern": "/"
+                }
             ]
         },
-        "superfish": {
+        {
+            "id": "superfish",
             "host": "https://superfish.badssl.com",
-            "allowlist": [
-                [
-                    "GET",
-                    "/"
-                ]
+            "allowList": [
+                {
+                    "method": "GET",
+                    "uriPattern": "/"
+                }
             ]
         }
-    }
+    ]
 }

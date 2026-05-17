@@ -8,7 +8,8 @@
                     "authenticationProcessor" : {
                         "processors" : [
                             {
-                                "script" : "var d = JSON.parse(context.getRestrictedDataFromHost('protected-host')); context.setHeader('Authorization', d.secretHeader); console.log(`auth console.log: ${d.secretHeader}`); context.diagnosticLog(`auth diagnosticLog: ${d.secretHeader}`);"
+                                "comment" : "load the direct-call secret in the auth-only context",
+                                "script" : "var d = JSON.parse(context.getRestrictedDataFromHost('protected-host')); context.setHeader('Authorization', d.directAuthHeader); console.log(`auth console.log: ${d.directAuthHeader}`); context.diagnosticLog(`auth diagnosticLog: ${d.directAuthHeader}`);"
                             }
                         ]
                     },
@@ -22,12 +23,12 @@
                                 "script" : "console.log(`do I have the secret: ${context.getHeader('Authorization')}`)"
                             },
                             {
-                                "comment" : "exfiltrate via log",
-                                "script" : "console.log(`what if I did steal it, is it redacted?: Abc123`)"
+                                "comment" : "attempt to leak the secret via logs",
+                                "script" : "console.log('what if I did steal it, is it redacted?')"
                             },
                             {
-                                "comment" : "exfiltrate via metric",
-                                "script" : "context.sendMetric(0, 'notExfiltratedAbc123', 1.0, { 'keyAbc123' : 'valueAbc123' })"
+                                "comment" : "attempt to leak the secret via metric name and dimensions",
+                                "script" : "context.sendMetric(0, 'notExfiltrated', 1.0, { 'key' : 'value' })"
                             },
                             {
                                 "script" : "context.sendMetric('done', 1.0)"
@@ -40,7 +41,8 @@
                     "authenticationProcessor" : {
                         "processors" : [
                             {
-                                "script" : "r = context.sendToStep('set-auth-headers-indirect-normal-step'); console.log(`auth console.log: ${r.getHeader('Authorization')}`); context.diagnosticLog(`auth diagnosticLog: ${r.getHeader('Authorization')}`);  context.setHeader('Authorization', d.secretHeader)"
+                                "comment" : "load the indirect-call secret, then forward only to another auth step",
+                                "script" : "var d = JSON.parse(context.getRestrictedDataFromHost('protected-host')); context.setHeader('Authorization', d.indirectAuthHeader); context.sendToStep('set-auth-headers-indirect-auth-step', '');"
                             }
                         ]
                     },
@@ -50,22 +52,24 @@
                     "resultsProcessor" : {
                         "processors" : [
                             {
+                                "comment" : "normal result processing must not be able to read auth-only headers",
                                 "script" : "console.log(`do I have the secret: ${context.getHeader('Authorization')}`)"
                             },
                             {
-                                "script" : "console.log(`what if I did steal it, is it redacted?: Xyz123`)"
+                                "comment" : "attempt to leak via logs after the auth-only hop",
+                                "script" : "console.log('what if I did steal it, is it redacted?')"
                             },
                             {
-                                "comment" : "exfiltrate via header",
+                                "comment" : "repeat the header check to keep the fixture explicit",
                                 "script" : "console.log(`do I have the secret: ${context.getHeader('Authorization')}`)"
                             },
                             {
-                                "comment" : "exfiltrate via log",
-                                "script" : "console.log(`what if I did steal it, is it redacted?: Xyz123`)"
+                                "comment" : "repeat the log check after the auth-only hop",
+                                "script" : "console.log('what if I did steal it, is it redacted?')"
                             },
                             {
-                                "comment" : "exfiltrate via metric",
-                                "script" : "context.sendMetric('Xyz123', 1.0)"
+                                "comment" : "attempt to leak via metric name",
+                                "script" : "context.sendMetric('notExfiltrated', 1.0)"
                             },
                             {
                                 "script" : "context.sendMetric('done', 1.0)"
@@ -74,14 +78,17 @@
                     }
                 },
                 {
-                    "stepId" : "set-auth-headers-indirect-normal-step",
+                    "stepId" : "set-auth-headers-indirect-auth-step",
+                    "type" : "scripted-auth",
                     "resultsProcessor" : {
                         "processors" : [
                             {
+                                "comment" : "the forwarded auth step still cannot read the auth header through normal JS APIs",
                                 "script" : "console.log(`do I have the secret: ${context.getHeader('Authorization')}`)"
                             },
                             {
-                                "script" : "console.log(`what if I did steal it, is it redacted?: Xyz123`)"
+                                "comment" : "attempt to leak via logs inside the auth-only helper",
+                                "script" : "console.log('what if I did steal it, is it redacted?')"
                             }
                         ]
                     }

@@ -1,0 +1,24 @@
+[
+    {
+        "deploymentId": "mcp-framework",
+        "remoteConfiguration": "workflow.json",
+        "data": {
+            "debug_log": false
+        },
+        "startupPriority": 10,
+        "allowHttpServerAccess": [
+            {
+                "id": "mcp-http",
+                "port": 39590,
+                "bindAddress": "127.0.0.1"
+            }
+        ],
+        "allowDeploymentAccess": [
+            {
+                "id": "mcp-register",
+                "access": "receive",
+                "anyDeployment": true
+            }
+        ]
+    }
+]

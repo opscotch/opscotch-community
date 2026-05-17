@@ -1,0 +1,24 @@
+{
+    "ignore": true,
+    "fromDirectory": "/aws/",
+    "testThisStep": "get-test",
+    "useThisTestConfigFile": "aws.sigv4.config.json",
+    "useThisTestBootstrapFile" : "aws.bootstrap.json",
+    "mockEndpointResponses": [
+        {
+            "whenThisIsCalled": "http://mockserver/?Version=2010-05-08&Action=ListUsers",
+            "returnThisStatusCode": 201,
+            "expectedHeaders" : {
+                "Content-Type" : ["application/x-www-form-urlencoded; charset=utf-8"],
+                "Authorization": ["AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20150830/us-east-1/iam/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=73e609729b72c2f2171706d49765c7c60ff52a1bd67d1dfb7b92029e0e0fb7f5"]
+            }
+        }
+    ],
+    "theseLogsShouldHaveBeenSent" : [
+        "amzDate=20150830T053600Z",
+        "payloadHash=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "requestHash=4b56117f2e1e409c7c1a0607db16a0eae6af918ef87d32437de20fc006c2f251",
+        "signature=73e609729b72c2f2171706d49765c7c60ff52a1bd67d1dfb7b92029e0e0fb7f5"
+    ],
+    "timestampOverride" : 1440912960000
+}

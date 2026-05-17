@@ -1,0 +1,109 @@
+[
+    {
+        "deploymentId" : "email-sender",
+        "packaging" : {
+            "packageId" : "opscotch-website-email-service"
+        },
+        "remoteConfiguration" : "/home/jeremy/dev/opscotch/apps/opscotch-website-email-service/opscotch-website-email-service.oapp",
+        "frequency" : 0,
+        "allowDeploymentAccess" : [
+            {
+                "id" : "aws-services",
+                "access" : "call",
+                "deploymentId" : "aws-services"
+            },
+            {
+                "id" : "aws-lambda-callback",
+                "access" : "receive",
+                "deploymentId" : "lambda"
+            }
+        ],
+        "data" : {
+            "emailSqsQueue" : "websiteEmailQueue",
+            "fromAddress" : "${EMAIL_FROM}",
+            "toAddress" : ${EMAIL_TO},
+            "subject" : "New website contact",
+            "responseMessage" : "Thank-you. Your message has been received."
+        }
+    },
+    {
+        "deploymentId" : "lambda",
+        "packaging" : {
+            "packageId" : "opscotch-aws-lambda"
+        },
+        "remoteConfiguration" : "/home/jeremy/dev/opscotch/apps/opscotch-aws-lambda/opscotch-aws-lambda.oapp",
+        "frequency" : 0,
+        "allowExternalHostAccess": [
+            {
+                "id" : "aws-lambda-runtime-api",
+                "host": "${AWS_LAMBDA_RUNTIME_API}"
+            }
+        ],
+        "allowDeploymentAccess" : [
+            {
+                "id" : "aws-lambda-processor",
+                "access" : "call",
+                "deploymentId" : "email-sender"
+            }
+        ],
+        "data" : {
+            "eventRouting" : {
+                "sqs" : {
+                    "deploymentAccessId" : "aws-lambda-processor",
+                    "stepId" : "accept-sqs"
+                }
+            }
+        }
+    },
+    {
+        "deploymentId" : "aws-services",
+        "packaging" : {
+            "packageId" : "opscotch-aws-services"
+        },
+        "remoteConfiguration" : "/home/jeremy/dev/opscotch/apps/opscotch-aws-services/opscotch-aws-services.oapp",
+        "frequency" : 0,
+        "allowExternalHostAccess": [
+            {
+                "id" : "sts",
+                "host": "https://sts.amazonaws.com",
+                "data" : {
+                    "region": "us-east-1",
+                    "host" : "sts.amazonaws.com",
+                    "service" : "sts",
+                    "accessKey" : "${AWS_ACCESS_KEY_ID}",
+                    "secretKey" : "${AWS_SECRET_ACCESS_KEY}",
+                    "amzSecurityToken" : "${AWS_SESSION_TOKEN}"
+                }
+            },
+            {
+                "id": "sqs",
+                "host": "https://sqs.${AWS_REGION}.amazonaws.com",
+                "data": {
+                    "host": "sqs.${AWS_REGION}.amazonaws.com",
+                    "service": "sqs"
+                }
+            },
+            {
+                "id": "ses",
+                "host": "https://email.${AWS_REGION}.amazonaws.com",
+                "data": {
+                    "host": "email.${AWS_REGION}.amazonaws.com",
+                    "service": "ses"
+                }
+            }
+        ],
+        "allowDeploymentAccess" : [
+            {
+                "id" : "callers",
+                "access" : "receive",
+                "anyDeployment" : true
+            }
+        ],
+        "data" : {
+            "awsRegion" : "${AWS_REGION}",
+            "awsAccount" : "${AWS_ACCOUNT}",
+            "awsRoleSessionName" : "awsOpscotchEmailService",
+            "awsRoleArn" : "${AWS_ROLE_ARN}"
+        }
+    }
+]
