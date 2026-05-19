@@ -1,5 +1,5 @@
 {
-  "enabled": true,
+  "enabled": false,
   "fromDirectory": "/github/issue-updater/",
   "testThisStep": "test-set-labels-trigger",
   "useThisTestConfigFile": "workflow-issue-updater.test.config.json",
