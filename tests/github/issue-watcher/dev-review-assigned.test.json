@@ -1,5 +1,5 @@
 {
-  "enabled": false,
+  "ignore": true,
   "fromDirectory": "/github/issue-watcher/",
   "testThisStep": "poll-github-issues",
   "useThisTestConfigFile": "workflow-github-ticket-poller.json",

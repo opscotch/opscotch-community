@@ -1,5 +1,5 @@
 {
-  "enabled": false,
+  "ignore": true,
   "fromDirectory": "/github/issue-updater/",
   "testThisStep": "test-add-comment-trigger",
   "useThisTestConfigFile": "workflow-issue-updater.test.config.json",
