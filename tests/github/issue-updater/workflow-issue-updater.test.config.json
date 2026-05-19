@@ -72,16 +72,16 @@
         {
           "stepId": "github-issue-updater",
           "urlGenerator": {
-            "resource": "/apps/github/update-url-generator.js"
+            "resource": "/apps/github/issues/update-url-generator.js"
           },
           "payloadGenerator": {
-            "resource": "/apps/github/update-payload-generator.js"
+            "resource": "/apps/github/issues/update-payload-generator.js"
           },
           "authenticationProcessor": {
             "resource": "/apps/github/github-auth-processor.js"
           },
           "resultsProcessor": {
-            "resource": "/apps/github/update-results-processor.js"
+            "resource": "/apps/github/issues/update-results-processor.js"
           },
           "httpStatusHandling": {
             "300-599": {
