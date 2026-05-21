@@ -1,12 +1,20 @@
 [
   {
     "deploymentId": "github-issue-updater",
-    "remoteConfiguration": "workflow.json",
+    "remoteConfiguration": "/community/opscotch-community/apps/github/issue-updater/workflow.json",
+    "frequency": 0,
     "allowExternalHostAccess": [
+      {
+        "id": "github-api-auth",
+        "host": "https://api.github.com",
+        "authenticationHost": true,
+        "data": {
+          "githubToken": "REPLACE_ME_WITH_GH_TOKEN"
+        }
+      },
       {
         "id": "github-api",
         "host": "https://api.github.com",
-        "authenticationHost": true,
         "httpTimeout": 15000,
         "allowList": [
           {
@@ -26,12 +34,16 @@
             "uriPattern": "/repos/.+/issues/.+/(labels/.+|assignees)"
           },
           {
+            "method": "DELETE",
+            "uriPattern": "/repos/.+/issues/comments/.+"
+          },
+          {
             "method": "GET",
             "uriPattern": "/repos/.+/pulls.*"
           },
           {
             "method": "POST",
-            "uriPattern": "/repos/.+/pulls"
+            "uriPattern": "/repos/.+/pulls$"
           },
           {
             "method": "PATCH",
@@ -40,21 +52,41 @@
           {
             "method": "POST",
             "uriPattern": "/repos/.+/pulls/.+/requested_reviewers"
+          },
+          {
+            "method": "POST",
+            "uriPattern": "/repos/.+/actions/workflows/.+/dispatches"
+          },
+          {
+            "method": "GET",
+            "uriPattern": "/repos/.+/actions/workflows.*"
+          },
+          {
+            "method": "GET",
+            "uriPattern": "/repos/.+/contents/.+"
           }
-        ],
-        "data": {
-          "githubToken": "REPLACE_ME_WITH_GH_TOKEN"
-        }
+        ]
       }
     ],
     "allowDeploymentAccess": [
       {
+        "id": "github-issue-updater",
+        "deploymentId": "REPLACE_ISSUE_WATCHER_DEPLOYMENT_ID",
+        "access": "receive"
+      },
+      {
         "id": "github-issue-updater-callers",
-        "deploymentId": "REPLACE_CALLER_DEPLOYMENT_ID",
+        "deploymentId": "REPLACE_TICKET_ACTIONS_DEPLOYMENT_ID",
+        "access": "receive"
+      },
+      {
+        "id": "github-issue-updater-callers-pr",
+        "deploymentId": "REPLACE_PR_ACTIONS_DEPLOYMENT_ID",
         "access": "receive"
       }
     ],
     "data": {
+      "githubAuthHostId": "github-api-auth",
       "hostId": "github-api"
     }
   }
