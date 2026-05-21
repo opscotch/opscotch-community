@@ -1,0 +1,58 @@
+{
+  "comment": "Reusable GitHub PR updater app for create/update/reviewer operations.",
+  "defaultStepProperties": {
+    "trigger": {
+      "deploymentAccess": {
+        "ids": [
+          "github-pr-updater-callers",
+          "github-issue-updater-callers-pr"
+        ]
+      }
+    },
+    "authenticationProcessor": {
+      "resource": "/apps/github/github-auth-processor.js"
+    },
+    "urlGenerator": {
+      "resource": "/apps/github/issues/update-url-generator.js"
+    },
+    "payloadGenerator": {
+      "resource": "/apps/github/issues/update-payload-generator.js"
+    },
+    "resultsProcessor": {
+      "resource": "/apps/github/issues/update-results-processor.js"
+    },
+    "httpStatusHandling": {
+      "300-599": {
+        "resource": "/apps/github/http-error.js",
+        "data": {
+          "httpErrorKind": "github-update"
+        }
+      }
+    }
+  },
+  "workflows": [
+    {
+      "name": "github pr updater",
+      "steps": [
+        {
+          "stepId": "github-pr-create",
+          "data": {
+            "operation": "create-pr"
+          }
+        },
+        {
+          "stepId": "github-pr-update",
+          "data": {
+            "operation": "update-pr"
+          }
+        },
+        {
+          "stepId": "github-pr-request-reviewers",
+          "data": {
+            "operation": "request-reviewers"
+          }
+        }
+      ]
+    }
+  ]
+}

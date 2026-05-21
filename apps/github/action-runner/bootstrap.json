@@ -46,7 +46,7 @@
         "access": "receive"
       },
       {
-        "id": "REPLACE_NOTIFICATION_TARGET_ACCESS_ID",
+        "id": "openclaw-pr-actions-build-state",
         "deploymentId": "REPLACE_NOTIFICATION_TARGET_DEPLOYMENT_ID",
         "access": "call"
       }
