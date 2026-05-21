@@ -1,0 +1,56 @@
+[
+  {
+    "deploymentId": "github-pr-updater",
+    "remoteConfiguration": "workflow.json",
+    "frequency": 0,
+    "allowExternalHostAccess": [
+      {
+        "id": "github-api-auth",
+        "host": "https://api.github.com",
+        "authenticationHost": true,
+        "data": {
+          "githubToken": "REPLACE_ME_WITH_GH_TOKEN"
+        }
+      },
+      {
+        "id": "github-api",
+        "host": "https://api.github.com",
+        "httpTimeout": 15000,
+        "allowList": [
+          {
+            "method": "GET",
+            "uriPattern": "/repos/.+/pulls.*"
+          },
+          {
+            "method": "POST",
+            "uriPattern": "/repos/.+/pulls$"
+          },
+          {
+            "method": "PATCH",
+            "uriPattern": "/repos/.+/pulls/.+"
+          },
+          {
+            "method": "POST",
+            "uriPattern": "/repos/.+/pulls/.+/requested_reviewers"
+          }
+        ]
+      }
+    ],
+    "allowDeploymentAccess": [
+      {
+        "id": "github-pr-updater-callers",
+        "deploymentId": "REPLACE_CALLER_DEPLOYMENT_ID",
+        "access": "receive"
+      },
+      {
+        "id": "github-issue-updater-callers-pr",
+        "deploymentId": "REPLACE_CALLER_DEPLOYMENT_ID",
+        "access": "receive"
+      }
+    ],
+    "data": {
+      "githubAuthHostId": "github-api-auth",
+      "hostId": "github-api"
+    }
+  }
+]
