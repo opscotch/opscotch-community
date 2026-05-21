@@ -38,12 +38,12 @@
     ],
     "allowDeploymentAccess": [
       {
-        "id": "github-pr-updater-callers",
-        "deploymentId": "REPLACE_CALLER_DEPLOYMENT_ID",
+        "id": "github-issue-updater-callers-pr",
+        "deploymentId": "REPLACE_PR_ACTIONS_DEPLOYMENT_ID",
         "access": "receive"
       },
       {
-        "id": "github-issue-updater-callers-pr",
+        "id": "github-pr-updater-callers",
         "deploymentId": "REPLACE_CALLER_DEPLOYMENT_ID",
         "access": "receive"
       }

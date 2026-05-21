@@ -78,11 +78,6 @@
         "id": "github-issue-updater-callers",
         "deploymentId": "REPLACE_TICKET_ACTIONS_DEPLOYMENT_ID",
         "access": "receive"
-      },
-      {
-        "id": "github-issue-updater-callers-pr",
-        "deploymentId": "REPLACE_PR_ACTIONS_DEPLOYMENT_ID",
-        "access": "receive"
       }
     ],
     "data": {
