@@ -15,6 +15,9 @@
                     "resultsProcessor" : { 
                         "processors" : [
                             {
+                                "resource" : "/httpserver/clear-headers.js"
+                            },
+                            {
                                 "script" : "context.setProperty(`service`, `sqs-request`); context.setProperty(`payload`, JSON.stringify( { aws_sqs_queue : 'test-queue', action : 'SendMessage', params : { MessageBody : JSON.parse(context.getBody()).body } } ))"
                             },
                             {

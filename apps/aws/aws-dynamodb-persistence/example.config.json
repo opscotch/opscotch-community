@@ -15,6 +15,9 @@
                     "resultsProcessor" : { 
                         "processors" : [
                             {
+                                "resource" : "/httpserver/clear-headers.js"
+                            },
+                            {
                                 "script" : "context.setProperty(`status`, context.sendToStep(`aws-dynamodb-persistence`, `table-check`, ``).getProperty(`status`))"
                             },
                             {

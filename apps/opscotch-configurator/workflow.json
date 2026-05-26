@@ -17,6 +17,9 @@
                     "resultsProcessor" : {
                         "processors" : [
                             {
+                                "resource" : "/httpserver/clear-headers.js"
+                            },
+                            {
                                 "resource" : "/general/standard-clear-body.js"
                             },
                             {
@@ -49,6 +52,9 @@
                     "resultsProcessor" : {
                         "processors" : [
                             {
+                                "resource" : "/httpserver/clear-headers.js"
+                            },
+                            {
                                 "resource" : "/httpserver/response-set-cors.js"
                             },
                             {
@@ -76,6 +82,9 @@
                     },
                     "resultsProcessor" : {
                         "processors" : [
+                            {
+                                "resource" : "/httpserver/clear-headers.js"
+                            },
                             {
                                 "resource" : "/httpserver/response-set-cors.js"
                             },
@@ -105,6 +114,9 @@
                     "resultsProcessor" : {
                         "processors" : [
                             {
+                                "resource" : "/httpserver/clear-headers.js"
+                            },
+                            {
                                 "resource" : "/httpserver/response-set-cors.js"
                             },
                             {
@@ -132,6 +144,9 @@
                     },
                     "resultsProcessor" : {
                         "processors" : [
+                            {
+                                "resource" : "/httpserver/clear-headers.js"
+                            },
                             {
                                 "resource" : "/httpserver/response-set-cors.js"
                             },
@@ -170,6 +185,9 @@
                     "resultsProcessor" : {
                         "processors" : [
                             {
+                                "resource" : "/httpserver/clear-headers.js"
+                            },
+                            {
                                 "resource" : "/httpserver/response-set-cors.js"
                             },
                             {
@@ -197,6 +215,9 @@
                     },
                     "resultsProcessor" : {
                         "processors" : [
+                            {
+                                "resource" : "/httpserver/clear-headers.js"
+                            },
                             {
                                 "resource" : "/httpserver/response-set-cors.js"
                             },
@@ -226,6 +247,9 @@
                     "resultsProcessor" : {
                         "processors" : [
                             {
+                                "resource" : "/httpserver/clear-headers.js"
+                            },
+                            {
                                 "resource" : "/httpserver/response-set-cors.js"
                             },
                             {
@@ -253,6 +277,9 @@
                     },
                     "resultsProcessor" : {
                         "processors" : [
+                            {
+                                "resource" : "/httpserver/clear-headers.js"
+                            },
                             {
                                 "resource" : "/httpserver/response-set-cors.js"
                             },
@@ -288,6 +315,9 @@
                     },
                     "resultsProcessor" : {
                         "processors" : [
+                            {
+                                "resource" : "/httpserver/clear-headers.js"
+                            },
                             {
                                 "script" : "var p = JSON.parse(context.getBody()).path; context.setProperty(\"path\", p == \"/\" ? \"/index.html\" : p);"
                             }

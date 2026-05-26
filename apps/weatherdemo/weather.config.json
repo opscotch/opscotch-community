@@ -16,7 +16,7 @@
                         "processors" : [
                             {
                                 "comment" : "Extract the city name from the url",
-                                "script" : "const path = JSON.parse(context.getBody()).path; context.setProperty(`city`, path.slice(path.lastIndexOf(`/`) + 1));"
+                                "script" : "const path = JSON.parse(context.getBody()).path; context.setProperty(`city`, path.slice(path.lastIndexOf(`/`) + 1)); context.removeAllHeaders();"
                             },
                             {
                                 "comment" : "Generate the openweathermap api url",

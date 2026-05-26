@@ -19,6 +19,9 @@
                                 "script" : "context.setBody(JSON.parse(context.getBody()).body)"
                             },
                             {
+                                "resource" : "/httpserver/clear-headers.js"
+                            },
+                            {
                                 "resource" : "apps/aws/lambda-response-processor.js"
                             } 
                         ]

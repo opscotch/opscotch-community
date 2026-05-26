@@ -15,7 +15,14 @@
             }
           },
           "resultsProcessor": {
-            "script": "context.setBody(`goodbye`)"
+            "processors" : [
+              {
+                "resource" : "/httpserver/clear-headers.js"
+              },
+              {
+                "script": "context.setBody(`goodbye`)"
+              }
+            ]
           }
         }
       ]

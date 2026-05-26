@@ -13,7 +13,14 @@
                         }
                     },
                     "resultsProcessor" : {
-                        "script" : "context.setBody(context.sendToStep(\"otherDeployment\", \"ping\", \"\").getBody());"
+                        "processors" : [
+                            {
+                                "resource" : "/httpserver/clear-headers.js"
+                            },
+                            {
+                                "script" : "context.setBody(context.sendToStep(\"otherDeployment\", \"ping\", \"\").getBody());"
+                            }
+                        ]
                     }
                 }
             ]

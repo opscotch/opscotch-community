@@ -22,6 +22,9 @@
                                 "script": "var event = JSON.parse(context.getBody() || \"{}\"); context.setProperty(\"mcp_http_event\", JSON.stringify(event)); context.setBody(event.body == null ? \"{}\" : String(event.body));"
                             },
                             {
+                                "resource": "/httpserver/clear-headers.js"
+                            },
+                            {
                                 "resource": "apps/mcp-framework/router.js"
                             }
                         ]
@@ -44,6 +47,9 @@
                             },
                             {
                                 "script": "var event = JSON.parse(context.getBody() || \"{}\"); context.setProperty(\"mcp_http_event\", JSON.stringify(event)); context.setBody(event.body == null ? \"{}\" : String(event.body));"
+                            },
+                            {
+                                "resource": "/httpserver/clear-headers.js"
                             },
                             {
                                 "resource": "apps/mcp-framework/router.js"

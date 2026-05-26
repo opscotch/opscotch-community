@@ -16,7 +16,14 @@
                         "script" : "context.setUrl(\"otherhost\", \"/pong\")"
                     },
                     "resultsProcessor" : {
-                        "script" : "//no op"
+                        "processors" : [
+                            {
+                                "resource" : "/httpserver/clear-headers.js"
+                            },
+                            {
+                                "script" : "//no op"
+                            }
+                        ]
                     }
                 }
             ]
