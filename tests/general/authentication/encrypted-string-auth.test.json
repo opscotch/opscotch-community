@@ -1,0 +1,30 @@
+{
+    "fromDirectory": "general/authentication",
+    "testThisStep": "encrypted-string-call",
+    "useThisTestConfigFile": "encrypted-string-auth.config.json",
+    "useThisTestBootstrapFile": "encrypted-string-auth.bootstrap.json",
+    "timestampOverride": 1762722577000,
+    "mockEndpointResponses": [
+        {
+            "whenThisIsCalled": "http://mockserver/call-me",
+            "returnThisStatusCode": 202,
+            "expectedHeaders": {
+                "Authorization": [
+                    "a secret"
+                ]
+            }
+        }
+    ],
+    "logsShouldNotContain": [
+        "a secret"
+    ],
+    "theseMetricsShouldHaveBeenSent": [
+        {
+            "key": "done",
+            "value": 1.0
+        }
+    ],
+    "variables" : {
+        "OPSCOTCH_STRING_SECRETKEYS" : "6B7FA545F007806802D16210C8A659E03EF9784EBFF25D908660B55A218F0004/C3DB295667EF781E27FEEB86E78C59C0A0FF2AE61B106B3E8BF540ACF3020FAC"
+    }
+}

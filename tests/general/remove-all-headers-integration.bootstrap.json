@@ -1,0 +1,8 @@
+{
+  "allowHttpServerAccess": [
+    {
+      "id": "testhttp",
+      "port": 11001
+    }
+  ]
+}

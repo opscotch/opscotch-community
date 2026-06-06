@@ -1,0 +1,38 @@
+{
+    "workflows": [
+        {
+            "name": "encrypted string authentication",
+            "steps": [
+                {
+                    "stepId": "encrypted-string-run-once",
+                    "trigger": {
+                        "runOnce": true
+                    },
+                    "resultsProcessor": {
+                        "script": "context.sendToStep('encrypted-string-call', '');"
+                    }
+                },
+                {
+                    "stepId": "encrypted-string-call",
+                    "authenticationProcessor": {
+                        "processors": [
+                            {
+                                "script": "var d = JSON.parse(context.getRestrictedDataFromHost('protected-host')); context.setHeader('Authorization', d.authHeader);"
+                            }
+                        ]
+                    },
+                    "urlGenerator": {
+                        "script": "context.setUrl('call-host', '');"
+                    },
+                    "resultsProcessor": {
+                        "processors": [
+                            {
+                                "script": "context.sendMetric('done', 1.0);"
+                            }
+                        ]
+                    }
+                }
+            ]
+        }
+    ]
+}

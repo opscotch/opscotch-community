@@ -1,0 +1,16 @@
+{
+    "allowExternalHostAccess": [
+        {
+            "authenticationHost": "true",
+            "id": "protected-host",
+            "host": "http://mockserver/noop",
+            "data": {
+                "authHeader": "-2/AQABGNsSf/R8Y1+SzqUpfEIly2QpUkVAhUgqywEYYt5W5m84eyYtmE5SHCe5E6jqVJnI/6gQAXTqhO9bLYcIfY7d/vWGHYvHuH+uLqB9aRLAHHxDrPP/T/LG6eMY8UiEBSAUbeyBNep/CSMVxW5qDIhkhWPYJFXE6VODvHzG17RtycKM6NrPpfJjOOUOX9lIwXJdtsM5IKagMKW/EcKC6yO+l3xZHqfjauGQjg=="
+            }
+        },
+        {
+            "id": "call-host",
+            "host": "http://mockserver/call-me"
+        }
+    ]
+}

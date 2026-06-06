@@ -1,0 +1,25 @@
+{
+  "enabled": true,
+  "fromDirectory": "/general/",
+  "testThisStep": "resource-clear-headers",
+  "useThisTestConfigFile": "remove-all-headers-integration.config.json",
+  "useThisTestBootstrapFile": "remove-all-headers-integration.bootstrap.json",
+  "makeTheseCalls": [
+    {
+      "url": "http://localhost:11001/resource-clear-headers",
+      "headers": [
+        [ "X-Test", "abc" ]
+      ],
+      "expectedResponse": "{\"ok\":true,\"mode\":\"resource\",\"beforeCount\":1,\"afterCount\":0}",
+      "expectedResponseCode": 200
+    },
+    {
+      "url": "http://localhost:11001/direct-clear-headers",
+      "headers": [
+        [ "X-Test", "abc" ]
+      ],
+      "expectedResponse": "{\"ok\":true,\"mode\":\"direct\",\"beforeCount\":1,\"afterCount\":0}",
+      "expectedResponseCode": 200
+    }
+  ]
+}

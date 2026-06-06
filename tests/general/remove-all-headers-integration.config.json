@@ -1,0 +1,51 @@
+{
+  "workflows": [
+    {
+      "name": "remove all headers integration",
+      "steps": [
+        {
+          "stepId": "resource-clear-headers",
+          "type": "scripted",
+          "trigger": {
+            "http": {
+              "server": "testhttp",
+              "path": "/resource-clear-headers",
+              "method": "GET"
+            }
+          },
+          "resultsProcessor": {
+            "processors": [
+              {
+                "script": "context.setProperty(\"before\", context.getHeader(\"X-Test\") || \"[]\")"
+              },
+              {
+                "resource": "/httpserver/clear-headers.js"
+              },
+              {
+                "script": "var before = JSON.parse(context.getProperty(\"before\") || \"[]\"); var after = JSON.parse(context.getHeader(\"X-Test\") || \"[]\"); var ok = before.length === 1 && before[0] === \"abc\" && after.length === 0; context.setBody(JSON.stringify({ ok: ok, mode: \"resource\", beforeCount: before.length, afterCount: after.length })); context.setProperty(\"status_code\", ok ? \"200\" : \"500\");"
+              }
+            ]
+          }
+        },
+        {
+          "stepId": "direct-clear-headers",
+          "type": "scripted",
+          "trigger": {
+            "http": {
+              "server": "testhttp",
+              "path": "/direct-clear-headers",
+              "method": "GET"
+            }
+          },
+          "resultsProcessor": {
+            "processors": [
+              {
+                "script": "var before = JSON.parse(context.getHeader(\"X-Test\") || \"[]\"); context.removeAllHeaders(); var after = JSON.parse(context.getHeader(\"X-Test\") || \"[]\"); var ok = before.length === 1 && before[0] === \"abc\" && after.length === 0; context.setBody(JSON.stringify({ ok: ok, mode: \"direct\", beforeCount: before.length, afterCount: after.length })); context.setProperty(\"status_code\", ok ? \"200\" : \"500\");"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
