@@ -1,4 +1,5 @@
 {
+  "ignore" : true,
   "comment" : "THIS REQUIRES THE OPSCOTCH_COMMUNITY_ROOT ENVIRONMENT VARIABLE TO BE SET ON THE AGENT - SEE THE README",
   "enabled": true,
   "fromDirectory": "/general/",
@@ -7,11 +8,11 @@
   "useThisTestBootstrapFile" : "readzipfile.bootstrap.json",
   "makeTheseCalls" : [
     {
-      "url" : "http://localhost:11000/okfile.json",
+      "url" : "http://localhost:11010/okfile.json",
       "expectedResponse" : "{\n  \"status\": \"OK\",\n  \"sentfrom\": \"native test service\"\n}"
     },
     {
-      "url" : "http://localhost:11000/file.png",
+      "url" : "http://localhost:11010/file.png",
       "expectedSize" : 6424
     }
   ]

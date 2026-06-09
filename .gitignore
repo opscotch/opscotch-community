@@ -10,4 +10,4 @@ license.txt
 *r_0
 *w_0
 **.app
-unit-tests/node_modules
+node_modules
