@@ -9,7 +9,7 @@
     "allowHttpServerAccess" : [
         {
             "id" : "staticFileServer",
-            "port" : 11000,
+            "port" : "${test.port.staticFileServer}",
             "serveFromPackagedAsset" : {
                 "packagedAssetFileId" : "zipFile"
             }
