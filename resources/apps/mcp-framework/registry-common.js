@@ -114,6 +114,25 @@ doc
             };
         }
 
+        function requireBoolean(value, fieldName) {
+            if (typeof value !== "boolean") {
+                throw new Error(fieldName + " must be a boolean");
+            }
+
+            return value;
+        }
+
+        function normalizeToolAnnotations(annotations) {
+            annotations = requireObject(annotations, "tool.annotations");
+
+            return {
+                readOnlyHint: requireBoolean(annotations.readOnlyHint, "tool.annotations.readOnlyHint"),
+                destructiveHint: requireBoolean(annotations.destructiveHint, "tool.annotations.destructiveHint"),
+                idempotentHint: requireBoolean(annotations.idempotentHint, "tool.annotations.idempotentHint"),
+                openWorldHint: requireBoolean(annotations.openWorldHint, "tool.annotations.openWorldHint")
+            };
+        }
+
         function normalizeTool(namespace, tool) {
             tool = requireObject(tool, "tool");
 
@@ -121,6 +140,7 @@ doc
             var fqName = namespace + "_" + localName;
             var handler = normalizeHandler(tool.handler, "tool.handler");
             var inputSchema = tool.inputSchema == null ? { type: "object", properties: {} } : requireObject(tool.inputSchema, "tool.inputSchema");
+            var annotations = normalizeToolAnnotations(tool.annotations);
 
             return {
                 kind: "tool",
@@ -130,6 +150,7 @@ doc
                 title: tool.title == null ? localName : "" + tool.title,
                 description: tool.description == null ? "" : "" + tool.description,
                 inputSchema: cloneJson(inputSchema),
+                annotations: annotations,
                 handler: handler
             };
         }

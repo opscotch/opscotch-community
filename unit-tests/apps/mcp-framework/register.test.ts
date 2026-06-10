@@ -12,7 +12,21 @@ describe('apps/mcp-framework/register', () => {
   it('forwards registration payloads to the registry step', async () => {
     const payload = {
       namespace: 'demo',
-      tools: [{ name: 'echo' }],
+      tools: [
+        {
+          name: 'echo',
+          handler: {
+            deploymentAccessId: '_test_',
+            stepId: 'echo-step',
+          },
+          annotations: {
+            readOnlyHint: true,
+            destructiveHint: false,
+            idempotentHint: true,
+            openWorldHint: false,
+          },
+        },
+      ],
     };
     const context = createJavascriptContext({
       passedMessage: JSON.stringify(payload),

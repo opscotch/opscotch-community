@@ -140,6 +140,54 @@
                     "resultsProcessor": {
                         "resource": "apps/mcp-framework/registry-common.js"
                     }
+                },
+                {
+                    "stepId" : "keygen",
+                    "trigger" : {
+                      "http" : {
+                        "method" : "GET",
+                        "server" : "mcp-http",
+                        "path" : "/key-gen.*"
+                      }
+                    },
+                    "resultsProcessor" : {
+                      "processors" : [
+                        {
+                          "resource" : "httpserver/extract-query-params.js",
+                          "data" : {
+                            "setProperty" : "queryParams",
+                            "extract" : [ "purpose" ],
+                            "required" : true
+                          }
+                        },
+                        {
+                          "resource" : "/httpserver/clear-headers.js"
+                        },
+                        {
+                          "script" : "const purpose = JSON.parse(context.getProperty('queryParams')).purpose; const kp = context.crypto().generateKeyPair(purpose); context.setBody(JSON.stringify( { purpose : purpose, publicKey: ( kp[0] ? context.bytes().binaryToHex(kp[0]) : null), secretKey: context.bytes().binaryToHex(kp[1]) } ));"
+                        }
+                      ]
+                    }
+                },
+                {
+                    "stepId" : "http-ping",
+                    "trigger" : {
+                      "http" : {
+                        "method" : "GET",
+                        "server" : "mcp-http",
+                        "path" : "/ping.*"
+                      }
+                    },
+                    "resultsProcessor" : {
+                      "processors" : [
+                        {
+                          "resource" : "/httpserver/clear-headers.js"
+                        },
+                        {
+                          "script" : "context.setBody(\"pong\");"
+                        }
+                      ]
+                    }
                 }
             ]
         }

@@ -37,6 +37,12 @@ describe('apps/mcp-framework/registry-common', () => {
                 deploymentAccessId: '_test_',
                 stepId: 'echo-step',
               },
+              annotations: {
+                readOnlyHint: false,
+                destructiveHint: false,
+                idempotentHint: false,
+                openWorldHint: false,
+              },
             },
           ],
         },
@@ -83,12 +89,49 @@ describe('apps/mcp-framework/registry-common', () => {
               type: 'object',
               properties: {},
             },
+            annotations: {
+              readOnlyHint: false,
+              destructiveHint: false,
+              idempotentHint: false,
+              openWorldHint: false,
+            },
             handler: {
               deploymentAccessId: '_test_',
               stepId: 'echo-step',
             },
           },
         ],
+      },
+    }));
+  });
+
+  it('rejects registered tools without annotations', async () => {
+    const context = createJavascriptContext({
+      passedMessage: JSON.stringify({
+        action: 'register',
+        payload: {
+          namespace: 'demo',
+          tools: [
+            {
+              name: 'echo',
+              handler: {
+                deploymentAccessId: '_test_',
+                stepId: 'echo-step',
+              },
+            },
+          ],
+        },
+      }),
+    });
+    context.getStepProperties = () => createStepPropsStore() as any;
+
+    await suite.run("resource", { context });
+
+    expect(context.getBody()).toBe(JSON.stringify({
+      ok: false,
+      error: {
+        code: -32602,
+        message: 'tool.annotations must be an object',
       },
     }));
   });

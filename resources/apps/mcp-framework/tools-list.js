@@ -38,7 +38,8 @@ doc
                                 name: tool.name,
                                 title: tool.title,
                                 description: tool.description,
-                                inputSchema: tool.inputSchema
+                                inputSchema: tool.inputSchema,
+                                annotations: tool.annotations
                             };
                         })
                     }

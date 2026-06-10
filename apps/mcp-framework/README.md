@@ -54,6 +54,12 @@ The framework deployment must also be extended with `allowDeploymentAccess` entr
           "text": { "type": "string" }
         }
       },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
       "handler": {
         "deploymentAccessId": "example-callback",
         "stepId": "mcp-tool-echo"
@@ -89,6 +95,7 @@ The framework deployment must also be extended with `allowDeploymentAccess` entr
 Normalization rules:
 
 - tools become `namespace.name`
+- every registered tool must declare `annotations.readOnlyHint`, `annotations.destructiveHint`, `annotations.idempotentHint`, and `annotations.openWorldHint` as booleans
 - prompts become `namespace.name`
 - resource URIs must already be globally unique
 - duplicate namespace registration requires `replace: true`
@@ -102,7 +109,7 @@ Normalization rules:
     "runOnce": true
   },
   "resultsProcessor": {
-    "script": "context.sendToStep(\"mcp-framework\", \"register\", JSON.stringify({ namespace: \"example\", replace: true, tools: [{ name: \"echo\", title: \"Echo\", description: \"Returns the supplied string\", inputSchema: { type: \"object\", properties: { text: { type: \"string\" } } }, handler: { deploymentAccessId: \"example-callback\", stepId: \"mcp-tool-echo\" } }], resources: [{ uri: \"example://about\", name: \"About\", description: \"Static about content\", mimeType: \"text/plain\", source: { type: \"static\", text: \"Example app\" } }], prompts: [{ name: \"summarize\", title: \"Summarize\", description: \"Simple prompt\", source: { type: \"static\", text: \"Summarize the following text.\" } }] }));"
+    "script": "context.sendToStep(\"mcp-framework\", \"register\", JSON.stringify({ namespace: \"example\", replace: true, tools: [{ name: \"echo\", title: \"Echo\", description: \"Returns the supplied string\", inputSchema: { type: \"object\", properties: { text: { type: \"string\" } } }, annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false }, handler: { deploymentAccessId: \"example-callback\", stepId: \"mcp-tool-echo\" } }], resources: [{ uri: \"example://about\", name: \"About\", description: \"Static about content\", mimeType: \"text/plain\", source: { type: \"static\", text: \"Example app\" } }], prompts: [{ name: \"summarize\", title: \"Summarize\", description: \"Simple prompt\", source: { type: \"static\", text: \"Summarize the following text.\" } }] }));"
   }
 }
 ```

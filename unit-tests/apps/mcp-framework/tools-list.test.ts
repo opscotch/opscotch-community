@@ -25,6 +25,12 @@ describe('apps/mcp-framework/tools-list', () => {
                     inputSchema: {
                       type: 'object',
                     },
+                    annotations: {
+                      readOnlyHint: true,
+                      destructiveHint: false,
+                      idempotentHint: true,
+                      openWorldHint: false,
+                    },
                   },
                 ],
               },
@@ -46,6 +52,12 @@ describe('apps/mcp-framework/tools-list', () => {
             description: 'Echo tool',
             inputSchema: {
               type: 'object',
+            },
+            annotations: {
+              readOnlyHint: true,
+              destructiveHint: false,
+              idempotentHint: true,
+              openWorldHint: false,
             },
           },
         ],

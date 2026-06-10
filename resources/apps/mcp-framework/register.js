@@ -6,7 +6,30 @@ doc
         properties: {
             namespace: { type: "string" },
             replace: { type: "boolean" },
-            tools: { type: "array" },
+            tools: {
+                type: "array",
+                items: {
+                    type: "object",
+                    required: ["name", "handler", "annotations"],
+                    properties: {
+                        name: { type: "string" },
+                        title: { type: "string" },
+                        description: { type: "string" },
+                        inputSchema: { type: "object" },
+                        handler: { type: "object" },
+                        annotations: {
+                            type: "object",
+                            required: ["readOnlyHint", "destructiveHint", "idempotentHint", "openWorldHint"],
+                            properties: {
+                                readOnlyHint: { type: "boolean" },
+                                destructiveHint: { type: "boolean" },
+                                idempotentHint: { type: "boolean" },
+                                openWorldHint: { type: "boolean" }
+                            }
+                        }
+                    }
+                }
+            },
             resources: { type: "array" },
             prompts: { type: "array" }
         }
