@@ -1,10 +1,11 @@
-import { existsSync } from 'node:fs';
+import path from 'node:path';
 import { createJavascriptContext, createResourceSuite } from '@opscotch/resource-testkit';
 import { describe, expect, it } from 'vitest';
 
-const mountedResource = '/workspace/dev_workspace/al.machino/implementation-artifacts/opscotch/github-ticket-poller/resources/dispatch-bmad-refine.js';
-const localResource = '/home/jeremy/dev/opscotch/dev_workspace/al.machino/implementation-artifacts/opscotch/github-ticket-poller/resources/dispatch-bmad-refine.js';
-const resource = existsSync(mountedResource) ? mountedResource : localResource;
+const resource = path.resolve(
+  import.meta.dirname,
+  '../../../../../apps/opscotch-ai-developer/opscotch/resources/dispatch-bmad-refine.js',
+);
 
 const suite = createResourceSuite({
   resources: [{ id: "resource", resource }],

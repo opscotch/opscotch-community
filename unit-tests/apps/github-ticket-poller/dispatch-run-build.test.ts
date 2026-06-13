@@ -2,7 +2,10 @@ import path from 'node:path';
 import { createJavascriptContext, createResourceSuite } from '@opscotch/resource-testkit';
 import { describe, expect, it } from 'vitest';
 
-const resource = '/workspace/dev_workspace/al.machino/implementation-artifacts/opscotch/github-ticket-poller/resources/dispatch-run-build.js';
+const resource = path.resolve(
+  import.meta.dirname,
+  '../../../../../apps/opscotch-ai-developer/opscotch/resources/dispatch-run-build.js',
+);
 
 const suite = createResourceSuite({
   resources: [{ id: "resource", resource }],

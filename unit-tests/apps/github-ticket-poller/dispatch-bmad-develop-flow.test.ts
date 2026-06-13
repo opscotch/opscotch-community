@@ -2,9 +2,10 @@ import path from 'node:path';
 import { createJavascriptContext, createResourceSuite } from '@opscotch/resource-testkit';
 import { describe, expect, it } from 'vitest';
 
-const prepareResource = '/workspace/dev_workspace/al.machino/implementation-artifacts/opscotch/github-ticket-poller/resources/dispatch-bmad-develop-prepare.js';
-const flowResource = '/workspace/dev_workspace/al.machino/implementation-artifacts/opscotch/github-ticket-poller/resources/dispatch-bmad-develop.js';
-const invokeResource = '/workspace/dev_workspace/al.machino/implementation-artifacts/opscotch/github-ticket-poller/resources/dispatch-bmad-develop-invoke.js';
+const resourcesRoot = path.resolve(import.meta.dirname, '../../../../../apps/opscotch-ai-developer/opscotch/resources');
+const prepareResource = path.join(resourcesRoot, 'dispatch-bmad-develop-prepare.js');
+const flowResource = path.join(resourcesRoot, 'dispatch-bmad-develop.js');
+const invokeResource = path.join(resourcesRoot, 'dispatch-bmad-develop-invoke.js');
 
 const suite = createResourceSuite({
   resources: [
