@@ -212,6 +212,22 @@ General approach:
 5. Assert on the resulting body, properties, headers, metrics, split return items, `sendToStep` calls, or recorded stub warnings.
 6. Run the test until it passes.
 
+### Shared Issue-Watcher Fixtures
+
+GitHub issue-watcher tests now use shared helpers under `unit-tests/apps/github/issue-watcher/fixtures/`:
+
+- `buildContextFixture(...)` standardizes `createJavascriptContext(...)` inputs for body, data, persisted items, and `sendToStep`.
+- `getDataJson(context, key, fallback)` wraps the runtime `getData(...)` contract for tests that need parsed JSON values.
+- `expectSendToStep(...)` asserts call order and parsed payloads without repeating `JSON.parse(...)` in each test.
+
+The built-in scenario factories cover the current sample set:
+
+- `triageAssigned`
+- `devReviewAssigned`
+- `prReadyForDev`
+
+Use those helpers before adding new hand-built issue-watcher contexts.
+
 ## Current Scope Limits
 
 The current runtime is intentionally stub-first.
