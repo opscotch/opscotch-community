@@ -19,6 +19,14 @@
                                 "resource": "/httpserver/clear-headers.js"
                             },
                             {
+                                "resource": "/httpserver/query-params-to-body.js",
+                                "data": {
+                                    "extract": [
+                                        "purpose"
+                                    ]
+                                }
+                            },
+                            {
                                 "resource": "apps/key-gen/generate-key-pair.js"
                             }
                         ]

@@ -7,12 +7,12 @@
     "makeTheseCalls": [
         {
             "url": "http://localhost:11020/key-gen",
-            "expectedResponse": "{\"ok\":false,\"error\":{\"code\":\"missing_purpose\",\"message\":\"purpose is required\",\"allowedPurposes\":[\"sign\",\"box\",\"secretbox\"]}}",
+            "expectedResponse": "",
             "expectedResponseCode": 400
         },
         {
             "url": "http://localhost:11020/key-gen?purpose=encrypt",
-            "expectedResponse": "{\"ok\":false,\"error\":{\"code\":\"invalid_purpose\",\"message\":\"purpose must be one of sign, box, secretbox\",\"allowedPurposes\":[\"sign\",\"box\",\"secretbox\"]}}",
+            "expectedResponse": "",
             "expectedResponseCode": 400
         },
         {

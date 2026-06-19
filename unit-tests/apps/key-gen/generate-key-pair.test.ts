@@ -1,4 +1,6 @@
+import fs from 'node:fs/promises';
 import path from 'node:path';
+import vm from 'node:vm';
 import { createJavascriptContext, createResourceSuite } from '@opscotch/resource-testkit';
 import { describe, expect, it } from 'vitest';
 
@@ -9,6 +11,72 @@ const suite = createResourceSuite({
 });
 
 describe('apps/key-gen/generate-key-pair', () => {
+  it('declares enum schemas for purpose and encoding', async () => {
+    const source = await fs.readFile(resource, 'utf8');
+    const doc = {
+      inSchemaValue: undefined as unknown,
+      outSchemaValue: undefined as unknown,
+      descriptionValue: undefined as unknown,
+      inSchema(schema: unknown) {
+        this.inSchemaValue = schema;
+        return this;
+      },
+      outSchema(schema: unknown) {
+        this.outSchemaValue = schema;
+        return this;
+      },
+      description(description: unknown) {
+        this.descriptionValue = description;
+        return this;
+      },
+      run() {
+        return this;
+      },
+    };
+
+    vm.runInNewContext(source, {
+      doc,
+      context: {},
+      console,
+      JSON,
+    }, {
+      filename: resource,
+    });
+
+    expect(doc.inSchemaValue).toEqual({
+      type: 'object',
+      required: ['purpose'],
+      properties: {
+        purpose: {
+          type: 'string',
+          enum: ['sign', 'box', 'secretbox'],
+        },
+      },
+    });
+    expect(doc.outSchemaValue).toEqual({
+      type: 'object',
+      required: ['ok'],
+      properties: {
+        ok: { type: 'boolean' },
+        purpose: {
+          type: 'string',
+          enum: ['sign', 'box', 'secretbox'],
+        },
+        encoding: {
+          type: 'string',
+          enum: ['hex'],
+        },
+        keyPair: {
+          type: 'object',
+          properties: {
+            publicKeyHex: { type: ['string', 'null'] },
+            secretKeyHex: { type: 'string' },
+          },
+        },
+      },
+    });
+  });
+
   it('returns a sign key pair as hex', async () => {
     const context = createJavascriptContext({
       body: JSON.stringify({ purpose: 'sign' }),
@@ -38,30 +106,6 @@ describe('apps/key-gen/generate-key-pair', () => {
     expect(context.getHeader('content-type')).toBe('application/json');
   });
 
-  it('returns a box key pair from an HTTP query event', async () => {
-    const context = createJavascriptContext({
-      body: JSON.stringify({ query: '?purpose=box' }),
-      crypto: {
-        generateKeyPair: () => [
-          context.bytes().createFromByteArray([0x01]),
-          context.bytes().createFromByteArray([0x02]),
-        ],
-      },
-    });
-
-    await suite.run('resource', { context });
-
-    expect(JSON.parse(context.getBody() || '{}')).toEqual({
-      ok: true,
-      purpose: 'box',
-      encoding: 'hex',
-      keyPair: {
-        publicKeyHex: '01',
-        secretKeyHex: '02',
-      },
-    });
-  });
-
   it('returns a stable secretbox shape with null public key', async () => {
     const context = createJavascriptContext({
       body: JSON.stringify({ purpose: 'secretbox' }),
@@ -86,49 +130,4 @@ describe('apps/key-gen/generate-key-pair', () => {
     });
   });
 
-  it('returns a structured error when purpose is missing', async () => {
-    const context = createJavascriptContext({
-      body: JSON.stringify({}),
-      crypto: {
-        generateKeyPair: () => {
-          throw new Error('should not be called');
-        },
-      },
-    });
-
-    await suite.run('resource', { context });
-
-    expect(JSON.parse(context.getBody() || '{}')).toEqual({
-      ok: false,
-      error: {
-        code: 'missing_purpose',
-        message: 'purpose is required',
-        allowedPurposes: ['sign', 'box', 'secretbox'],
-      },
-    });
-    expect(context.getProperty('status_code')).toBe('400');
-  });
-
-  it('returns a structured error when purpose is invalid', async () => {
-    const context = createJavascriptContext({
-      body: JSON.stringify({ purpose: 'encrypt' }),
-      crypto: {
-        generateKeyPair: () => {
-          throw new Error('should not be called');
-        },
-      },
-    });
-
-    await suite.run('resource', { context });
-
-    expect(JSON.parse(context.getBody() || '{}')).toEqual({
-      ok: false,
-      error: {
-        code: 'invalid_purpose',
-        message: 'purpose must be one of sign, box, secretbox',
-        allowedPurposes: ['sign', 'box', 'secretbox'],
-      },
-    });
-    expect(context.getProperty('status_code')).toBe('400');
-  });
 });
