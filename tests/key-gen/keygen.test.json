@@ -1,0 +1,24 @@
+{
+    "enabled": true,
+    "fromDirectory": "/key-gen/",
+    "testThisStep": "call-keygen",
+    "useThisTestConfigFile": "keygen.config.json",
+    "useThisTestBootstrapFile": "keygen.bootstrap.json",
+    "makeTheseCalls": [
+        {
+            "url": "http://localhost:11020/key-gen",
+            "expectedResponse": "{\"ok\":false,\"error\":{\"code\":\"missing_purpose\",\"message\":\"purpose is required\",\"allowedPurposes\":[\"sign\",\"box\",\"secretbox\"]}}",
+            "expectedResponseCode": 400
+        },
+        {
+            "url": "http://localhost:11020/key-gen?purpose=encrypt",
+            "expectedResponse": "{\"ok\":false,\"error\":{\"code\":\"invalid_purpose\",\"message\":\"purpose must be one of sign, box, secretbox\",\"allowedPurposes\":[\"sign\",\"box\",\"secretbox\"]}}",
+            "expectedResponseCode": 400
+        },
+        {
+            "url": "http://localhost:11021/call-key-gen?purpose=sign",
+            "expectedResponse": "{\"ok\":true,\"purpose\":\"sign\",\"encoding\":\"hex\",\"hasPublicKey\":true,\"hasSecretKey\":true}",
+            "expectedResponseCode": 200
+        }
+    ]
+}

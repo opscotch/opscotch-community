@@ -1,0 +1,44 @@
+{
+    "workflows": [
+        {
+            "name": "key gen",
+            "steps": [
+                {
+                    "stepId": "key-gen-http",
+                    "type": "scripted",
+                    "trigger": {
+                        "http": {
+                            "method": "GET",
+                            "server": "api",
+                            "path": "/key-gen.*"
+                        }
+                    },
+                    "resultsProcessor": {
+                        "processors": [
+                            {
+                                "resource": "/httpserver/clear-headers.js"
+                            },
+                            {
+                                "resource": "apps/key-gen/generate-key-pair.js"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "stepId": "key-gen",
+                    "type": "scripted",
+                    "trigger": {
+                        "deploymentAccess": {
+                            "ids": [
+                                "key-gen-callers"
+                            ]
+                        }
+                    },
+                    "resultsProcessor": {
+                        "resource": "apps/key-gen/generate-key-pair.js"
+                    }
+                }
+            ]
+        }
+    ]
+}

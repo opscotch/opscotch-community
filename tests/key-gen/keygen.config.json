@@ -1,0 +1,30 @@
+{
+    "workflows": [
+        {
+            "name": "keygen caller",
+            "steps": [
+                {
+                    "stepId": "call-keygen",
+                    "type": "scripted",
+                    "trigger": {
+                        "http": {
+                            "method": "GET",
+                            "server": "caller-api",
+                            "path": "/call-key-gen.*"
+                        }
+                    },
+                    "resultsProcessor": {
+                        "processors": [
+                            {
+                                "resource": "/httpserver/clear-headers.js"
+                            },
+                            {
+                                "script": "const request = JSON.parse(context.getBody() || '{}'); const query = request.query || ''; const purpose = (((query[0] === '?' ? query.substring(1) : query).split('&').find((pair) => pair.indexOf('purpose=') === 0) || '').split('=')[1] || 'sign'); const decodedPurpose = decodeURIComponent(purpose); const response = JSON.parse(context.sendToStep('keygen-remote', 'key-gen', JSON.stringify({ purpose: decodedPurpose })).getBody() || '{}'); context.setHeader('content-type', 'application/json'); context.setBody(JSON.stringify({ ok: response.ok === true, purpose: response.purpose || null, encoding: response.encoding || null, hasPublicKey: typeof response.keyPair?.publicKeyHex === 'string' && response.keyPair.publicKeyHex.length > 0, hasSecretKey: typeof response.keyPair?.secretKeyHex === 'string' && response.keyPair.secretKeyHex.length > 0 }));"
+                            }
+                        ]
+                    }
+                }
+            ]
+        }
+    ]
+}
