@@ -8,20 +8,22 @@ doc
         properties: {
             repo: {
                 description: "GitHub repository in owner/repo format.",
-                type: "string"
+                type: "string",
+                minLength: 3,
+                pattern: "^[^/]+\\/[^/]+$"
             },
             issue: {
                 description: "GitHub issue number.",
                 oneOf: [
-                    { type: "number" },
-                    { type: "string" }
+                    { type: "number", minimum: 1 },
+                    { type: "string", pattern: "^[1-9][0-9]*$" }
                 ]
             },
             pull_number: {
                 description: "GitHub pull request number for PR review comment retrieval.",
                 oneOf: [
-                    { type: "number" },
-                    { type: "string" }
+                    { type: "number", minimum: 1 },
+                    { type: "string", pattern: "^[1-9][0-9]*$" }
                 ]
             },
             entity_type: {
@@ -33,22 +35,17 @@ doc
     })
     .dataSchema({
         type: "object",
+        required: ["hostId"],
         additionalProperties: true,
         properties: {
             hostId: {
                 description: "Bootstrap host id for GitHub API access.",
-                type: "string"
+                type: "string",
+                minLength: 1
             }
         }
     })
     .run(() => {
-        function parseJson(value, fallback) {
-            if (value === null || value === undefined || value === "") {
-                return fallback;
-            }
-            return JSON.parse(value);
-        }
-
         function normalizeIssue(value) {
             var issueNumber = parseInt(String(value), 10);
             if (isNaN(issueNumber) || issueNumber <= 0) {
@@ -57,24 +54,20 @@ doc
             return issueNumber;
         }
 
-        function normalizeRepo(value) {
-            var repo = String(value || "").trim();
-            if (!repo || repo.indexOf("/") === -1) {
-                throw new Error("repo must be in owner/repo format");
-            }
-            return repo;
-        }
-
-        var data = parseJson(context.getData(), {});
-        var hostId = String(data.hostId || "github-api").trim() || "github-api";
-        var payload = parseJson(context.getBody(), {});
-        var repo = normalizeRepo(payload.repo);
+        var data = JSON.parse(context.getData());
+        var hostId = String(data.hostId).trim();
+        var payload = JSON.parse(context.getBody());
+        var repo = String(payload.repo).trim();
         var entityType = String(payload.entity_type || "issue").toLowerCase().trim();
         var issue = normalizeIssue(payload.issue);
         var pullNumber = payload.pull_number !== undefined ? normalizeIssue(payload.pull_number) : issue;
         var path = "/repos/" + repo + "/issues/" + issue + "/comments?per_page=100&sort=updated&direction=asc";
         if (entityType === "pr") {
-            path = "/repos/" + repo + "/pulls/" + pullNumber + "/comments?per_page=100&sort=updated&direction=asc";
+            context.setHttpMethod("POST");
+            context.setUrl(hostId, "/graphql");
+            context.setHeader("Accept", "application/vnd.github+json");
+            context.setHeader("X-GitHub-Api-Version", "2022-11-28");
+            return;
         }
 
         context.setHttpMethod("GET");

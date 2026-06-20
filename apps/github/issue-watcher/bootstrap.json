@@ -23,6 +23,10 @@
           {
             "method": "GET",
             "uriPattern": "/repos/.+/issues/.+/comments.*"
+          },
+          {
+            "method": "POST",
+            "uriPattern": "/graphql"
           }
         ]
       }
@@ -31,13 +35,17 @@
       "githubAuthHostId": "github-api-auth",
       "hostId": "github-api",
       "issueHandoffDelaySeconds": 120,
-      "githubIssueWatcherCriteria": [
+      "githubIssueWatcherRepos": [
         {
-          "label": "triage",
           "assignee": "YOUR_GITHUB_USERNAME",
           "repo": "YOUR_ORG/YOUR_REPO",
-          "deploymentId": "target-deployment-access-id",
-          "stepId": "target-step-id"
+          "criteria": [
+            {
+              "label": "triage",
+              "deploymentId": "target-deployment-access-id",
+              "stepId": "target-step-id"
+            }
+          ]
         }
       ]
     }

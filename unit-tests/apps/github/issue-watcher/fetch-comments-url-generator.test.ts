@@ -44,10 +44,17 @@ describe('fetch-comments-url-generator', () => {
 
     await suite.run("resource", { context });
 
-    expect(context.__method).toBe('GET');
+    expect(context.__method).toBe('POST');
     expect(context.__url?.hostRef).toBe('github-api');
-    expect(context.__url?.path).toBe('/repos/opscotch/hopscotch/pulls/91/comments?per_page=100&sort=updated&direction=asc');
+    expect(context.__url?.path).toBe('/graphql');
     expect(context.getHeader('accept')).toBe('application/vnd.github+json');
     expect(context.getHeader('x-github-api-version')).toBe('2022-11-28');
+    expect(context.getBody()).toBe(JSON.stringify({
+      repo: 'opscotch/hopscotch',
+      issue: 317,
+      entity_type: 'pr',
+      pull_number: 91,
+    }));
+    expect(context.getProperty('gh_fetch_comments_graphql')).toBeUndefined();
   });
 });

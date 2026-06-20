@@ -31,6 +31,10 @@
           {
             "method": "GET",
             "uriPattern": "/repos/.+/pulls/.+"
+          },
+          {
+            "method": "POST",
+            "uriPattern": "/graphql"
           }
         ]
       }
@@ -40,13 +44,17 @@
       "hostId": "github-api",
       "watchEntity": "pr",
       "issueHandoffDelaySeconds": 120,
-      "githubPrWatcherCriteria": [
+      "githubPrWatcherRepos": [
         {
-          "label": "ready for dev",
           "assignee": "YOUR_GITHUB_USERNAME",
           "repo": "YOUR_ORG/YOUR_REPO",
-          "deploymentId": "target-deployment-access-id",
-          "stepId": "target-step-id"
+          "criteria": [
+            {
+              "label": "ready for dev",
+              "deploymentId": "target-deployment-access-id",
+              "stepId": "target-step-id"
+            }
+          ]
         }
       ]
     }

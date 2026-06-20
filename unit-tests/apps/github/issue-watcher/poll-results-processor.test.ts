@@ -8,6 +8,31 @@ const suite = createResourceSuite({
   resources: [{ id: "resource", resource }],
 });
 
+function pollGroup(items: unknown[], options: {
+  repo?: string;
+  assignee?: string;
+  watchEntity?: 'issue' | 'pr';
+  label?: string;
+  deploymentId?: string;
+  stepId?: string;
+} = {}) {
+  return [
+    {
+      repo: options.repo ?? 'opscotch/hopscotch',
+      assignee: options.assignee ?? 'machinoal2-cell',
+      watchEntity: options.watchEntity ?? 'issue',
+      criteria: [
+        {
+          label: options.label ?? 'triage',
+          deploymentId: options.deploymentId ?? 'openclaw-ticket-actions',
+          stepId: options.stepId ?? 'dispatch-bmad-refine',
+        },
+      ],
+      items,
+    },
+  ];
+}
+
 describe('poll-results-processor', () => {
   it('dispatches matching issue and updates watermark', async () => {
     const issues = [
@@ -31,18 +56,8 @@ describe('poll-results-processor', () => {
     ];
 
     const context = createJavascriptContext({
-      body: JSON.stringify(issues),
-      data: {
-        'githubIssueWatcherCriteria': [
-          {
-            label: 'triage',
-            assignee: 'machinoal2-cell',
-            repo: 'opscotch/hopscotch',
-            deploymentId: 'openclaw-ticket-actions',
-            stepId: 'dispatch-bmad-refine',
-          },
-        ],
-      },
+      body: JSON.stringify(pollGroup(issues)),
+      data: {},
       sendToStep: (call) => {
         if (call.stepName === 'route-ticket-action') {
           return { body: JSON.stringify({ routed: true }) };
@@ -90,20 +105,10 @@ describe('poll-results-processor', () => {
     ];
 
     const context = createJavascriptContext({
-      body: JSON.stringify(issues),
-      data: {
-        'githubIssueWatcherCriteria': [
-          {
-            label: 'triage',
-            assignee: 'machinoal2-cell',
-            repo: 'opscotch/hopscotch',
-            deploymentId: 'openclaw-ticket-actions',
-            stepId: 'dispatch-bmad-refine',
-          },
-        ],
-      },
+      body: JSON.stringify(pollGroup(issues)),
+      data: {},
       persistedItems: {
-        issueUpdatedAtByNumber: JSON.stringify({ 'issue:317': '2026-04-23T00:00:00Z' }),
+        issueUpdatedAtByNumber: JSON.stringify({ 'issue:opscotch/hopscotch:317': '2026-04-23T00:00:00Z' }),
       },
     });
 
@@ -138,18 +143,8 @@ describe('poll-results-processor', () => {
     ];
 
     const context = createJavascriptContext({
-      body: JSON.stringify(issues),
-      data: {
-        githubIssueWatcherCriteria: [
-          {
-            label: 'triage',
-            assignee: 'machinoal2-cell',
-            repo: 'opscotch/hopscotch',
-            deploymentId: 'openclaw-ticket-actions',
-            stepId: 'dispatch-bmad-refine',
-          },
-        ],
-      },
+      body: JSON.stringify(pollGroup(issues)),
+      data: {},
       sendToStep: (call) => {
         if (call.stepName === 'route-ticket-action') {
           return {
@@ -193,18 +188,8 @@ describe('poll-results-processor', () => {
     ];
 
     const context = createJavascriptContext({
-      body: JSON.stringify(issues),
-      data: {
-        githubIssueWatcherCriteria: [
-          {
-            label: 'triage',
-            assignee: 'machinoal2-cell',
-            repo: 'opscotch/hopscotch',
-            deploymentId: 'openclaw-ticket-actions',
-            stepId: 'dispatch-bmad-refine-triage',
-          },
-        ],
-      },
+      body: JSON.stringify(pollGroup(issues, { stepId: 'dispatch-bmad-refine-triage' })),
+      data: {},
       sendToStep: (call) => {
         if (call.stepName === 'route-ticket-action') {
           return {
@@ -244,17 +229,8 @@ describe('poll-results-processor', () => {
     ];
 
     const context = createJavascriptContext({
-      body: JSON.stringify(issues),
+      body: JSON.stringify(pollGroup(issues)),
       data: {
-        githubIssueWatcherCriteria: [
-          {
-            label: 'triage',
-            assignee: 'machinoal2-cell',
-            repo: 'opscotch/hopscotch',
-            deploymentId: 'openclaw-ticket-actions',
-            stepId: 'dispatch-bmad-refine',
-          },
-        ],
         issueHandoffDelaySeconds: 120,
       },
       timestamp: Date.parse('2026-04-23T00:02:00Z'),
@@ -296,19 +272,13 @@ describe('poll-results-processor', () => {
     ];
 
     const context = createJavascriptContext({
-      body: JSON.stringify(mixed),
-      data: {
+      body: JSON.stringify(pollGroup(mixed, {
         watchEntity: 'pr',
-        githubPrWatcherCriteria: [
-          {
-            label: 'ready for dev',
-            assignee: 'machinoal2-cell',
-            repo: 'opscotch/hopscotch',
-            deploymentId: 'openclaw-pr-actions',
-            stepId: 'dispatch-bmad-pr-develop',
-          },
-        ],
-      },
+        label: 'ready for dev',
+        deploymentId: 'openclaw-pr-actions',
+        stepId: 'dispatch-bmad-pr-develop',
+      })),
+      data: {},
       sendToStep: (call) => {
         if (call.stepName === 'route-ticket-action') {
           return { body: JSON.stringify({ routed: true }) };
@@ -331,7 +301,7 @@ describe('poll-results-processor', () => {
       action_step_id: 'dispatch-bmad-pr-develop',
     });
     expect(JSON.parse(context.getPersistedItem('issueUpdatedAtByNumber') || '{}')).toMatchObject({
-      'pr:402': '2026-04-23T00:06:00Z',
+      'pr:opscotch/hopscotch:402': '2026-04-23T00:06:00Z',
     });
   });
 });

@@ -4,8 +4,8 @@ Reusable Opscotch app that polls GitHub pull requests (via the issues API) and r
 
 ## What this app does
 
-- Polls open PRs for one repo/assignee pair at a time.
-- Filters/routes by label using `githubPrWatcherCriteria`.
+- Polls open PRs for each configured repo/assignee group.
+- Filters/routes by label using `githubPrWatcherRepos`.
 - Calls `deploymentId` + `stepId` from the matched criterion.
 
 ## Bootstrap usage example
@@ -41,13 +41,17 @@ Reusable Opscotch app that polls GitHub pull requests (via the issues API) and r
       "hostId": "github-api",
       "watchEntity": "pr",
       "issueHandoffDelaySeconds": 120,
-      "githubPrWatcherCriteria": [
+      "githubPrWatcherRepos": [
         {
-          "label": "ready for dev",
           "assignee": "YOUR_GITHUB_USERNAME",
           "repo": "YOUR_ORG/YOUR_REPO",
-          "deploymentId": "target-deployment-access-id",
-          "stepId": "target-step-id"
+          "criteria": [
+            {
+              "label": "ready for dev",
+              "deploymentId": "target-deployment-access-id",
+              "stepId": "target-step-id"
+            }
+          ]
         }
       ]
     }
@@ -61,16 +65,19 @@ Reusable Opscotch app that polls GitHub pull requests (via the issues API) and r
 - `watchEntity` (string, required): must be `pr`.
 - `issueHandoffDelaySeconds` (number, optional): minimum PR age by `updated_at` before handoff.
 - `issueWatcherDecisionLoggingEnabled` (boolean, optional): emits diagnostic matching logs.
-- `githubPrWatcherCriteria` (array, required): routing criteria.
+- `githubPrWatcherRepos` (array, required): repo/assignee polling groups.
 
-Each `githubPrWatcherCriteria[]` item requires:
-- `label` (string)
+Each `githubPrWatcherRepos[]` item requires:
 - `assignee` (string)
 - `repo` (string, `owner/repo`)
+- `criteria` (array)
+
+Each `criteria[]` item requires:
+- `label` (string)
 - `deploymentId` (string)
 - `stepId` (string)
 
 ## Important nuance
 
-- All criteria in a single deployment must share the same `repo` and `assignee` because polling is done with one upstream query and label selection happens in the results processor.
+- Each repo group is polled separately, so one watcher deployment can cover multiple repositories.
 - This app routes only; it does not mutate pull requests.

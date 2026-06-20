@@ -1,22 +1,71 @@
 doc
-    .description("Normalize polled GitHub issues/PRs (including search API responses), dedupe by watermark, and dispatch actionable events")
+    .description("Evaluate grouped GitHub issue/PR poll results, dedupe by repo-aware watermark, and dispatch actionable events")
     .asUserErrors()
     .inSchema({
         type: "array",
-        description: "Array of issues/PRs from GitHub API",
+        description: "Array of grouped poll results from poll-item-result-processor",
         items: {
             type: "object",
-            required: ["number", "updated_at"],
+            required: ["repo", "assignee", "watchEntity", "criteria", "items"],
+            additionalProperties: true,
             properties: {
-                number: { type: "integer" },
-                pull_request: { type: "object" },
-                labels: { type: "array", items: { type: "object", properties: { name: { type: "string" } } } },
-                assignees: { type: "array", items: { type: "object", properties: { login: { type: "string" } } } },
-                updated_at: { type: "string" },
-                created_at: { type: "string" },
-                html_url: { type: "string" },
-                title: { type: "string" },
-                body: { type: "string" }
+                repo: {
+                    type: "string",
+                    pattern: "^[^/]+\\/[^/]+$"
+                },
+                assignee: { type: "string", minLength: 1 },
+                watchEntity: { type: "string", enum: ["issue", "pr"] },
+                criteria: {
+                    type: "array",
+                    minItems: 1,
+                    items: {
+                        type: "object",
+                        additionalProperties: true,
+                        required: ["label", "deploymentId", "stepId"],
+                        properties: {
+                            label: { type: "string", minLength: 1 },
+                            deploymentId: { type: "string", minLength: 1 },
+                            stepId: { type: "string", minLength: 1 }
+                        }
+                    }
+                },
+                items: {
+                    type: "array",
+                    items: {
+                        type: "object",
+                        additionalProperties: true,
+                        required: ["number"],
+                        properties: {
+                            number: { type: "integer" },
+                            pull_request: { type: "object" },
+                            labels: {
+                                type: "array",
+                                items: {
+                                    type: "object",
+                                    additionalProperties: true,
+                                    properties: {
+                                        name: { type: "string" }
+                                    }
+                                }
+                            },
+                            assignees: {
+                                type: "array",
+                                items: {
+                                    type: "object",
+                                    additionalProperties: true,
+                                    properties: {
+                                        login: { type: "string" }
+                                    }
+                                }
+                            },
+                            updated_at: { type: "string" },
+                            created_at: { type: "string" },
+                            html_url: { type: "string" },
+                            title: { type: "string" },
+                            body: { type: "string" }
+                        }
+                    }
+                }
             }
         }
     })
@@ -24,82 +73,13 @@ doc
         type: "object",
         additionalProperties: true,
         properties: {
-            "githubIssueWatcherCriteria": {
-                description: "Routing criteria list defining label, assignee, repo, and downstream deployment/step target.",
-                type: "array",
-                minItems: 1,
-                items: {
-                    type: "object",
-                    additionalProperties: true,
-                    required: ["label", "assignee", "repo", "deploymentId", "stepId"],
-                    properties: {
-                        label: {
-                            description: "Label that must be present on the issue.",
-                            type: "string"
-                        },
-                        assignee: {
-                            description: "GitHub assignee login that must own the issue.",
-                            type: "string"
-                        },
-                        repo: {
-                            description: "GitHub repository in owner/repo format.",
-                            type: "string"
-                        },
-                        deploymentId: {
-                            description: "Deployment access id to call when this criterion matches.",
-                            type: "string"
-                        },
-                        stepId: {
-                            description: "Target step id in the destination deployment.",
-                            type: "string"
-                        }
-                    }
-                }
-            },
-            "githubPrWatcherCriteria": {
-                description: "Routing criteria list defining label, assignee, repo, and downstream deployment/step target for pull requests.",
-                type: "array",
-                minItems: 1,
-                items: {
-                    type: "object",
-                    additionalProperties: true,
-                    required: ["label", "assignee", "repo", "deploymentId", "stepId"],
-                    properties: {
-                        label: {
-                            description: "Label that must be present on the pull request.",
-                            type: "string"
-                        },
-                        assignee: {
-                            description: "GitHub assignee login that must own the pull request.",
-                            type: "string"
-                        },
-                        repo: {
-                            description: "GitHub repository in owner/repo format.",
-                            type: "string"
-                        },
-                        deploymentId: {
-                            description: "Deployment access id to call when this criterion matches.",
-                            type: "string"
-                        },
-                        stepId: {
-                            description: "Target step id in the destination deployment.",
-                            type: "string"
-                        }
-                    }
-                }
-            },
-            "watchEntity": {
-                description: "Watcher entity type; issue watcher matches only issues, pr watcher matches only pull requests.",
-                type: "string",
-                enum: ["issue", "pr"]
-            },
-            "issueHandoffDelaySeconds": {
+            issueHandoffDelaySeconds: {
                 description: "Wait period in seconds after issue update before dispatching matched actions.",
                 type: "number",
                 minimum: 0
             },
-            "issueWatcherDecisionLoggingEnabled": {
-                description: "When true, emits diagnostic logs for issue watcher decisions and delay handling.",
+            issueWatcherDecisionLoggingEnabled: {
+                description: "When true, emits diagnostic logs for watcher decisions and delay handling.",
                 type: "boolean"
             }
         }
@@ -110,16 +90,15 @@ doc
         required: ["status", "scanned_issues", "dispatched_actions"],
         properties: {
             status: { type: "string", description: "Operation status" },
-            scanned_issues: { type: "integer", description: "Number of issues scanned" },
+            scanned_issues: { type: "integer", description: "Number of issues/PRs scanned" },
             dispatched_actions: { type: "integer", description: "Number of actions dispatched" }
         }
     })
     .run(() => {
-        var data = JSON.parse(context.getData());
-        var decisionLoggingEnabled = data.issueWatcherDecisionLoggingEnabled ?? false;
         function toLower(value) {
             return String(value || "").toLowerCase();
         }
+
         function parseJson(value, fallback) {
             if (value === null || value === undefined || value === "") {
                 return fallback;
@@ -151,26 +130,27 @@ doc
                 out[key] = value;
             }
 
-            copyIfPresent("issue");
-            copyIfPresent("watch_entity");
-            copyIfPresent("matched_label");
-            copyIfPresent("deployment_id");
-            copyIfPresent("step_id");
-            copyIfPresent("updated_at");
-            copyIfPresent("previous_watermark");
-            copyIfPresent("age_seconds");
-            copyIfPresent("delay_seconds");
-            copyIfPresent("remaining_delay_seconds");
-            copyIfPresent("ready_for_dispatch");
-            copyIfPresent("scanned_issues");
-            copyIfPresent("dispatched_actions");
-            copyIfPresent("polled_items");
-            copyIfPresent("criteria_count");
-            copyIfPresent("watermark_count");
-            copyIfPresent("response_type");
-            copyIfPresent("normalized_items");
-            copyIfPresent("status_code");
-            copyIfPresent("error", 180);
+            [
+                "repo",
+                "issue",
+                "watch_entity",
+                "matched_label",
+                "deployment_id",
+                "step_id",
+                "updated_at",
+                "previous_watermark",
+                "age_seconds",
+                "delay_seconds",
+                "remaining_delay_seconds",
+                "ready_for_dispatch",
+                "scanned_issues",
+                "dispatched_actions",
+                "polled_items",
+                "criteria_count",
+                "watermark_count",
+                "poll_group_count",
+                "error"
+            ].forEach((key) => copyIfPresent(key, key === "error" ? 180 : undefined));
 
             return out;
         }
@@ -180,7 +160,7 @@ doc
                 return;
             }
             var compact = compactDecisionDetails(details);
-            var message = "issue-watcher decision " + eventName + " " + JSON.stringify(compact);
+            var message = "github-watcher decision " + eventName + " " + JSON.stringify(compact);
             if (typeof context.diagnosticLog === "function") {
                 context.diagnosticLog(message);
                 return;
@@ -188,28 +168,23 @@ doc
             console.log(message);
         }
 
-        function normalizeCriteria(criteria) {
+        function normalizeCriteria(repo, assignee, criteria) {
             var normalized = [];
-            var i;
+            var normalizedAssignee = toLower(assignee).trim();
 
-            for (i = 0; i < criteria.length; i += 1) {
-                var item = criteria[i];
-                var repo = String(item.repo || "").trim();
-                var assignee = toLower(item.assignee || "").trim();
+            for (var i = 0; i < criteria.length; i += 1) {
+                var item = criteria[i] || {};
                 var label = toLower(item.label || "").trim();
                 var deploymentId = String(item.deploymentId || "").trim();
                 var stepId = String(item.stepId || "").trim();
 
-                if (!repo || repo.indexOf("/") === -1) {
-                    continue;
-                }
-                if (!assignee || !label || !deploymentId || !stepId) {
+                if (!label || !deploymentId || !stepId) {
                     continue;
                 }
 
                 normalized.push({
                     repo: repo,
-                    assignee: assignee,
+                    assignee: normalizedAssignee,
                     label: label,
                     deploymentId: deploymentId,
                     stepId: stepId
@@ -256,26 +231,24 @@ doc
                 isRateLimitedResponse(value.body, depth + 1);
         }
 
-        var watchEntity = String(data.watchEntity || "issue").toLowerCase();
-        if (watchEntity !== "issue" && watchEntity !== "pr") {
-            watchEntity = "issue";
-        }
-        var criteriaKey = watchEntity === "pr" ? "githubPrWatcherCriteria" : "githubIssueWatcherCriteria";
-        var criteria = data[criteriaKey] || [];
+        var data = JSON.parse(context.getData());
         var issueHandoffDelaySeconds = data.issueHandoffDelaySeconds ?? 0;
         var issueHandoffDelayMs = issueHandoffDelaySeconds * 1000;
         var decisionLoggingEnabled = data.issueWatcherDecisionLoggingEnabled ?? false;
+        var pollGroups = JSON.parse(context.getBody());
 
-        var body = JSON.parse(context.getBody());
+        var totalItems = 0;
+        for (var gCount = 0; gCount < pollGroups.length; gCount += 1) {
+            totalItems += Array.isArray((pollGroups[gCount] || {}).items) ? pollGroups[gCount].items.length : 0;
+        }
         logDecision(decisionLoggingEnabled, "poll-result", {
-            polled_items: body.length,
-            watch_entity: watchEntity,
-            criteria_count: criteria.length,
+            poll_group_count: pollGroups.length,
+            polled_items: totalItems,
             handoff_delay_seconds: issueHandoffDelaySeconds
         });
 
         var persistedRaw = context.getPersistedItem("issueUpdatedAtByNumber") || "{}";
-        var issueWatermarks = JSON.parse(persistedRaw);
+        var issueWatermarks = parseJson(persistedRaw, {});
         if (!issueWatermarks || typeof issueWatermarks !== "object" || Array.isArray(issueWatermarks)) {
             issueWatermarks = {};
         }
@@ -285,176 +258,206 @@ doc
 
         var scanned = 0;
         var dispatched = 0;
+        var stopTick = false;
 
-        for (var i = 0; i < body.length; i += 1) {
-            var issue = body[i];
-            var isPullRequest = !!issue.pull_request;
-            if (watchEntity === "issue" && isPullRequest) {
-                logDecision(decisionLoggingEnabled, "skip-pr-while-watching-issues", {
-                    issue: issue.number
-                });
-                continue;
-            }
-            if (watchEntity === "pr" && !isPullRequest) {
-                logDecision(decisionLoggingEnabled, "skip-issue-while-watching-prs", {
-                    issue: issue.number
-                });
-                continue;
-            }
+        for (var g = 0; g < pollGroups.length && !stopTick; g += 1) {
+            var group = pollGroups[g] || {};
+            var repo = String(group.repo || "").trim();
+            var assignee = String(group.assignee || "").trim();
+            var watchEntity = toLower(group.watchEntity || "issue").trim();
+            var criteria = normalizeCriteria(repo, assignee, Array.isArray(group.criteria) ? group.criteria : []);
+            var body = Array.isArray(group.items) ? group.items : [];
 
-            scanned += 1;
-
-            var issueNumber = issue.number;
-            var labels = Array.isArray(issue.labels) ? issue.labels : [];
-            var assignees = Array.isArray(issue.assignees) ? issue.assignees : [];
-
-            var labelNames = [];
-            for (var l = 0; l < labels.length; l += 1) {
-                var labelObj = labels[l] || {};
-                labelNames.push(String(labelObj.name || "").toLowerCase());
-            }
-
-            var assigneeNames = [];
-            for (var a = 0; a < assignees.length; a += 1) {
-                assigneeNames.push(String((assignees[a] || {}).login || "").toLowerCase());
-            }
-
-            var matchedCriterion = getMatchedCriterion(criteria, labelNames, assigneeNames);
-            var watermarkKey = watchEntity + ":" + issueNumber;
-            var updatedAt = issue.updated_at || issue.created_at;
-            if (!updatedAt) {
-                updatedAt = String(context.getTimestamp());
-            }
-            var previousWatermark = issueWatermarks[watermarkKey];
-
-            logDecision(decisionLoggingEnabled, "issue-evaluated", {
-                issue: issueNumber,
-                updated_at: updatedAt,
-                previous_watermark: previousWatermark || "",
-                labels: labelNames,
-                assignees: assigneeNames,
-                matched: !!matchedCriterion
-            });
-
-            if (!matchedCriterion) {
-                logDecision(decisionLoggingEnabled, "skip-no-match", {
-                    issue: issueNumber,
-                    title: String(issue.title || ""),
-                    labels: labelNames,
-                    assignees: assigneeNames
+            if (!repo || !assignee || (watchEntity !== "issue" && watchEntity !== "pr") || criteria.length === 0) {
+                logDecision(decisionLoggingEnabled, "skip-invalid-poll-group", {
+                    repo: repo,
+                    watch_entity: watchEntity,
+                    criteria_count: criteria.length
                 });
                 continue;
             }
 
-            if (issueHandoffDelayMs > 0) {
-                var updatedAtTs = Date.parse(updatedAt);
-                if (!Number.isFinite(updatedAtTs)) {
-                    logDecision(decisionLoggingEnabled, "delay-check-skipped-invalid-updated-at", {
-                        issue: issueNumber,
-                        updated_at: updatedAt
+            for (var i = 0; i < body.length; i += 1) {
+                var issue = body[i];
+                var isPullRequest = !!issue.pull_request;
+                if (watchEntity === "issue" && isPullRequest) {
+                    logDecision(decisionLoggingEnabled, "skip-pr-while-watching-issues", {
+                        repo: repo,
+                        issue: issue.number
                     });
-                } else {
-                    var issueAgeMs = context.getTimestamp() - updatedAtTs;
-                    if (issueAgeMs < issueHandoffDelayMs) {
-                        var remainingDelayMs = issueHandoffDelayMs - issueAgeMs;
-                        logDecision(decisionLoggingEnabled, "wait-stable", {
+                    continue;
+                }
+                if (watchEntity === "pr" && !isPullRequest) {
+                    logDecision(decisionLoggingEnabled, "skip-issue-while-watching-prs", {
+                        repo: repo,
+                        issue: issue.number
+                    });
+                    continue;
+                }
+
+                scanned += 1;
+
+                var issueNumber = issue.number;
+                var labels = Array.isArray(issue.labels) ? issue.labels : [];
+                var assignees = Array.isArray(issue.assignees) ? issue.assignees : [];
+
+                var labelNames = [];
+                for (var l = 0; l < labels.length; l += 1) {
+                    var labelObj = labels[l] || {};
+                    labelNames.push(toLower(labelObj.name));
+                }
+
+                var assigneeNames = [];
+                for (var a = 0; a < assignees.length; a += 1) {
+                    assigneeNames.push(toLower((assignees[a] || {}).login));
+                }
+
+                var matchedCriterion = getMatchedCriterion(criteria, labelNames, assigneeNames);
+                var watermarkKey = watchEntity + ":" + repo + ":" + issueNumber;
+                var updatedAt = issue.updated_at || issue.created_at;
+                if (!updatedAt) {
+                    updatedAt = String(context.getTimestamp());
+                }
+                var previousWatermark = issueWatermarks[watermarkKey];
+
+                logDecision(decisionLoggingEnabled, "issue-evaluated", {
+                    repo: repo,
+                    issue: issueNumber,
+                    updated_at: updatedAt,
+                    previous_watermark: previousWatermark || "",
+                    labels: labelNames,
+                    assignees: assigneeNames,
+                    matched: !!matchedCriterion
+                });
+
+                if (!matchedCriterion) {
+                    logDecision(decisionLoggingEnabled, "skip-no-match", {
+                        repo: repo,
+                        issue: issueNumber,
+                        title: String(issue.title || ""),
+                        labels: labelNames,
+                        assignees: assigneeNames
+                    });
+                    continue;
+                }
+
+                if (issueHandoffDelayMs > 0) {
+                    var updatedAtTs = Date.parse(updatedAt);
+                    if (!Number.isFinite(updatedAtTs)) {
+                        logDecision(decisionLoggingEnabled, "delay-check-skipped-invalid-updated-at", {
+                            repo: repo,
+                            issue: issueNumber,
+                            updated_at: updatedAt
+                        });
+                    } else {
+                        var issueAgeMs = context.getTimestamp() - updatedAtTs;
+                        if (issueAgeMs < issueHandoffDelayMs) {
+                            var remainingDelayMs = issueHandoffDelayMs - issueAgeMs;
+                            logDecision(decisionLoggingEnabled, "wait-stable", {
+                                repo: repo,
+                                issue: issueNumber,
+                                updated_at: updatedAt,
+                                age_seconds: Math.floor(issueAgeMs / 1000),
+                                delay_seconds: issueHandoffDelaySeconds,
+                                remaining_delay_seconds: Math.ceil(remainingDelayMs / 1000)
+                            });
+                            continue;
+                        }
+                        logDecision(decisionLoggingEnabled, "delay-check-passed", {
+                            repo: repo,
                             issue: issueNumber,
                             updated_at: updatedAt,
-                            now_timestamp: context.getTimestamp(),
-                            updated_at_timestamp: updatedAtTs,
                             age_seconds: Math.floor(issueAgeMs / 1000),
                             delay_seconds: issueHandoffDelaySeconds,
-                            remaining_delay_seconds: Math.ceil(remainingDelayMs / 1000)
+                            remaining_delay_seconds: 0,
+                            ready_for_dispatch: true
                         });
-                        continue;
                     }
-                    logDecision(decisionLoggingEnabled, "delay-check-passed", {
+                }
+
+                if (issueWatermarks[watermarkKey] === updatedAt) {
+                    logDecision(decisionLoggingEnabled, "skip-duplicate-watermark", {
+                        repo: repo,
                         issue: issueNumber,
                         updated_at: updatedAt,
-                        now_timestamp: context.getTimestamp(),
-                        updated_at_timestamp: updatedAtTs,
-                        age_seconds: Math.floor(issueAgeMs / 1000),
-                        delay_seconds: issueHandoffDelaySeconds,
-                        remaining_delay_seconds: 0,
-                        ready_for_dispatch: true
+                        previous_watermark: previousWatermark || ""
                     });
+                    continue;
                 }
-            }
 
-            if (issueWatermarks[watermarkKey] === updatedAt) {
-                logDecision(decisionLoggingEnabled, "skip-duplicate-watermark", {
+                var eventPayload = {
+                    entity_type: watchEntity,
+                    repo: matchedCriterion.repo,
+                    issue_number: issueNumber,
+                    issue_url: issue.html_url || "",
+                    title: issue.title || "",
+                    issue_body: issue.body || "",
+                    labels: labelNames,
+                    assignees: assigneeNames,
+                    assignee: matchedCriterion.assignee,
+                    matched_label: matchedCriterion.label,
+                    action_deployment_id: matchedCriterion.deploymentId,
+                    action_step_id: matchedCriterion.stepId,
+                    updated_at: updatedAt,
+                    issue_context: issue,
+                    pull_number: isPullRequest ? issueNumber : undefined,
+                    pull_url: isPullRequest ? (issue.pull_request && issue.pull_request.html_url) || issue.html_url || "" : undefined,
+                    pull_context: isPullRequest ? issue.pull_request || {} : undefined
+                };
+
+                logDecision(decisionLoggingEnabled, "dispatch", {
+                    repo: repo,
                     issue: issueNumber,
+                    title: String(issue.title || ""),
+                    matched_label: matchedCriterion.label,
+                    deployment_id: matchedCriterion.deploymentId,
+                    step_id: matchedCriterion.stepId,
                     updated_at: updatedAt,
                     previous_watermark: previousWatermark || ""
                 });
-                continue;
-            }
 
-            var eventPayload = {
-                entity_type: watchEntity,
-                repo: matchedCriterion.repo,
-                issue_number: issueNumber,
-                issue_url: issue.html_url || "",
-                title: issue.title || "",
-                issue_body: issue.body || "",
-                labels: labelNames,
-                assignees: assigneeNames,
-                assignee: matchedCriterion.assignee,
-                matched_label: matchedCriterion.label,
-                action_deployment_id: matchedCriterion.deploymentId,
-                action_step_id: matchedCriterion.stepId,
-                updated_at: updatedAt,
-                issue_context: issue,
-                pull_number: isPullRequest ? issueNumber : undefined,
-                pull_url: isPullRequest ? (issue.pull_request && issue.pull_request.html_url) || issue.html_url || "" : undefined,
-                pull_context: isPullRequest ? issue.pull_request || {} : undefined
-            };
-
-            logDecision(decisionLoggingEnabled, "dispatch", {
-                issue: issueNumber,
-                title: String(issue.title || ""),
-                matched_label: matchedCriterion.label,
-                deployment_id: matchedCriterion.deploymentId,
-                step_id: matchedCriterion.stepId,
-                updated_at: updatedAt,
-                previous_watermark: previousWatermark || ""
-            });
-            var routeResponse;
-            var routeBody;
-            try {
-                routeResponse = context.sendToStep("route-ticket-action", JSON.stringify(eventPayload));
-                routeBody = parseJson(routeResponse ? routeResponse.getBody() : "", {});
-            } catch (dispatchErr) {
-                logDecision(decisionLoggingEnabled, "dispatch-failed", {
-                    issue: issueNumber,
-                    error: String(dispatchErr && dispatchErr.message ? dispatchErr.message : dispatchErr)
-                });
-                continue;
-            }
-
-            if (!routeBody || routeBody.routed !== true || routeBody.error || routeBody.status === "error" || routeBody.queued === false) {
-                logDecision(decisionLoggingEnabled, "dispatch-not-acknowledged", {
-                    issue: issueNumber,
-                    route_response: routeBody || {}
-                });
-                if (isRateLimitedResponse(routeBody, 0)) {
-                    logDecision(decisionLoggingEnabled, "dispatch-rate-limited-stop-tick", {
+                var routeResponse;
+                var routeBody;
+                try {
+                    routeResponse = context.sendToStep("route-ticket-action", JSON.stringify(eventPayload));
+                    routeBody = parseJson(routeResponse ? routeResponse.getBody() : "", {});
+                } catch (dispatchErr) {
+                    logDecision(decisionLoggingEnabled, "dispatch-failed", {
+                        repo: repo,
                         issue: issueNumber,
-                        matched_label: matchedCriterion.label,
-                        deployment_id: matchedCriterion.deploymentId,
-                        step_id: matchedCriterion.stepId
+                        error: String(dispatchErr && dispatchErr.message ? dispatchErr.message : dispatchErr)
                     });
-                    break;
+                    continue;
                 }
-                continue;
-            }
 
-            issueWatermarks[watermarkKey] = updatedAt;
-            logDecision(decisionLoggingEnabled, "watermark-updated", {
-                issue: issueNumber,
-                watermark: updatedAt
-            });
-            dispatched += 1;
+                if (!routeBody || routeBody.routed !== true || routeBody.error || routeBody.status === "error" || routeBody.queued === false) {
+                    logDecision(decisionLoggingEnabled, "dispatch-not-acknowledged", {
+                        repo: repo,
+                        issue: issueNumber,
+                        route_response: routeBody || {}
+                    });
+                    if (isRateLimitedResponse(routeBody, 0)) {
+                        logDecision(decisionLoggingEnabled, "dispatch-rate-limited-stop-tick", {
+                            repo: repo,
+                            issue: issueNumber,
+                            matched_label: matchedCriterion.label,
+                            deployment_id: matchedCriterion.deploymentId,
+                            step_id: matchedCriterion.stepId
+                        });
+                        stopTick = true;
+                        break;
+                    }
+                    continue;
+                }
+
+                issueWatermarks[watermarkKey] = updatedAt;
+                logDecision(decisionLoggingEnabled, "watermark-updated", {
+                    repo: repo,
+                    issue: issueNumber,
+                    watermark: updatedAt
+                });
+                dispatched += 1;
+            }
         }
 
         context.setPersistedItem("issueUpdatedAtByNumber", JSON.stringify(issueWatermarks));

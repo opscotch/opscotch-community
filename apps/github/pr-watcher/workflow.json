@@ -9,6 +9,7 @@
       "steps": [
         {
           "stepId": "poll-github-prs",
+          "type": "scripted-split-aggregate",
           "singleThreaded": "return",
           "trigger": {
             "timer": {
@@ -16,11 +17,17 @@
               "period": 10000
             }
           },
+          "splitGenerator": {
+            "resource": "/apps/github/poll-split-generator.js"
+          },
           "urlGenerator": {
             "resource": "/apps/github/poll-url-generator.js"
           },
           "authenticationProcessor": {
             "resource": "/apps/github/github-auth-processor.js"
+          },
+          "itemResultProcessor": {
+            "resource": "/apps/github/poll-item-result-processor.js"
           },
           "resultsProcessor": {
             "resource": "/apps/github/poll-results-processor.js"
@@ -49,6 +56,9 @@
           "stepId": "fetch-issue-comments",
           "urlGenerator": {
             "resource": "/apps/github/fetch-comments-url-generator.js"
+          },
+          "payloadGenerator": {
+            "resource": "/apps/github/fetch-comments-payload-generator.js"
           },
           "authenticationProcessor": {
             "resource": "/apps/github/github-auth-processor.js"

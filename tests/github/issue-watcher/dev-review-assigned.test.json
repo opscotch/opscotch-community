@@ -6,7 +6,7 @@
   "useThisTestBootstrapFile": "workflow-github-ticket-poller.test.bootstrap.json",
   "mockEndpointResponses": [
     {
-      "whenThisIsCalled": "http://mockserver/repos/opscotch/hopscotch/issues?state=open&assignee=machinoal2-cell&labels=triage%2Cdev-review%2Cdev-ready&sort=updated&direction=asc&per_page=100",
+      "whenThisIsCalled": "http://mockserver/repos/opscotch/hopscotch/issues?state=open&assignee=machinoal2-cell&sort=updated&direction=asc&per_page=100",
       "returnThisFile": "/github/issue-watcher/issues-dev-review.json"
     }
   ],

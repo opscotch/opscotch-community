@@ -28,27 +28,27 @@
     "data": {
       "hostId": "github-api",
       "issueHandoffDelaySeconds": 120,
-      "githubIssueWatcherCriteria": [
+      "githubIssueWatcherRepos": [
         {
-          "label": "triage",
           "assignee": "machinoal2-cell",
           "repo": "opscotch/hopscotch",
-          "deploymentId": "openclaw-ticket-actions",
-          "stepId": "dispatch-bmad-refine"
-        },
-        {
-          "label": "dev-review",
-          "assignee": "machinoal2-cell",
-          "repo": "opscotch/hopscotch",
-          "deploymentId": "openclaw-ticket-actions",
-          "stepId": "dispatch-non-triage"
-        },
-        {
-          "label": "dev-ready",
-          "assignee": "machinoal2-cell",
-          "repo": "opscotch/hopscotch",
-          "deploymentId": "openclaw-ticket-actions",
-          "stepId": "dispatch-non-triage"
+          "criteria": [
+            {
+              "label": "triage",
+              "deploymentId": "openclaw-ticket-actions",
+              "stepId": "dispatch-bmad-refine"
+            },
+            {
+              "label": "dev-review",
+              "deploymentId": "openclaw-ticket-actions",
+              "stepId": "dispatch-non-triage"
+            },
+            {
+              "label": "dev-ready",
+              "deploymentId": "openclaw-ticket-actions",
+              "stepId": "dispatch-non-triage"
+            }
+          ]
         }
       ]
     }
