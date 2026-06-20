@@ -31,6 +31,20 @@ doc
                     publicKeyHex: { type: ["string", "null"] },
                     secretKeyHex: { type: "string" }
                 }
+            },
+            error: {
+                type: "object",
+                properties: {
+                    code: { type: "string" },
+                    message: { type: "string" },
+                    allowedPurposes: {
+                        type: "array",
+                        items: {
+                            type: "string",
+                            enum: allowedPurposes
+                        }
+                    }
+                }
             }
         }
     })
@@ -41,12 +55,38 @@ doc
             context.setBody(JSON.stringify(payload));
         }
         const request = JSON.parse(context.getBody() || "{}");
-        const keyPair = context.crypto().generateKeyPair(request.purpose);
+        const purpose = String(request.purpose || "").trim();
+
+        if (!purpose) {
+            setJsonResponse(400, {
+                ok: false,
+                error: {
+                    code: "missing_purpose",
+                    message: "Query parameter 'purpose' is required.",
+                    allowedPurposes: allowedPurposes
+                }
+            });
+            return;
+        }
+
+        if (allowedPurposes.indexOf(purpose) < 0) {
+            setJsonResponse(400, {
+                ok: false,
+                error: {
+                    code: "invalid_purpose",
+                    message: "Query parameter 'purpose' must be one of: sign, box, secretbox.",
+                    allowedPurposes: allowedPurposes
+                }
+            });
+            return;
+        }
+
+        const keyPair = context.crypto().generateKeyPair(purpose);
         const bytes = context.bytes();
 
         setJsonResponse(200, {
             ok: true,
-            purpose: request.purpose,
+            purpose: purpose,
             encoding: "hex",
             keyPair: {
                 publicKeyHex: keyPair[0] ? bytes.binaryToHex(keyPair[0]) : null,

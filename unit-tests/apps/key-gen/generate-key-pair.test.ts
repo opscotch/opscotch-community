@@ -73,6 +73,20 @@ describe('apps/key-gen/generate-key-pair', () => {
             secretKeyHex: { type: 'string' },
           },
         },
+        error: {
+          type: 'object',
+          properties: {
+            code: { type: 'string' },
+            message: { type: 'string' },
+            allowedPurposes: {
+              type: 'array',
+              items: {
+                type: 'string',
+                enum: ['sign', 'box', 'secretbox'],
+              },
+            },
+          },
+        },
       },
     });
   });
@@ -128,6 +142,54 @@ describe('apps/key-gen/generate-key-pair', () => {
         secretKeyHex: '1020',
       },
     });
+  });
+
+  it('returns a structured 400 when purpose is missing', async () => {
+    const context = createJavascriptContext({
+      body: '{}',
+      crypto: {
+        generateKeyPair: () => {
+          throw new Error('generateKeyPair should not be called');
+        },
+      },
+    });
+
+    await suite.run('resource', { context });
+
+    expect(JSON.parse(context.getBody() || '{}')).toEqual({
+      ok: false,
+      error: {
+        code: 'missing_purpose',
+        message: "Query parameter 'purpose' is required.",
+        allowedPurposes: ['sign', 'box', 'secretbox'],
+      },
+    });
+    expect(context.getProperty('status_code')).toBe('400');
+    expect(context.getHeader('content-type')).toBe('application/json');
+  });
+
+  it('returns a structured 400 when purpose is invalid', async () => {
+    const context = createJavascriptContext({
+      body: JSON.stringify({ purpose: 'encrypt' }),
+      crypto: {
+        generateKeyPair: () => {
+          throw new Error('generateKeyPair should not be called');
+        },
+      },
+    });
+
+    await suite.run('resource', { context });
+
+    expect(JSON.parse(context.getBody() || '{}')).toEqual({
+      ok: false,
+      error: {
+        code: 'invalid_purpose',
+        message: "Query parameter 'purpose' must be one of: sign, box, secretbox.",
+        allowedPurposes: ['sign', 'box', 'secretbox'],
+      },
+    });
+    expect(context.getProperty('status_code')).toBe('400');
+    expect(context.getHeader('content-type')).toBe('application/json');
   });
 
 });
