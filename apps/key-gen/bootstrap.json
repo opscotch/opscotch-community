@@ -1,0 +1,20 @@
+[
+    {
+        "deploymentId": "key-gen",
+        "remoteConfiguration": "workflow.json",
+        "allowHttpServerAccess": [
+            {
+                "id": "api",
+                "port": 11020,
+                "bindAddress": "127.0.0.1"
+            }
+        ],
+        "allowDeploymentAccess": [
+            {
+                "id": "key-gen-callers",
+                "access": "receive",
+                "anyDeployment": true
+            }
+        ]
+    }
+]

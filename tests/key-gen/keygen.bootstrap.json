@@ -1,0 +1,38 @@
+[
+    {
+        "deploymentId": "opscotch-keygen",
+        "remoteConfiguration": "../../apps/key-gen/workflow.json",
+        "allowHttpServerAccess": [
+            {
+                "id": "api",
+                "port": 11020,
+                "bindAddress": "127.0.0.1"
+            }
+        ],
+        "allowDeploymentAccess": [
+            {
+                "id": "key-gen-callers",
+                "deploymentId": "keygen-caller",
+                "access": "receive"
+            }
+        ]
+    },
+    {
+        "deploymentId": "keygen-caller",
+        "remoteConfiguration": "keygen.config.json",
+        "allowHttpServerAccess": [
+            {
+                "id": "caller-api",
+                "port": 11021,
+                "bindAddress": "127.0.0.1"
+            }
+        ],
+        "allowDeploymentAccess": [
+            {
+                "id": "keygen-remote",
+                "deploymentId": "opscotch-keygen",
+                "access": "call"
+            }
+        ]
+    }
+]
