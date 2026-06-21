@@ -31,20 +31,6 @@
                             }
                         ]
                     }
-                },
-                {
-                    "stepId": "key-gen",
-                    "type": "scripted",
-                    "trigger": {
-                        "deploymentAccess": {
-                            "ids": [
-                                "key-gen-callers"
-                            ]
-                        }
-                    },
-                    "resultsProcessor": {
-                        "resource": "/general/generate-key-pair.js"
-                    }
                 }
             ]
         }
