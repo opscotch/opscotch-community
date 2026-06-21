@@ -27,7 +27,7 @@
                                 }
                             },
                             {
-                                "resource": "apps/key-gen/generate-key-pair.js"
+                                "resource": "/general/generate-key-pair.js"
                             }
                         ]
                     }
@@ -43,7 +43,7 @@
                         }
                     },
                     "resultsProcessor": {
-                        "resource": "apps/key-gen/generate-key-pair.js"
+                        "resource": "/general/generate-key-pair.js"
                     }
                 }
             ]

@@ -1,4 +1,4 @@
-const allowedPurposes = ["sign", "box", "secretbox"];
+const allowedPurposes = ["sign", "authenticated", "symmetric", "anonymous"];
 
 doc
     .description("Generate a cryptographic key pair for a supported Opscotch crypto purpose.")
