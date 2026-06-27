@@ -1,0 +1,35 @@
+{
+  "workflows": [
+    {
+      "name": "encrypted output authorization integration test",
+      "steps": [
+        {
+          "stepId": "health",
+          "trigger": {
+            "http": {
+              "server": "api",
+              "path": "/health",
+              "method": "GET"
+            }
+          },
+          "resultsProcessor": {
+            "script": "context.setBody('ok');"
+          }
+        },
+        {
+          "stepId": "intentional-failure",
+          "trigger": {
+            "http": {
+              "server": "api",
+              "path": "/fail",
+              "method": "GET"
+            }
+          },
+          "resultsProcessor": {
+            "script": "throw new Error('intentional encrypted output authorization test failure');"
+          }
+        }
+      ]
+    }
+  ]
+}
