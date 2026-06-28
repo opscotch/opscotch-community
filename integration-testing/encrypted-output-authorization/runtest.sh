@@ -46,11 +46,15 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-read -r receiver_port agent_port < <(
-    python3 "$SCENARIO_DIR/reserve_ports.py" 2
+read -r receiver_port agent_port_1 agent_port_2 < <(
+    python3 "$SCENARIO_DIR/reserve_ports.py" 3
 )
 
-mkdir -p "$temp_dir/persistence"
+for definition_number in 1 2; do
+    mkdir -p \
+        "$temp_dir/persistence/encrypted-output-authorization-$definition_number/metrics" \
+        "$temp_dir/persistence/encrypted-output-authorization-$definition_number/logs"
+done
 
 python3 "$SCENARIO_DIR/receiver.py" \
     --port "$receiver_port" \
@@ -92,15 +96,15 @@ wait_for_file() {
 wait_for_url "http://127.0.0.1:$receiver_port/health"
 
 python3 "$SCENARIO_DIR/generate_bootstrap.py" \
-    --agent-port "$agent_port" \
+    --agent-ports "$agent_port_1,$agent_port_2" \
     --receiver-port "$receiver_port" \
+    --workflow "$SCENARIO_DIR/workflow.config.json" \
     --output "$temp_dir/bootstrap.json"
 
-docker run --detach --rm \
+docker run --detach \
     --name "$agent_container" \
     --network host \
     --volume "$temp_dir:/config:ro" \
-    --volume "$SCENARIO_DIR:/scenario:ro" \
     --volume "$temp_dir/persistence:/persistence" \
     --env BOOTSTRAP_FILE=bootstrap.json \
     --env OPSCOTCH_LEGAL_ACCEPTED \
@@ -108,19 +112,25 @@ docker run --detach --rm \
     --env TEST_OUTPUT_AUTH="$ENCRYPTED_AUTHORIZATION" \
     "$AGENT_IMAGE" >/dev/null
 
-wait_for_url "http://127.0.0.1:$agent_port/health"
+for definition_number in 1 2; do
+    agent_port_variable="agent_port_$definition_number"
+    agent_port="${!agent_port_variable}"
+    wait_for_url "http://127.0.0.1:$agent_port/health"
 
-curl --silent --show-error \
-    --max-time 5 \
-    "http://127.0.0.1:$agent_port/fail" \
-    --output "$temp_dir/trigger-response.txt" || true
+    curl --silent --show-error \
+        --max-time 5 \
+        "http://127.0.0.1:$agent_port/fail" \
+        --output "$temp_dir/trigger-response-$definition_number.txt" || true
+done
 
-wait_for_file "$temp_dir/metric.received"
-wait_for_file "$temp_dir/log.received"
+for definition_number in 1 2; do
+    wait_for_file "$temp_dir/metric-$definition_number.received"
+    wait_for_file "$temp_dir/log-$definition_number.received"
+done
 
 if [[ -s "$temp_dir/failure.txt" ]]; then
     cat "$temp_dir/failure.txt" >&2
     exit 1
 fi
 
-printf 'Metric and log outputs used the decrypted Authorization header\n'
+printf 'Both bootstrap definitions used the same decrypted Authorization environment variable\n'

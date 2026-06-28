@@ -7,6 +7,7 @@ from pathlib import Path
 
 DEPLOYMENT_COUNT = 20
 ITEMS_PER_DEPLOYMENT = 100
+TIMER_PERIOD_MS = 600_000
 
 
 def parse_args() -> argparse.Namespace:
@@ -35,7 +36,12 @@ def workflow(deployment_number: int) -> dict:
                 "steps": [
                     {
                         "stepId": f"heartbeat-{deployment_number}",
-                        "trigger": {"runOnce": True},
+                        "trigger": {
+                            "timer": {
+                                "delay": 100,
+                                "period": TIMER_PERIOD_MS,
+                            }
+                        },
                         "resultsProcessor": {
                             "script": heartbeat_script
                         },
@@ -47,7 +53,12 @@ def workflow(deployment_number: int) -> dict:
                 "steps": [
                     {
                         "stepId": f"collection-{deployment_number}",
-                        "trigger": {"runOnce": True},
+                        "trigger": {
+                            "timer": {
+                                "delay": 200,
+                                "period": TIMER_PERIOD_MS,
+                            }
+                        },
                         "resultsProcessor": {
                             "script": collection_script
                         },

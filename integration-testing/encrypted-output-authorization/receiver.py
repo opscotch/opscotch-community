@@ -25,8 +25,10 @@ def build_handler(expected_authorization: str, state_directory: Path):
 
         def do_POST(self) -> None:
             output_name = {
-                "/metric": "metric",
-                "/log": "log",
+                "/metric/1": "metric-1",
+                "/log/1": "log-1",
+                "/metric/2": "metric-2",
+                "/log/2": "log-2",
             }.get(self.path)
             if output_name is None:
                 self.send_error(404)

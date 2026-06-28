@@ -6,8 +6,11 @@ collection workflows when configured with more than six bootstrap definitions.
 The scenario generates 20 bootstrap definitions. Each definition loads a
 separate raw workflow containing:
 
-- a run-once heartbeat step that emits item `001`;
-- a run-once collection step that emits items `002` through `100`.
+- a heartbeat step on a timer that emits item `001`;
+- a collection step on a separate timer that emits items `002` through `100`.
+
+The timers use staggered initial delays so both timers run during startup, then
+use a ten-minute period to avoid flooding the receiver during the test.
 
 Every item produces one uniquely named metric and one uniquely identifiable
 diagnostic log. A scenario-local receiver therefore requires 2,000 metrics and

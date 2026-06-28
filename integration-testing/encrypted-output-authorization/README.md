@@ -5,13 +5,14 @@ Black-box test using:
 - the Opscotch dev-agent Docker image;
 - a scenario-local Python HTTP receiver.
 
-The agent loads a mounted raw workflow that throws an intentional error. Its
-bootstrap-level metric and log error outputs have `outputAuthorization` values
-from an environment variable containing a `-2/...` encrypted string.
+The agent loads two bootstrap definitions that share a mounted raw workflow.
+Each workflow throws an intentional error. Both definitions' bootstrap-level
+metric and log error outputs reference the same `TEST_OUTPUT_AUTH` environment
+variable containing a `-2/...` encrypted string.
 
-The receiver requires both output requests to carry the decrypted plaintext
-Authorization header. Ciphertext, missing headers, or missing metric/log
-requests fail the scenario.
+The receiver requires all four output requests (metric and log from each
+definition) to carry the decrypted plaintext Authorization header. Ciphertext,
+missing headers, or any missing request fails the scenario.
 
 Optional image overrides:
 
