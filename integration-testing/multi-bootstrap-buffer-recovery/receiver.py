@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 
 import argparse
+import hashlib
 import json
 import re
 import threading
+import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
@@ -18,6 +20,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--expected-metrics", type=Path, required=True)
     parser.add_argument("--expected-logs", type=Path, required=True)
     parser.add_argument("--state-directory", type=Path, required=True)
+    parser.add_argument("--response-status", type=int, default=200)
+    parser.add_argument("--response-delay", type=float, default=0)
     return parser.parse_args()
 
 
@@ -25,6 +29,8 @@ def build_handler(
     expected_metrics: set[str],
     expected_logs: set[str],
     state_directory: Path,
+    response_status: int,
+    response_delay: float,
 ):
     received_metrics: set[str] = set()
     received_logs: set[str] = set()
@@ -69,6 +75,29 @@ def build_handler(
                 return
 
             with lock:
+                token_matches = re.findall(
+                    r"bootstrap-\d+-[a-z0-9-]+-(?:metric|log)-\d{3,4}",
+                    body,
+                )
+                journal_entry = {
+                    "timestamp": time.time(),
+                    "path": self.path,
+                    "status": response_status,
+                    "recordCount": len(records),
+                    "bodyHash": hashlib.sha256(raw_body).hexdigest(),
+                    "sampleToken": token_matches[0] if token_matches else None,
+                }
+                with (state_directory / "requests.ndjson").open("a") as journal:
+                    journal.write(json.dumps(journal_entry) + "\n")
+
+            if response_status < 200 or response_status >= 300:
+                if response_delay > 0:
+                    time.sleep(response_delay)
+                self.send_response(response_status)
+                self.end_headers()
+                return
+
+            with lock:
                 if self.path == "/metrics":
                     received_bytes["metrics"] += len(raw_body)
                     try:
@@ -89,7 +118,7 @@ def build_handler(
                     for record in records:
                         received_logs.update(
                             re.findall(
-                                r"bootstrap-\d+-(?:online|buffered)-log-\d{3}",
+                                r"bootstrap-\d+-[a-z0-9-]+-log-\d{3,4}",
                                 str(record.get("value", "")),
                             )
                         )
@@ -101,6 +130,8 @@ def build_handler(
                 )
                 update_completion_marker()
 
+            if response_delay > 0:
+                time.sleep(response_delay)
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
             self.end_headers()
@@ -117,7 +148,13 @@ def main() -> int:
     expected_metrics = set(json.loads(args.expected_metrics.read_text()))
     expected_logs = set(json.loads(args.expected_logs.read_text()))
     args.state_directory.mkdir(parents=True, exist_ok=True)
-    handler = build_handler(expected_metrics, expected_logs, args.state_directory)
+    handler = build_handler(
+        expected_metrics,
+        expected_logs,
+        args.state_directory,
+        args.response_status,
+        args.response_delay,
+    )
     server = ReusableThreadingHTTPServer(("127.0.0.1", args.port), handler)
     server.serve_forever()
     return 0

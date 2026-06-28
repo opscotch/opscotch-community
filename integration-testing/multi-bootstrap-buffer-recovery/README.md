@@ -1,23 +1,19 @@
 # Multi-Bootstrap Buffer Recovery
 
-Exercises output buffering and recovery across 20 bootstrap definitions.
+Exercises output retry, buffering, and recovery across 20 bootstrap
+definitions.
 
 The scenario:
 
 1. Starts a receiver and the Docker dev agent.
-2. Triggers an online batch from every deployment and verifies delivery.
-3. Stops the receiver.
-4. Triggers a larger batch from every deployment while both metric and log
-   endpoints are unavailable.
-5. Waits for the agent to attempt delivery and record connection failures.
-6. Restarts the receiver on the same port.
-7. Requires every buffered metric and log token to be delivered.
-
-Per run:
-
-- Online phase: 500 unique metrics and 500 unique logs.
-- Buffered phase: 2,000 unique metrics and 2,000 unique logs.
-- Deployments: 20.
+2. Verifies normal metric and log delivery.
+3. Verifies connection-refused retries, one warning per outage, and recovery.
+4. Verifies retries and recovery for HTTP 400, 401, 404, 500, and 302.
+5. Verifies the median retry interval is between 0.5 and 2.5 seconds.
+6. Delays responses for 15 seconds to exceed the agent's 10-second HTTP
+   timeout, then verifies recovery.
+7. Verifies all 2,500 metrics arrive and no request exceeds the 1,000-record
+   batch boundary.
 
 Run directly:
 

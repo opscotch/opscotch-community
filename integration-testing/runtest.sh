@@ -5,10 +5,14 @@ set -uo pipefail
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 
 declare -a available=()
+declare -a default_scenarios=()
 declare -a selected=()
 
 while IFS= read -r scenario; do
     available+=("$scenario")
+    if [[ ! -e "$SCRIPT_DIR/$scenario/.manual" ]]; then
+        default_scenarios+=("$scenario")
+    fi
 done < <(
     find "$SCRIPT_DIR" -mindepth 2 -maxdepth 2 -type f -name runtest.sh -executable \
         -printf '%h\n' |
@@ -47,7 +51,7 @@ if (( $# > 0 )); then
         selected+=("$requested")
     done
 else
-    selected=("${available[@]}")
+    selected=("${default_scenarios[@]}")
 fi
 
 if (( ${#selected[@]} == 0 )); then

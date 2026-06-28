@@ -1,6 +1,6 @@
 # Opscotch Community Integration Testing
 
-This directory contains private Hopscotch integration scenarios. It is
+This directory contains Opscotch integration scenarios. It is
 independent of the public integration test runner.
 
 ## Running tests
@@ -25,6 +25,10 @@ List available scenarios:
 
 The root runner executes every selected scenario and exits non-zero when any
 scenario fails.
+
+Scenarios containing a `.manual` marker are listed and can be selected
+explicitly, but are excluded when the root runner is invoked without scenario
+names.
 
 ## Scenario contract
 
