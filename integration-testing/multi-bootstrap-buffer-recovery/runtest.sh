@@ -184,6 +184,19 @@ start_receiver buffered
 wait_for_outputs "$temp_dir/state-buffered" "$buffered_expected"
 recovery_elapsed=$((SECONDS - recovery_started_at))
 
-printf 'Recovered %s buffered metrics and %s buffered logs from %s deployments in %ss\n' \
+read -r metric_bytes log_bytes total_bytes < <(
+    python3 - "$temp_dir/state-buffered/received-bytes.json" <<'PY'
+import json
+import pathlib
+import sys
+
+counts = json.loads(pathlib.Path(sys.argv[1]).read_text())
+metric_bytes = counts["metrics"]
+log_bytes = counts["logs"]
+print(metric_bytes, log_bytes, metric_bytes + log_bytes)
+PY
+)
+
+printf 'Recovered %s buffered metrics and %s buffered logs from %s deployments in %ss (%s bytes: metrics=%s logs=%s)\n' \
     "$buffered_expected" "$buffered_expected" "$DEPLOYMENT_COUNT" \
-    "$recovery_elapsed"
+    "$recovery_elapsed" "$total_bytes" "$metric_bytes" "$log_bytes"

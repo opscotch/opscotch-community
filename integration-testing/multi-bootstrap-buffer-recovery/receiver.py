@@ -28,6 +28,7 @@ def build_handler(
 ):
     received_metrics: set[str] = set()
     received_logs: set[str] = set()
+    received_bytes = {"metrics": 0, "logs": 0}
     lock = threading.Lock()
 
     def update_completion_marker() -> None:
@@ -52,7 +53,8 @@ def build_handler(
                 return
 
             content_length = int(self.headers.get("Content-Length", "0"))
-            body = self.rfile.read(content_length).decode("utf-8")
+            raw_body = self.rfile.read(content_length)
+            body = raw_body.decode("utf-8")
             try:
                 records = [
                     json.loads(line)
@@ -68,6 +70,7 @@ def build_handler(
 
             with lock:
                 if self.path == "/metrics":
+                    received_bytes["metrics"] += len(raw_body)
                     try:
                         received_metrics.update(
                             record["name"] for record in records
@@ -82,6 +85,7 @@ def build_handler(
                         json.dumps(sorted(received_metrics), indent=2) + "\n"
                     )
                 else:
+                    received_bytes["logs"] += len(raw_body)
                     for record in records:
                         received_logs.update(
                             re.findall(
@@ -92,6 +96,9 @@ def build_handler(
                     (state_directory / "received-logs.json").write_text(
                         json.dumps(sorted(received_logs), indent=2) + "\n"
                     )
+                (state_directory / "received-bytes.json").write_text(
+                    json.dumps(received_bytes, indent=2) + "\n"
+                )
                 update_completion_marker()
 
             self.send_response(200)
