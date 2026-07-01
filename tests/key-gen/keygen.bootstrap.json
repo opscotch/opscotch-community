@@ -7,12 +7,5 @@
             "port": 11020,
             "bindAddress": "127.0.0.1"
         }
-    ],
-    "allowDeploymentAccess": [
-        {
-            "id": "key-gen-callers",
-            "deploymentId": "keygen-caller",
-            "access": "receive"
-        }
     ]
 }
