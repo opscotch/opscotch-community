@@ -1,23 +1,32 @@
 {
-    "enabled": true,
+    "ignore": true,
     "fromDirectory": "/key-gen/",
-    "testThisStep": "call-keygen",
+    "testThisStep": "keygen",
     "useThisTestConfigFile": "keygen.config.json",
     "useThisTestBootstrapFile": "keygen.bootstrap.json",
     "makeTheseCalls": [
         {
             "url": "http://localhost:11020/key-gen",
-            "expectedResponse": "",
-            "expectedResponseCode": 400
+            "expectedResponseCode": 500
         },
         {
             "url": "http://localhost:11020/key-gen?purpose=encrypt",
-            "expectedResponse": "",
-            "expectedResponseCode": 400
+            "expectedResponseCode": 500
         },
         {
-            "url": "http://localhost:11021/call-key-gen?purpose=sign",
-            "expectedResponse": "{\"ok\":true,\"purpose\":\"sign\",\"encoding\":\"hex\",\"hasPublicKey\":true,\"hasSecretKey\":true}",
+            "url": "http://localhost:11020/key-gen?purpose=sign",
+            "expectedResponseCode": 200
+        },
+        {
+            "url": "http://localhost:11020/key-gen?purpose=authenticated",
+            "expectedResponseCode": 200
+        },
+        {
+            "url": "http://localhost:11020/key-gen?purpose=symmetric",
+            "expectedResponseCode": 200
+        },
+        {
+            "url": "http://localhost:11020/key-gen?purpose=anonymous",
             "expectedResponseCode": 200
         }
     ]

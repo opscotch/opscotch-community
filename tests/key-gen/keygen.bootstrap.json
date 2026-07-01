@@ -1,11 +1,8 @@
 {
-    "deploymentId": "opscotch-keygen",
-    "remoteConfiguration": "../../apps/key-gen/workflow.json",
     "allowHttpServerAccess": [
         {
             "id": "api",
-            "port": 11020,
-            "bindAddress": "127.0.0.1"
+            "port": 11020
         }
     ]
 }
