@@ -160,6 +160,7 @@ PY
 
 wait_for_health
 
+printf 'Using Docker image: %s\n' "$AGENT_IMAGE" >&2
 docker run --detach \
     --name "$agent_container" \
     --network host \

@@ -236,6 +236,7 @@ run_phase() {
         --request POST \
         "http://127.0.0.1:$port/reset" >/dev/null
 
+    printf 'Using Docker image: %s\n' "$AGENT_IMAGE" >&2
     docker run --detach \
         --name "$phase_container" \
         --network host \

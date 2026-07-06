@@ -109,6 +109,7 @@ wait_for_outputs() {
 }
 
 start_agent() {
+    printf 'Using Docker image: %s\n' "$AGENT_IMAGE" >&2
     docker run --detach \
         --name "$agent_container" \
         --network host \
@@ -124,7 +125,7 @@ assert_ready_logs() {
     local ready_count
     ready_count="$(
         grep -c \
-            'Startup final activation complete for deploymentId: twenty-bootstrap-.*activated=true' \
+            'Startup activation complete for deploymentId: twenty-bootstrap-.*activated=true' \
             "$log_file" || true
     )"
     if (( ready_count < EXPECTED_DEPLOYMENTS )); then

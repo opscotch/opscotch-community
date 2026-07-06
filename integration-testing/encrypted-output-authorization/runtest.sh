@@ -101,6 +101,7 @@ python3 "$SCENARIO_DIR/generate_bootstrap.py" \
     --workflow "$SCENARIO_DIR/workflow.config.json" \
     --output "$temp_dir/bootstrap.json"
 
+printf 'Using Docker image: %s\n' "$AGENT_IMAGE" >&2
 docker run --detach \
     --name "$agent_container" \
     --network host \

@@ -66,6 +66,7 @@ wait_for_url() {
 }
 
 start_agent() {
+    printf 'Using Docker image: %s\n' "$AGENT_IMAGE" >&2
     docker run --detach \
         --name "$agent_container" \
         --network host \
