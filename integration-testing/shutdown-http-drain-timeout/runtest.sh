@@ -32,6 +32,7 @@ temp_dir="$(mktemp -d "${TMPDIR:-/tmp}/opscotch-shutdown-http-drain-timeout.XXXX
 agent_container=""
 server_pid=""
 keep_failed="${KEEP_FAILED_INTEGRATION_TEST:-0}"
+current_phase_name=""
 
 copy_if_present() {
     local source="$1"
@@ -39,6 +40,40 @@ copy_if_present() {
 
     if [[ -f "$source" ]]; then
         cp -f "$source" "$destination"
+    fi
+}
+
+copy_tree_if_present() {
+    local source="$1"
+    local destination="$2"
+
+    if [[ -d "$source" ]]; then
+        mkdir -p "$destination"
+        cp -R "$source/." "$destination/"
+    fi
+}
+
+preserve_run_artifacts() {
+    mkdir -p "$ARTIFACT_DIR"
+
+    copy_if_present "$temp_dir/server.log" "$ARTIFACT_DIR/server.log"
+    for file in "$temp_dir"/state/*.json; do
+        [[ -f "$file" ]] || continue
+        cp -f "$file" "$ARTIFACT_DIR/$(basename "$file")"
+    done
+    for file in "$temp_dir"/agent-*.log; do
+        [[ -f "$file" ]] || continue
+        cp -f "$file" "$ARTIFACT_DIR/$(basename "$file")"
+    done
+    for dir in "$temp_dir"/fixtures-*; do
+        [[ -d "$dir" ]] || continue
+        cp -R "$dir" "$ARTIFACT_DIR/"
+    done
+    copy_tree_if_present "$temp_dir/persistence" "$ARTIFACT_DIR/persistence"
+
+    if [[ -n "$agent_container" ]]; then
+        local phase_label="${current_phase_name:-current}"
+        docker logs "$agent_container" >"$ARTIFACT_DIR/agent-$phase_label.log" 2>&1 || true
     fi
 }
 
@@ -150,6 +185,7 @@ cleanup() {
     local status=$?
 
     if (( status != 0 )); then
+        preserve_run_artifacts
         printf '\n--- server state ---\n' >&2
         for file in \
             "$temp_dir/state/phase-1.json" \
@@ -176,6 +212,10 @@ cleanup() {
             printf '\n--- live container log tail ---\n' >&2
             docker logs "$agent_container" 2>&1 | tail -200 >&2 || true
         fi
+    fi
+
+    if (( status == 0 )); then
+        preserve_run_artifacts
     fi
 
     if [[ -n "$agent_container" ]]; then
@@ -219,6 +259,7 @@ run_phase() {
     local phase_state_copy="$temp_dir/state/$phase_name.json"
     local deployment_id="shutdown-http-drain-timeout-$phase_name"
 
+    current_phase_name="$phase_name"
     mkdir -p "$phase_fixtures" "$phase_persistence/$deployment_id"
     python3 "$SCENARIO_DIR/generate_fixtures.py" \
         --phase-name "$phase_name" \
@@ -252,10 +293,14 @@ run_phase() {
 
     docker logs "$agent_container" >"$phase_log" 2>&1
     agent_exit_code="$(docker inspect -f '{{.State.ExitCode}}' "$agent_container")"
-    if [[ "$agent_exit_code" != "0" ]]; then
-        printf 'Phase %s: agent exited with code %s\n' "$phase_name" "$agent_exit_code" >&2
-        return 1
-    fi
+    case "$agent_exit_code" in
+        0|143)
+            ;;
+        *)
+            printf 'Phase %s: agent exited with code %s\n' "$phase_name" "$agent_exit_code" >&2
+            return 1
+            ;;
+    esac
     cp "$phase_log" "$ARTIFACT_DIR/agent-$phase_name.log"
     cp "$temp_dir/state/state.json" "$phase_state_copy"
     cp "$phase_state_copy" "$ARTIFACT_DIR/state-$phase_name.json"
@@ -276,7 +321,7 @@ run_phase() {
         fi
     fi
 
-    if ! state_matches_expected "$temp_dir/state/state.json" "$expected_completed" "$expected_canceled"; then
+    if ! wait_for_state "$temp_dir/state/state.json" "$expected_completed" "$expected_canceled"; then
         printf 'Phase %s: unexpected request state\n' "$phase_name" >&2
         cat "$temp_dir/state/state.json" >&2
         return 1
@@ -296,6 +341,7 @@ run_phase() {
 
     docker rm "$agent_container" >/dev/null
     agent_container=""
+    current_phase_name=""
 
     printf 'Phase %s passed: shutdown=%ss completed=%s canceled=%s\n' \
         "$phase_name" "$stop_elapsed" "$expected_completed" "$expected_canceled"

@@ -10,13 +10,16 @@ The scenario runs two phases against the same blocking HTTP endpoint:
    the timeout error message, cancel the HTTP call after the grace period, and
    still exit normally.
 
-The workflow issues a single timer-triggered HTTP GET to a local fixture server
-that sleeps for 20 seconds before responding. The runner waits until the
-request is in flight, then stops the agent and inspects:
+The workflow issues a single zero-delay timer-triggered HTTP GET to a local
+fixture server that sleeps for 20 seconds before responding. The runner waits
+until the request is in flight, then stops the agent and inspects:
 
 - the fixture server state file for completed versus canceled requests;
 - the agent log for the shutdown timeout message in phase 2;
 - shutdown duration for both phases.
+
+The runner copies phase logs, server state, fixtures, and persistence data into
+the artifact directory so failed runs still leave useful files behind.
 
 Run:
 
@@ -33,4 +36,3 @@ Optional overrides:
 - `OPSCOTCH_AGENT_CPUS`
 - `OPSCOTCH_AGENT_MEMORY`
 - `OPSCOTCH_AGENT_PIDS_LIMIT`
-

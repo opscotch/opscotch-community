@@ -28,7 +28,6 @@ def workflow(phase_name: str) -> dict:
                     {
                         "stepId": f"blocking-http-{phase_name}",
                         "trigger": {
-                            "runOnce": True,
                             "timer": {
                                 "delay": 0,
                                 "period": TRIGGER_PERIOD_MS,

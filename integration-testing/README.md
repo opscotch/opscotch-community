@@ -42,6 +42,8 @@ The scenario script:
 - owns its fixtures, temporary processes, ports, assertions, and cleanup;
 - writes useful failure details to standard error;
 - exits `0` on success and non-zero on failure.
+- prints the Docker image it will use immediately before each `docker run`
+  invocation, including repeated runs for restart or multi-phase scenarios.
 
 Scenarios should prefer the Docker Opscotch agent. Dev-agent scenarios may
 mount raw workflow JSON directly; use the standalone packager only when
@@ -123,7 +125,7 @@ Start scripts with:
 set -euo pipefail
 
 SCENARIO_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-AGENT_IMAGE="${OPSCOTCH_AGENT_IMAGE:-ghcr.io/opscotch/opscotch-agent:3.1.6-dev}"
+AGENT_IMAGE="${OPSCOTCH_AGENT_IMAGE:-ghcr.io/opscotch/opscotch-agent:3.1.7-dev}"
 TIMEOUT_SECONDS="${INTEGRATION_TEST_TIMEOUT_SECONDS:-90}"
 ```
 
@@ -131,7 +133,7 @@ Then apply these rules:
 
 - Check required commands before creating resources. Exit `2` for a missing
   prerequisite or invalid configuration.
-- Require `OPSCOTCH_LEGAL_ACCEPTED` for Docker agent tests.
+- Require `OPSCOTCH_LEGAL_ACCEPTED` to be set in the user's shell environment for Docker agent tests.
 - Use unique container names containing `$$`; never assume a globally fixed
   name or port.
 - Allocate loopback ports dynamically. A reserved port has a small race after
