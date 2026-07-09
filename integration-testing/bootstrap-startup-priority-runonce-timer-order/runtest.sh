@@ -24,9 +24,47 @@ temp_dir="$(mktemp -d "${TMPDIR:-/tmp}/opscotch-startup-priority.XXXXXX")"
 agent_container="opscotch-startup-priority-$$"
 receiver_pid=""
 keep_failed="${KEEP_FAILED_INTEGRATION_TEST:-0}"
+fixture_dir="$ARTIFACT_DIR/fixtures"
+test_result_file="$temp_dir/state/test-result.txt"
+
+copy_if_present() {
+    local source="$1"
+    local destination="$2"
+
+    if [[ -f "$source" ]]; then
+        cp -f "$source" "$destination"
+    fi
+}
+
+copy_state_artifacts() {
+    mkdir -p "$ARTIFACT_DIR"
+    for file in \
+        "$temp_dir/state/failure.txt" \
+        "$temp_dir/state/complete.txt" \
+        "$test_result_file" \
+        "$temp_dir/state/received-metrics.json" \
+        "$temp_dir/state/received-logs.json" \
+        "$temp_dir/state/received-events.ndjson"
+    do
+        copy_if_present "$file" "$ARTIFACT_DIR/$(basename "$file")"
+    done
+}
+
+preserve_run_artifacts() {
+    mkdir -p "$ARTIFACT_DIR"
+
+    copy_state_artifacts
+    copy_if_present "$temp_dir/receiver.log" "$ARTIFACT_DIR/receiver.log"
+    copy_if_present "$temp_dir/agent.log" "$ARTIFACT_DIR/agent.log"
+    if [[ -n "$agent_container" ]]; then
+        docker logs "$agent_container" >"$ARTIFACT_DIR/agent.log" 2>&1 || true
+    fi
+}
 
 cleanup() {
     status=$?
+
+    preserve_run_artifacts
 
     if (( status != 0 )); then
         printf '\n--- receiver state ---\n' >&2
@@ -61,12 +99,12 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-mkdir -p "$ARTIFACT_DIR" "$temp_dir/state"
+mkdir -p "$ARTIFACT_DIR" "$fixture_dir" "$temp_dir/state"
 port="$(python3 "$SCENARIO_DIR/reserve_port.py")"
 
 python3 "$SCENARIO_DIR/generate_fixtures.py" \
     --receiver-port "$port" \
-    --output-directory "$temp_dir"
+    --output-directory "$fixture_dir"
 
 mkdir -p "$temp_dir/persistence"
 for deployment_id in bootstrap-priority-01 bootstrap-priority-05 bootstrap-priority-10; do
@@ -78,8 +116,8 @@ done
 python3 "$SCENARIO_DIR/receiver.py" \
     --port "$port" \
     --state-directory "$temp_dir/state" \
-    --expected-metrics "$temp_dir/expected-metrics.json" \
-    --expected-logs "$temp_dir/expected-logs.json" \
+    --expected-metrics "$fixture_dir/expected-metrics.json" \
+    --expected-logs "$fixture_dir/expected-logs.json" \
     >"$temp_dir/receiver.log" 2>&1 &
 receiver_pid=$!
 
@@ -90,11 +128,13 @@ wait_for_health() {
             return 0
         fi
         if [[ -s "$temp_dir/state/failure.txt" ]]; then
+            cat "$temp_dir/state/failure.txt" >"$test_result_file"
             return 1
         fi
         sleep 0.25
     done
     printf 'Timed out waiting for receiver health on port %s\n' "$port" >&2
+    printf 'Timed out waiting for receiver health on port %s\n' "$port" >"$test_result_file"
     return 1
 }
 
@@ -103,6 +143,7 @@ wait_for_completion() {
     while (( SECONDS < deadline )); do
         if [[ -s "$temp_dir/state/failure.txt" ]]; then
             cat "$temp_dir/state/failure.txt" >&2
+            cat "$temp_dir/state/failure.txt" >"$test_result_file"
             return 1
         fi
         if [[ -s "$temp_dir/state/complete.txt" ]]; then
@@ -111,6 +152,7 @@ wait_for_completion() {
         sleep 0.25
     done
     printf 'Timed out waiting for ordered logs and metrics to complete\n' >&2
+    printf 'Timed out waiting for ordered logs and metrics to complete\n' >"$test_result_file"
     return 1
 }
 
@@ -118,7 +160,8 @@ assert_sequence() {
     local actual="$1"
     local expected="$2"
     local label="$3"
-    python3 - "$actual" "$expected" "$label" <<'PY'
+    local output
+    if output="$(python3 - "$actual" "$expected" "$label" <<'PY'
 import json
 import pathlib
 import sys
@@ -129,15 +172,20 @@ label = sys.argv[3]
 actual = json.loads(actual_path.read_text()) if actual_path.exists() else []
 expected = json.loads(expected_path.read_text()) if expected_path.exists() else []
 if actual != expected:
-    raise SystemExit(
-        f"{label} order mismatch\nexpected: {expected}\nactual:   {actual}"
-    )
+    print(f"{label} order mismatch\nexpected: {expected}\nactual:   {actual}")
+    raise SystemExit(1)
 PY
+    )"; then
+        return 0
+    fi
+    printf '%s\n' "$output" >"$test_result_file"
+    return 1
 }
 
 assert_startup_order() {
     local agent_log="$1"
-    python3 - "$agent_log" "$temp_dir/expected-startup-order.json" <<'PY'
+    local output
+    if output="$(python3 - "$agent_log" "$fixture_dir/expected-startup-order.json" <<'PY'
 import json
 import pathlib
 import re
@@ -154,8 +202,14 @@ for line in log_path.read_text(errors="replace").splitlines():
     if match:
         actual.append(match.group("deployment_id"))
 if actual != expected:
-    raise SystemExit(f"startup order mismatch\nexpected: {expected}\nactual:   {actual}")
+    print(f"startup order mismatch\nexpected: {expected}\nactual:   {actual}")
+    raise SystemExit(1)
 PY
+    )"; then
+        return 0
+    fi
+    printf '%s\n' "$output" >"$test_result_file"
+    return 1
 }
 
 wait_for_health
@@ -164,7 +218,7 @@ printf 'Using Docker image: %s\n' "$AGENT_IMAGE" >&2
 docker run --detach \
     --name "$agent_container" \
     --network host \
-    --volume "$temp_dir:/fixtures:ro" \
+    --volume "$fixture_dir:/fixtures:ro" \
     --volume "$temp_dir/persistence:/persistence" \
     --env BOOTSTRAP_FILE=/fixtures/bootstrap.json \
     --env OPSCOTCH_LEGAL_ACCEPTED \
@@ -173,14 +227,11 @@ docker run --detach \
 wait_for_completion
 
 docker logs "$agent_container" >"$temp_dir/agent.log" 2>&1
-assert_sequence "$temp_dir/state/received-metrics.json" "$temp_dir/expected-metrics.json" "metric"
-assert_sequence "$temp_dir/state/received-logs.json" "$temp_dir/expected-logs.json" "log"
+assert_sequence "$temp_dir/state/received-metrics.json" "$fixture_dir/expected-metrics.json" "metric"
+assert_sequence "$temp_dir/state/received-logs.json" "$fixture_dir/expected-logs.json" "log"
 assert_startup_order "$temp_dir/agent.log"
 
-cp "$temp_dir/agent.log" "$ARTIFACT_DIR/agent.log"
-cp "$temp_dir/state/received-metrics.json" "$ARTIFACT_DIR/received-metrics.json"
-cp "$temp_dir/state/received-logs.json" "$ARTIFACT_DIR/received-logs.json"
-cp "$temp_dir/state/received-events.ndjson" "$ARTIFACT_DIR/received-events.ndjson"
-cp "$temp_dir/state/complete.txt" "$ARTIFACT_DIR/complete.txt"
+printf 'passed\n' >"$test_result_file"
+preserve_run_artifacts
 
 printf 'Verified startupPriority ordering and runOnce-before-zero-delay-timer output for 3 bootstraps\n'

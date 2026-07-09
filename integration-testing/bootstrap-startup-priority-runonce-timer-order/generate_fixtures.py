@@ -22,25 +22,41 @@ def parse_args() -> argparse.Namespace:
 
 
 def workflow(label: str) -> dict:
-    def step(step_id: str, phase: str) -> dict:
+    def run_once_step(step_id: str) -> dict:
         return {
             "stepId": step_id,
             "trigger": {
                 "runOnce": True,
-                "timer": {
-                    "delay": 0,
-                    "period": TIMER_PERIOD_MS,
-                },
             },
             "data": {
-                "phase": phase,
+                "phase": "runonce",
             },
             "resultsProcessor": {
                 "script": (
                     "const label = context.getData('label');"
-                    "const phase = context.getData('phase');"
-                    "context.sendMetric(label + '-metric-' + phase, 1.0);"
-                    "context.diagnosticLog(label + '-log-' + phase);"
+                    "context.sendMetric(label + '-metric-runonce', 1.0);"
+                    "context.diagnosticLog(label + '-log-runonce');"
+                ),
+            },
+        }
+
+    def timer_step(step_id: str) -> dict:
+        return {
+            "stepId": step_id,
+            "trigger": {
+                "timer": {
+                    "delay": 1000,
+                    "period": TIMER_PERIOD_MS,
+                },
+            },
+            "data": {
+                "phase": "timer",
+            },
+            "resultsProcessor": {
+                "script": (
+                    "const label = context.getData('label');"
+                    "context.sendMetric(label + '-metric-timer', 1.0);"
+                    "context.diagnosticLog(label + '-log-timer');"
                 ),
             },
         }
@@ -53,8 +69,8 @@ def workflow(label: str) -> dict:
             {
                 "name": f"{label}-startup-order",
                 "steps": [
-                    step(f"{label}-runonce", "runonce"),
-                    step(f"{label}-timer", "timer"),
+                    run_once_step(f"{label}-runonce"),
+                    timer_step(f"{label}-timer"),
                 ],
             }
         ],
@@ -110,9 +126,16 @@ def main() -> int:
             json.dumps(workflow(label), indent=2) + "\n"
         )
         bootstraps.append(bootstrap_record(deployment, args.receiver_port))
-        for phase in ("runonce", "timer"):
-            expected_metrics.append(f"{label}-metric-{phase}")
-            expected_logs.append(f"{label}-log-{phase}")
+
+    for deployment in DEPLOYMENTS:
+        label = deployment["label"]
+        expected_metrics.append(f"{label}-metric-runonce")
+        expected_logs.append(f"{label}-log-runonce")
+
+    for deployment in DEPLOYMENTS:
+        label = deployment["label"]
+        expected_metrics.append(f"{label}-metric-timer")
+        expected_logs.append(f"{label}-log-timer")
 
     (args.output_directory / "bootstrap.json").write_text(
         json.dumps(bootstraps, indent=2) + "\n"

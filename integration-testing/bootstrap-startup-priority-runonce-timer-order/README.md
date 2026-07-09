@@ -1,8 +1,8 @@
 # Bootstrap Startup Priority RunOnce Timer Order
 
 Verifies that bootstrap definitions activate in `startupPriority` order and
-that a step with both `runOnce` and a zero-delay periodic timer runs the
-`runOnce` execution before the timer execution.
+that startup-triggered `runOnce` executions complete in `startupPriority`
+order before the periodic timer executions begin.
 
 The scenario creates three bootstrap definitions with distinct startup
 priorities:
@@ -18,8 +18,9 @@ log and metric tokens.
 Each deployment has two startup-triggered steps:
 
 - a `runOnce` step that emits one metric and one diagnostic log;
-- a timer step with `delay: 0` and a long period so it fires immediately at
-  startup but does not repeat during the test window.
+- a timer step with `delay: 1000` and a long period so its first periodic
+  execution lands after the startup `runOnce` pass but does not repeat during
+  the test window.
 
 The receiver records ordered metric and log journals. Success requires:
 
@@ -48,4 +49,6 @@ The scenario follows the community integration-test contract:
 - it keeps cleanup self-contained and reports useful failure diagnostics.
 
 The runner sorts metric and log records by their emitted timestamps at the end
-of the run, then asserts the ordered token streams.
+of the run, then asserts the ordered token streams. The first wave should be
+all `runOnce` emissions in startup priority order, followed by the periodic
+timer emissions about 1 second later.
