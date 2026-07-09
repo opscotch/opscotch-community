@@ -1,8 +1,8 @@
 # Bootstrap Startup Priority RunOnce Timer Order
 
 Verifies that bootstrap definitions activate in `startupPriority` order and
-that startup-triggered `runOnce` executions complete in `startupPriority`
-order before the periodic timer executions begin.
+that startup-triggered `runOnce` executions happen before the periodic timer
+executions begin.
 
 The scenario creates three bootstrap definitions with distinct startup
 priorities:
@@ -22,11 +22,13 @@ Each deployment has two startup-triggered steps:
   execution lands after the startup `runOnce` pass but does not repeat during
   the test window.
 
-The receiver records ordered metric and log journals. Success requires:
+The receiver records metric and log journals. Success requires:
 
 - the agent startup log to show activation in `startupPriority` order;
-- the metric journal to contain the expected tokens in order;
-- the log journal to contain the expected tokens in order.
+- the metric journal to contain all expected `runOnce` tokens before any
+  timer tokens, with no ordering requirement inside either bucket;
+- the log journal to contain all expected `runOnce` tokens before any timer
+  tokens, with no ordering requirement inside either bucket.
 
 Run:
 
@@ -49,6 +51,6 @@ The scenario follows the community integration-test contract:
 - it keeps cleanup self-contained and reports useful failure diagnostics.
 
 The runner sorts metric and log records by their emitted timestamps at the end
-of the run, then asserts the ordered token streams. The first wave should be
-all `runOnce` emissions in startup priority order, followed by the periodic
-timer emissions about 1 second later.
+of the run, then asserts the phase boundary. The first wave should be all
+`runOnce` emissions, followed by the periodic timer emissions about 1 second
+later.

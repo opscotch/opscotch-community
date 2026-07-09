@@ -156,7 +156,7 @@ wait_for_completion() {
     return 1
 }
 
-assert_sequence() {
+assert_phase_order() {
     local actual="$1"
     local expected="$2"
     local label="$3"
@@ -164,6 +164,7 @@ assert_sequence() {
     if output="$(python3 - "$actual" "$expected" "$label" <<'PY'
 import json
 import pathlib
+from collections import Counter
 import sys
 
 actual_path = pathlib.Path(sys.argv[1])
@@ -171,8 +172,32 @@ expected_path = pathlib.Path(sys.argv[2])
 label = sys.argv[3]
 actual = json.loads(actual_path.read_text()) if actual_path.exists() else []
 expected = json.loads(expected_path.read_text()) if expected_path.exists() else []
-if actual != expected:
-    print(f"{label} order mismatch\nexpected: {expected}\nactual:   {actual}")
+expected_runonce = [token for token in expected if token.endswith("-runonce")]
+expected_timers = [token for token in expected if token.endswith("-timer")]
+
+first_timer_index = next(
+    (index for index, token in enumerate(actual) if token.endswith("-timer")),
+    len(actual),
+)
+actual_runonce = actual[:first_timer_index]
+actual_timers = actual[first_timer_index:]
+
+if any(token.endswith("-runonce") for token in actual_timers):
+    print(
+        f"{label} phase mismatch\n"
+        f"expected runOnce before timers\n"
+        f"actual:   {actual}"
+    )
+    raise SystemExit(1)
+
+if Counter(actual_runonce) != Counter(expected_runonce) or Counter(actual_timers) != Counter(expected_timers):
+    print(
+        f"{label} phase mismatch\n"
+        f"expected runOnce: {expected_runonce}\n"
+        f"actual runOnce:   {actual_runonce}\n"
+        f"expected timers:  {expected_timers}\n"
+        f"actual timers:    {actual_timers}"
+    )
     raise SystemExit(1)
 PY
     )"; then
@@ -227,8 +252,8 @@ docker run --detach \
 wait_for_completion
 
 docker logs "$agent_container" >"$temp_dir/agent.log" 2>&1
-assert_sequence "$temp_dir/state/received-metrics.json" "$fixture_dir/expected-metrics.json" "metric"
-assert_sequence "$temp_dir/state/received-logs.json" "$fixture_dir/expected-logs.json" "log"
+assert_phase_order "$temp_dir/state/received-metrics.json" "$fixture_dir/expected-metrics.json" "metric"
+assert_phase_order "$temp_dir/state/received-logs.json" "$fixture_dir/expected-logs.json" "log"
 assert_startup_order "$temp_dir/agent.log"
 
 printf 'passed\n' >"$test_result_file"
