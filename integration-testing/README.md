@@ -220,3 +220,31 @@ Also confirm that:
   not printed in diagnostics;
 - the README documents prerequisites, image overrides, timeout overrides,
   manual status, and any known-version regression behavior.
+
+## Log allowlist checker
+
+Use `integration-testing/check-log-entries.py` when you want to pin a log file
+to a known set of regex rules and fail on anything unexpected.
+
+```bash
+python3 integration-testing/check-log-entries.py \
+  --log /path/to/agent.log \
+  --rules integration-testing/check-log-rules.json
+```
+
+Rules files may be either:
+
+- a top-level JSON array of regex strings, which are treated as line rules;
+  or
+- a JSON object with `linePatterns` and `blockPatterns` arrays.
+
+Line rules are checked against individual non-empty log lines. For the dev
+format, the checker strips the fixed preamble and applies line rules only to
+the message after the closing `)`. Block rules are checked against the full
+logical block, where a new block starts at each timestamped log line. Unknown
+dev-format messages are printed one per line in alphabetical order to help
+with pattern recognition. Use block rules for multiline banner-style records,
+and line rules for ordinary single-line log messages.
+
+When using the object form, `linePatterns` should be a plain array of regex
+strings.

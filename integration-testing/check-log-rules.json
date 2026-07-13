@@ -1,0 +1,35 @@
+{
+  "blockPatterns": [
+    {
+      "name": "agent-banner",
+      "pattern": "(?s)^\\d{4}-\\d\\d-\\d\\d \\d\\d:\\d\\d:\\d\\d\\.\\d{3}\\+0000 INFO  \\[AlwaysLogLogger\\] \\(agent/-\\) Agent starting .*"
+    },
+    {
+      "name": "legal-terms-block",
+      "pattern": "(?s)^\\d{4}-\\d\\d-\\d\\d \\d\\d:\\d\\d:\\d\\d\\.\\d{3}\\+0000 INFO  \\[AlwaysLogLogger\\] \\(agent/-\\) \\s*\\nOpscotch Legal Terms Accepted.*"
+    }
+  ],
+  "linePatterns": [
+    "A non-redacting 1 hour dev license has been granted.*",
+    "Agent startup complete and ready in .*",
+    "Bootstrap and workflow definitions loaded in.*",
+    "Bootstrap configuration loaded.*",
+    "Deployment startup priority order.*",
+    "Error Logs destination configured.*",
+    "Internal Forward.*",
+    "Loading configuration once from.*",
+    "Post-init activation queue drained in.*",
+    "Agent initialized. post-init activatables queued.*",
+    "Starting workflow runtime activation",
+    "Startup pre-bootstrap completed in .*",
+    "Workflow activation finished in .*",
+    "Registered new metric.*",
+    "Starting: .*",
+    "Startup activation begin for deploymentId.*",
+    "Startup activation complete for deploymentId.*",
+    "Startup configuration load observed for deploymentId.*",
+    "Unable to obtain license for.*",
+    "Waiting for configuration load for deploymentId.*",
+    ".*/3 boostrap load.*"
+  ]
+}
