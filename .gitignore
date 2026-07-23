@@ -11,3 +11,5 @@ license.txt
 *w_0
 **.app
 node_modules
+__pycache__
+artifacts
