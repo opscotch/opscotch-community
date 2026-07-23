@@ -1,4 +1,0 @@
-[
-  {"name":"public-record-shape","record":{"format":"opscotch-key-store/key-record/v2","recordType":"public","keyId":"service/example","purpose":"sign","pairId":"<pair-id>","payload":{"publicKeyHex":"<public-key-hex>"},"tag":"<base64-hmac-tag>","version":1}},
-  {"name":"secret-record-shape","record":{"format":"opscotch-key-store/key-record/v2","recordType":"secret","keyId":"service/example","purpose":"sign","pairId":"<pair-id>","payload":{"nonce":"<base64-nonce>","ciphertext":"<base64-ciphertext>"},"tag":"<base64-hmac-tag>","version":1}}
-]

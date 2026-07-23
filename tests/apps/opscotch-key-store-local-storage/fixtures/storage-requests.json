@@ -1,4 +1,0 @@
-[
-  {"name":"get-public-pair","request":{"operation":"getPair","pairId":"<pair-id>","publicRecordId":"<public-record-id>","secretRecordId":"<secret-record-id>","includeSecret":false}},
-  {"name":"put-pair-if-absent","request":{"operation":"putPairIfAbsent","pairId":"<pair-id>","publicRecordId":"<public-record-id>","secretRecordId":"<secret-record-id>","publicRecord":{"format":"opscotch-key-store/key-record/v2","recordType":"public"},"secretRecord":{"format":"opscotch-key-store/key-record/v2","recordType":"secret"}}}
-]

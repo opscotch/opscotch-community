@@ -4,6 +4,30 @@
             "name" : "lambda listener",
             "steps" : [
                 {
+                    "enabled" : false,
+                    "stepId" : "localTester",
+                    "trigger" : {
+                        "http" : {
+                            "method" : "POST",
+                            "path" : "/lambda-test",
+                            "server" : "lambda-test"
+                        }
+                    },
+                    "resultsProcessor" : {
+                        "processors" : [
+                            {
+                                "script" : "context.setBody(JSON.parse(context.getBody()).body)"
+                            },
+                            {
+                                "resource" : "/httpserver/clear-headers.js"
+                            },
+                            {
+                                "resource" : "apps/aws/lambda-response-processor.js"
+                            } 
+                        ]
+                    }
+                },
+                {
                     "type" : "scripted",
                     "stepId" : "lambda-listener-auto-start",
                     "trigger" : {

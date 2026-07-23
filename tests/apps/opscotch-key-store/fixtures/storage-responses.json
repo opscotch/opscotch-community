@@ -1,8 +1,0 @@
-[
-  {"name":"get-found","response":{"status":"ok","recordVersion":1,"record":"<opaque-encrypted-record>"}},
-  {"name":"get-not-found","response":{"status":"not-found"}},
-  {"name":"created","response":{"status":"created","recordVersion":1}},
-  {"name":"updated","response":{"status":"updated","recordVersion":2}},
-  {"name":"conflict","response":{"status":"conflict","recordVersion":1,"error":"record version mismatch"}},
-  {"name":"unavailable","response":{"status":"unavailable","error":"storage is temporarily unavailable"}}
-]
