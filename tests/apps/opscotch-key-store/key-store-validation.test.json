@@ -1,0 +1,17 @@
+{
+  "fromDirectory": "../../../../../apps/opscotch-key-store",
+  "useThisTestBootstrapFile": "../../community/opscotch-community/tests/apps/opscotch-key-store/test.bootstrap.json",
+  "useThisTestConfigFile": "../../community/opscotch-community/tests/apps/opscotch-key-store/test.workflow.validation.json",
+  "testThisStep": "testTrigger",
+  "manifest": {
+    "customizations": [
+      {
+        "op": "delete",
+        "sourcePath": "$.workflows[0].steps[0].trigger.deploymentAccess"
+      }
+    ]
+  },
+  "theseMetricsShouldHaveBeenSent": [
+    { "key": "key-store-validation-pass", "value": 1.0 }
+  ]
+}

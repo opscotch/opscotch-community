@@ -1,0 +1,22 @@
+{
+  "fromDirectory": "../../../../../apps/opscotch-key-store-local-storage",
+  "useThisTestBootstrapFile": "../../community/opscotch-community/tests/apps/opscotch-key-store-local-storage/test.bootstrap.json",
+  "useThisTestConfigFile": "../../community/opscotch-community/tests/apps/opscotch-key-store-local-storage/test.workflow.memory.json",
+  "testThisStep": "testTrigger",
+  "manifest": {
+    "customizations": [
+      { "op": "delete", "sourcePath": "$.workflows[0].steps[0].trigger.deploymentAccess" },
+      {
+        "op": "add",
+        "sourcePath": "$.workflows[0].steps[3]",
+        "sourceValue": {
+          "stepId": "testTrigger",
+          "resultsProcessor": {
+            "script": "function call(request) { var response = context.sendToStep('accept-storage', JSON.stringify(request)); if (response.isErrored()) throw new Error(response.getAllErrors()[0]); return JSON.parse(response.getBody()); } var publicRecord = { format: 'opscotch-key-store/key-record/v2', recordType: 'public', keyId: 'service/example', purpose: 'sign', pairId: 'pair', version: 1 }; var secretRecord = { format: 'opscotch-key-store/key-record/v2', recordType: 'secret', keyId: 'service/example', purpose: 'sign', pairId: 'pair', version: 1 }; var get = { operation: 'getPair', pairId: 'pair', publicRecordId: 'public', secretRecordId: 'secret', includeSecret: true }; if (call(get).status !== 'not-found') throw new Error('expected missing pair'); var put = { operation: 'putPairIfAbsent', pairId: 'pair', publicRecordId: 'public', secretRecordId: 'secret', publicRecord: publicRecord, secretRecord: secretRecord }; if (call(put).status !== 'created') throw new Error('expected pair creation'); var found = call(get); if (found.status !== 'ok' || found.publicRecord.recordType !== 'public' || found.secretRecord.recordType !== 'secret') throw new Error('expected pair retrieval'); if (call(put).status !== 'conflict') throw new Error('expected pair conflict'); context.sendMetric('storage-contract-pass', 1.0);"
+          }
+        }
+      }
+    ]
+  },
+  "theseMetricsShouldHaveBeenSent": [{ "key": "storage-contract-pass", "value": 1.0 }]
+}

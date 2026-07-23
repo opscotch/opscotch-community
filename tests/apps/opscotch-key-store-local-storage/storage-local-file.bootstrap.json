@@ -1,0 +1,27 @@
+{
+  "deploymentId": "opscotch-key-store-local-storage",
+  "remoteConfiguration": "../../community/opscotch-community/apps/opscotch-key-store-local-storage/workflow.json",
+  "frequency": 0,
+  "startupPriority": 10,
+  "allowDeploymentAccess": [
+    {
+      "id": "key-store-storage-call",
+      "deploymentId": "opscotch-key-store",
+      "access": "receive"
+    }
+  ],
+  "allowFileAccess": [
+    {
+      "id": "storage-root",
+      "directoryOrFile": ".",
+      "READ": true,
+      "LIST": true,
+      "WRITE": true,
+      "DELETE": true
+    }
+  ],
+  "data": {
+    "storageProvider": "local-file",
+    "storageRoot": "./data"
+  }
+}

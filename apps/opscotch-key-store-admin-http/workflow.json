@@ -1,0 +1,23 @@
+{
+  "comment": "Administrative HTTP adapter for importing immutable key pairs.",
+  "workflows": [
+    {
+      "name": "key store administrative HTTP API",
+      "steps": [
+        {
+          "stepId": "accept-key-store-admin-http",
+          "trigger": {
+            "http": {
+              "method": "POST",
+              "server": "api",
+              "path": "/admin/key-store/load"
+            }
+          },
+          "resultsProcessor": {
+            "resource": "/accept-key-store-admin-http.js"
+          }
+        }
+      ]
+    }
+  ]
+}

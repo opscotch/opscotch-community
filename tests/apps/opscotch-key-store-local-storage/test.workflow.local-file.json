@@ -1,0 +1,39 @@
+{
+  "comment": "Contract-test workflow using the local-file provider.",
+  "workflows": [
+    {
+      "name": "opaque local-file storage contract test",
+      "steps": [
+        {
+          "stepId": "accept-storage",
+          "trigger": {
+            "deploymentAccess": {
+              "ids": ["key-store-storage-call"]
+            }
+          },
+          "resultsProcessor": {
+            "resource": "/accept-storage.js"
+          }
+        },
+        {
+          "stepId": "storage-provider",
+          "data": {
+            "storageProvider": "local-file"
+          },
+          "resultsProcessor": {
+            "resource": "/storage-provider.js"
+          }
+        },
+        {
+          "stepId": "storage-provider-local-file",
+          "data": {
+            "storageProvider": "local-file"
+          },
+          "resultsProcessor": {
+            "resource": "/local-file-provider.js"
+          }
+        }
+      ]
+    }
+  ]
+}

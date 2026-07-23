@@ -1,0 +1,16 @@
+{
+  "deploymentId": "opscotch-key-store-dynamodb",
+  "remoteConfiguration": "../../community/opscotch-community/apps/opscotch-key-store-dynamodb/workflow.json",
+  "frequency": 0,
+  "startupPriority": 10,
+  "allowDeploymentAccess": [
+    { "id": "key-store-storage-call", "deploymentId": "opscotch-key-store", "access": "receive" },
+    { "id": "aws-services", "deploymentId": "aws-services", "access": "call" }
+  ],
+  "data": {
+    "tableName": "OpscotchKeyStoreTest",
+    "keyField": "recordId",
+    "awsServicesId": "aws-services",
+    "enableTTL": false
+  }
+}

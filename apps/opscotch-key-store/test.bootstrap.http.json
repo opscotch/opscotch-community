@@ -1,0 +1,179 @@
+[
+  {
+    "deploymentId": "opscotch-key-store-http",
+    "remoteConfiguration": "/runtime/opscotch-key-store-http/workflow.json",
+    "persistenceRoot": "/runtime/state/http",
+    "frequency": 0,
+    "startupPriority": 30,
+    "allowHttpServerAccess": [
+      {
+        "id": "api",
+        "port": 39577,
+        "bindAddress": "127.0.0.1"
+      }
+    ],
+    "allowDeploymentAccess": [
+      {
+        "id": "key-store-call",
+        "deploymentId": "opscotch-key-store",
+        "access": "call"
+      }
+    ]
+  },
+  {
+    "deploymentId": "opscotch-key-store-admin-http",
+    "remoteConfiguration": "/runtime/opscotch-key-store-admin-http/workflow.json",
+    "persistenceRoot": "/runtime/state/admin-http",
+    "frequency": 0,
+    "startupPriority": 25,
+    "allowHttpServerAccess": [
+      {
+        "id": "api",
+        "port": 39578,
+        "bindAddress": "127.0.0.1"
+      }
+    ],
+    "allowDeploymentAccess": [
+      {
+        "id": "key-store-admin-call",
+        "deploymentId": "opscotch-key-store",
+        "access": "call"
+      }
+    ]
+  },
+  {
+    "deploymentId": "opscotch-key-store",
+    "remoteConfiguration": "/runtime/opscotch-key-store/workflow.json",
+    "persistenceRoot": "/runtime/state/key-store",
+    "frequency": 0,
+    "startupPriority": 20,
+    "allowDeploymentAccess": [
+      {
+        "id": "key-store-call",
+        "deploymentId": "opscotch-key-store-http",
+        "access": "receive"
+      },
+      {
+        "id": "key-store-admin-call",
+        "deploymentId": "opscotch-key-store-admin-http",
+        "access": "receive"
+      },
+      {
+        "id": "storage-call",
+        "deploymentId": "opscotch-key-store-dynamodb",
+        "access": "call"
+      }
+    ],
+    "data": {
+      "publicKeyStoreSeedHex": "00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff",
+      "secretKeyStoreSeedHex": "ffeeddccbbaa99887766554433221100ffeeddccbbaa99887766554433221100",
+      "publicKeyStoreDomain": "opscotch-key-store-http-public-test",
+      "secretKeyStoreDomain": "opscotch-key-store-http-secret-test",
+      "derivationVersion": "v2",
+      "storageDeploymentAccessId": "storage-call",
+      "storageStepId": "accept-storage"
+    }
+  },
+  {
+    "deploymentId": "opscotch-key-store-dynamodb",
+    "remoteConfiguration": "/runtime/opscotch-key-store-dynamodb/workflow.json",
+    "persistenceRoot": "/runtime/state/dynamodb",
+    "frequency": 0,
+    "startupPriority": 10,
+    "allowDeploymentAccess": [
+      {
+        "id": "key-store-storage-call",
+        "deploymentId": "opscotch-key-store",
+        "access": "receive"
+      },
+      {
+        "id": "aws-services",
+        "deploymentId": "aws-services",
+        "access": "call"
+      }
+    ],
+    "data": {
+      "tableName": "OpscotchKeyStoreHttpTest",
+      "keyField": "recordId",
+      "awsServicesId": "aws-services",
+      "enableTTL": false
+    }
+  },
+  {
+    "deferLoading": "true",
+    "deploymentId": "aws-services",
+    "remoteConfiguration": "/runtime/opscotch-aws-services.oapp",
+    "persistenceRoot": "/runtime/state/aws-services",
+    "frequency": 0,
+    "remoteConfigurationTimeout": 10000,
+    "packaging": {
+      "packageId": "opscotch-aws-services",
+      "packagerIdentities": ["opscotch-aws-services-identity"],
+      "requiredSigners": [
+        {
+          "id": "opscotch-aws-services-1.x",
+          "description": "Opscotch AWS Services App version 1.x lock"
+        }
+      ]
+    },
+    "keys": [
+      {
+        "id": "opscotch-app",
+        "purpose": "sign",
+        "type": "public",
+        "keyHex": "8C9AED01FF5E6695E4464E754697F22D653A9FB35E1233627D81D91F89CF2874"
+      },
+      {
+        "id": "opscotch-aws-services-app",
+        "purpose": "sign",
+        "type": "public",
+        "keyHex": "03DBDC90F71E53AA84CD4FAA8BC8E5025743E55385C4163EE92B2FFA33EBA457"
+      },
+      {
+        "id": "opscotch-aws-services-1.x",
+        "purpose": "sign",
+        "type": "public",
+        "keyHex": "2C2698E5C868257C58A6B1D6D2D81388403FA0ED1A159068EEFB0F4DF87A3535"
+      },
+      {
+        "id": "opscotch-aws-services-identiy",
+        "purpose": "authenticated",
+        "type": "public",
+        "keyHex": "673FDE8F1CAADA35D2D8D8A927CE9C3108A7A7943776BEB1CB19207BAA20A515"
+      }
+    ],
+    "allowExternalHostAccess": [
+      {
+        "id": "sts",
+        "host": "https://sts.amazonaws.com",
+        "data": {
+          "region": "us-east-1",
+          "host": "sts.amazonaws.com",
+          "service": "sts",
+          "accessKey": "${AWS_ACCESS_KEY_ID}",
+          "secretKey": "${AWS_SECRET_ACCESS_KEY}",
+          "amzSecurityToken": "${AWS_SESSION_TOKEN:}"
+        }
+      },
+      {
+        "id": "dynamodb",
+        "host": "https://dynamodb.${AWS_REGION}.amazonaws.com",
+        "data": {
+          "host": "dynamodb.${AWS_REGION}.amazonaws.com",
+          "service": "dynamodb"
+        }
+      }
+    ],
+    "allowDeploymentAccess": [
+      {
+        "id": "callers",
+        "deploymentId": "opscotch-key-store-dynamodb",
+        "access": "receive"
+      }
+    ],
+    "data": {
+      "awsRegion": "${AWS_REGION}",
+      "awsAccount": "${AWS_ACCOUNT}"
+    }
+  }
+]

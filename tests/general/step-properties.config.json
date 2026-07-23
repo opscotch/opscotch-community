@@ -1,0 +1,22 @@
+{
+  "workflows": [
+    {
+      "name": "step properties",
+      "steps" : [
+        {
+          "stepId": "step-properties",
+          "resultsProcessor": {
+                "processors" : [
+                    {
+                        "script" : "context.getStepProperties().put(`test`, `value`);"
+                    },
+                    {
+                        "script" : "context.sendMetric(context.getStepProperties().get(`test`), 1.0);"
+                    }
+                ]
+            }
+        }
+      ]
+    }
+  ]
+}

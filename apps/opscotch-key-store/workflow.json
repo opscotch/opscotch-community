@@ -1,0 +1,72 @@
+{
+  "comment": "Deployment-access-only key store. No HTTP trigger or HTTP server is configured.",
+  "workflows": [
+    {
+      "name": "key store API",
+      "comment": "Validate and route requests received from explicitly authorized deployments.",
+      "steps": [
+        {
+          "stepId": "accept-key-store",
+          "comment": "Deployment-access-only entry point for get and getOrGenerate.",
+          "trigger": {
+            "deploymentAccess": {
+              "ids": ["key-store-call"]
+            }
+          },
+          "resultsProcessor": {
+            "resource": "/accept-key-store.js"
+          }
+        },
+        {
+          "stepId": "accept-key-store-admin",
+          "comment": "Admin-only entry point for importing immutable existing key pairs.",
+          "trigger": {
+            "deploymentAccess": {
+              "ids": ["key-store-admin-call"]
+            }
+          },
+          "resultsProcessor": {
+            "resource": "/accept-key-store-admin.js"
+          }
+        },
+        {
+          "stepId": "key-store-get",
+          "comment": "Reserved for lookup, derivation, decrypt, and response shaping.",
+          "resultsProcessor": {
+            "resource": "/key-store-operation.js"
+          },
+          "data": {
+            "operation": "get"
+          }
+        },
+        {
+          "stepId": "key-store-get-or-generate",
+          "comment": "Lookup, generate-if-absent, encrypt, and conflict reconciliation.",
+          "resultsProcessor": {
+            "resource": "/key-store-operation.js"
+          },
+          "data": {
+            "operation": "getOrGenerate"
+          }
+        },
+        {
+          "stepId": "key-store-load",
+          "comment": "Import and integrity-check an existing immutable key pair.",
+          "resultsProcessor": {
+            "resource": "/key-store-operation.js"
+          },
+          "data": {
+            "operation": "load"
+          }
+        },
+        {
+          "stepId": "key-store-generate-key-pair",
+          "comment": "Generate a purpose-specific key pair through the shared Opscotch processor.",
+          "resultsProcessor": {
+            "resource": "/general/generate-key-pair.js"
+          }
+        }
+      ]
+    }
+  ]
+}

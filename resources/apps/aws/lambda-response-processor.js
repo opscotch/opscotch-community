@@ -118,8 +118,6 @@ doc
         context.setProperty("awsRequestId", arid);
         context.diagnosticLog(`arid ${arid}`);
 
-        let response;
-
         var eventRouting = JSON.parse(context.getData("eventRouting"));
         
         const eventKey = routeEvent();
@@ -141,29 +139,34 @@ doc
         context.diagnosticLog(`handler routing ${callback.deploymentAccessId} : ${callback.stepId}`);
 
         const body = context.getBody();
-        if ("_test_" == callback.deploymentAccessId) {
-            response = context.sendToStep(callback.stepId, body);
-        } else if ( callback.stepId) {
-            response = context.sendToStep(callback.deploymentAccessId, callback.stepId, body);
-        } else {
-            context.diagnosticLog(body);
-        }
+        const response = "_test_" == callback.deploymentAccessId
+            ? context.sendToStep(callback.stepId, body)
+            : callback.stepId
+                ? context.sendToStep(callback.deploymentAccessId, callback.stepId, body)
+                : null;
 
-        if (response && response.isErrored()) {
+        const responseErrors = response && response.isErrored() ? response.getAllErrors() : [];
+        responseErrors.forEach((error) => context.addSystemError(error));
+
+        if (responseErrors.length > 0) {
             context.setProperty("responseType", "error");
             context.sendToStep("lambda-listener-response", JSON.stringify(
                 {
-                    errorMessage : response.getAllErrors()[0],
+                    errorMessage : responseErrors[0],
                     errorType : "Exception"
                 }
             ));
-        } else if (response.getProperty("useResponse") ) {
-            context.setProperty("responseType", "response");
-            context.diagnosticLog(`response to lambda ${response.getBody()}`);
-            context.setBody(response.getBody());
-            context.sendToStep("lambda-listener-response", response.getBody());
         } else {
-            context.setProperty("responseType", "response");
-            context.sendToStep("lambda-listener-response", "{}");
+            if (!response) {
+                context.diagnosticLog(body);
+            } else if (response.getProperty("useResponse") ) {
+                context.setProperty("responseType", "response");
+                context.diagnosticLog(`response to lambda ${response.getBody()}`);
+                context.setBody(response.getBody());
+                context.sendToStep("lambda-listener-response", response.getBody());
+            } else {
+                context.setProperty("responseType", "response");
+                context.sendToStep("lambda-listener-response", "{}");
+            }
         }
     });

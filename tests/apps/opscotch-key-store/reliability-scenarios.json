@@ -1,0 +1,45 @@
+[
+  {
+    "name": "decrypt-after-restart",
+    "setup": "create a key pair, restart the key-store with the same seed/domain/version, then get the pair",
+    "assertions": [
+      "get succeeds",
+      "returned key pair equals the original pair",
+      "derived key inputs are unchanged"
+    ]
+  },
+  {
+    "name": "reject-malformed-record",
+    "setup": "replace a public or secret record with a missing-field or unsupported-version envelope",
+    "assertions": [
+      "get fails with a safe invalid-record error",
+      "no plaintext is returned",
+      "no record contents are logged"
+    ]
+  },
+  {
+    "name": "reject-tampered-record",
+    "setup": "modify public/secret payload, tag, pair metadata, or authenticated identity metadata",
+    "assertions": [
+      "get fails with an integrity error",
+      "no plaintext is returned"
+    ]
+  },
+  {
+    "name": "storage-timeout-after-write",
+    "setup": "make storage unavailable after accepting a pair creation",
+    "assertions": [
+      "the key-store reconciles by reading the record where safe",
+      "the caller receives a retryable storage outcome",
+      "no secret appears in the error"
+    ]
+  },
+  {
+    "name": "invalid-bootstrap",
+    "setup": "remove or shorten a public/secret seed, or remove the storage access configuration",
+    "assertions": [
+      "activation fails before serving requests",
+      "the failure does not expose seed material"
+    ]
+  }
+]

@@ -1,0 +1,43 @@
+{
+  "comment": "Deployment-level DynamoDB contract workflow. Requires opscotch-aws-services and a test table.",
+  "workflows": [
+    {
+      "name": "DynamoDB storage contract test",
+      "steps": [
+        {
+          "stepId": "accept-storage",
+          "trigger": { "deploymentAccess": { "ids": ["key-store-storage-call"] } },
+          "resultsProcessor": { "resource": "/accept-storage.js" }
+        },
+        { "stepId": "storage-provider", "resultsProcessor": { "resource": "/dynamodb-storage-provider.js" } },
+        {
+          "stepId": "table-check",
+          "resultsProcessor": {
+            "script": "context.setProperty('status', 'ready');"
+          },
+          "data": {
+            "tableSchema": {
+              "AttributeDefinitions": [
+                { "AttributeName": "recordId", "AttributeType": "S" }
+              ],
+              "KeySchema": [
+                { "AttributeName": "recordId", "KeyType": "HASH" }
+              ],
+              "BillingMode": "PAY_PER_REQUEST"
+            }
+          }
+        },
+        {
+          "stepId": "storage-provider-dynamodb",
+          "persistenceFile": "dynamodb-test-mock.dat",
+          "resultsProcessor": { "resource": "/dynamodb-provider.js" },
+          "data": {
+            "tableName": "OpscotchKeyStoreTest",
+            "awsServicesId": "aws-services",
+            "keyField": "recordId"
+          }
+        }
+      ]
+    }
+  ]
+}

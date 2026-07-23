@@ -1,0 +1,12 @@
+{
+  "enabled": true,
+  "fromDirectory": "/general/",
+  "testThisStep": "step-properties",
+  "useThisTestConfigFile": "step-properties.config.json",
+  "theseMetricsShouldHaveBeenSent": [
+    {
+      "key": "value",
+      "value": 1.0
+    }
+  ]
+}

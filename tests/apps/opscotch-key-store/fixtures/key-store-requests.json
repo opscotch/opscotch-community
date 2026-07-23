@@ -1,0 +1,5 @@
+[
+  {"name":"get-existing","request":{"get":{"keyId":"service/example","purpose":"sign"}}},
+  {"name":"get-or-generate-signing-pair","request":{"getOrGenerate":{"keyId":"service/generated","purpose":"sign"}}},
+  {"name":"get-or-generate-authenticated-pair","request":{"getOrGenerate":{"keyId":"service/generated-authenticated","purpose":"authenticated"}}}
+]
