@@ -1,7 +1,7 @@
 {
-  "fromDirectory": "../../../../../apps/opscotch-key-store-dynamodb",
-  "useThisTestBootstrapFile": "../../community/opscotch-community/tests/apps/opscotch-key-store-dynamodb/test.bootstrap.json",
-  "useThisTestConfigFile": "../../community/opscotch-community/tests/apps/opscotch-key-store-dynamodb/test.workflow.json",
+  "fromDirectory": "/apps/opscotch-key-store-dynamodb",
+  "useThisTestBootstrapFile": "/apps/opscotch-key-store-dynamodb/test.bootstrap.json",
+  "useThisTestConfigFile": "/apps/opscotch-key-store-dynamodb/test.workflow.json",
   "testThisStep": "testTrigger",
   "manifest": {
     "customizations": [

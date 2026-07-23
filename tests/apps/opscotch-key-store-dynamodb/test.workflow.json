@@ -7,9 +7,9 @@
         {
           "stepId": "accept-storage",
           "trigger": { "deploymentAccess": { "ids": ["key-store-storage-call"] } },
-          "resultsProcessor": { "resource": "/accept-storage.js" }
+          "resultsProcessor": { "resource": "/apps/ospcotch-key-store/accept-storage.js" }
         },
-        { "stepId": "storage-provider", "resultsProcessor": { "resource": "/dynamodb-storage-provider.js" } },
+        { "stepId": "storage-provider", "resultsProcessor": { "resource": "/apps/ospcotch-key-store-dynamodb/dynamodb-storage-provider.js" } },
         {
           "stepId": "table-check",
           "resultsProcessor": {
@@ -30,7 +30,7 @@
         {
           "stepId": "storage-provider-dynamodb",
           "persistenceFile": "dynamodb-test-mock.dat",
-          "resultsProcessor": { "resource": "/dynamodb-provider.js" },
+          "resultsProcessor": { "resource": "/apps/ospcotch-key-store-dynamodb/dynamodb-provider.js" },
           "data": {
             "tableName": "OpscotchKeyStoreTest",
             "awsServicesId": "aws-services",

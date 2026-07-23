@@ -5,17 +5,13 @@
       "name": "opaque DynamoDB record storage API",
       "steps": [
         {
-          "stepId": "accept-storage",
-          "trigger": { "deploymentAccess": { "ids": ["key-store-storage-call"] } },
-          "resultsProcessor": { "resource": "/accept-storage.js" }
-        },
-        {
           "stepId": "storage-provider",
-          "resultsProcessor": { "resource": "/dynamodb-storage-provider.js" }
+          "trigger": { "deploymentAccess": { "ids": ["key-store-storage-call"] } },
+          "resultsProcessor": { "resource": "/apps/ospcotch-key-store-dynamodb/dynamodb-storage-provider.js" }
         },
         {
           "stepId": "table-check",
-          "resultsProcessor": { "resource": "/table-check.js" },
+          "resultsProcessor": { "resource": "/apps/aws/dynamodb/create-table-if-not-exists.js" },
           "persistenceFile": "table-check",
           "data": {
             "tableSchema": {
@@ -31,7 +27,7 @@
         },
         {
           "stepId": "storage-provider-dynamodb",
-          "resultsProcessor": { "resource": "/dynamodb-provider.js" }
+          "resultsProcessor": { "resource": "/apps/ospcotch-key-store-dynamodb/dynamodb-provider.js" }
         }
       ]
     }

@@ -16,7 +16,7 @@
             }
           },
           "resultsProcessor": {
-            "resource": "/accept-key-store-http.js"
+            "resource": "/apps/ospcotch-key-store/accept-key-store-http.js"
           }
         }
       ]
