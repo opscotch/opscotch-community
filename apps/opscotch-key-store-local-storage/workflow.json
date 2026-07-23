@@ -13,14 +13,14 @@
             }
           },
           "resultsProcessor": {
-            "resource": "/accept-storage.js"
+            "resource": "/apps/ospcotch-key-store/accept-storage.js"
           }
         },
         {
           "stepId": "storage-provider",
           "comment": "Provider-neutral storage seam. The initial provider is local-file.",
           "resultsProcessor": {
-            "resource": "/storage-provider.js"
+            "resource": "/apps/ospcotch-key-store/storage-provider.js"
           },
           "data": {
             "storageProvider": "local-file"
@@ -30,7 +30,7 @@
           "stepId": "storage-provider-local-file",
           "comment": "Production local-file provider implementation.",
           "resultsProcessor": {
-            "resource": "/local-file-provider.js"
+            "resource": "/apps/ospcotch-key-store/local-file-provider.js"
           },
           "data": {
             "storageProvider": "local-file"
@@ -41,7 +41,7 @@
           "comment": "Non-production provider used for contract tests only.",
           "persistenceFile": "memory-provider.dat",
           "resultsProcessor": {
-            "resource": "/memory-provider.js"
+            "resource": "/apps/ospcotch-key-store/memory-provider.js"
           },
           "data": {
             "storageProvider": "memory"

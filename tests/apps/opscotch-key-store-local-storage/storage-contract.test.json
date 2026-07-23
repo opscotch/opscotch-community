@@ -1,7 +1,7 @@
 {
-  "fromDirectory": "../../../../../apps/opscotch-key-store-local-storage",
-  "useThisTestBootstrapFile": "../../community/opscotch-community/tests/apps/opscotch-key-store-local-storage/test.bootstrap.json",
-  "useThisTestConfigFile": "../../community/opscotch-community/tests/apps/opscotch-key-store-local-storage/test.workflow.memory.json",
+  "fromDirectory": "/apps/opscotch-key-store-local-storage",
+  "useThisTestBootstrapFile": "/apps/opscotch-key-store-local-storage/test.bootstrap.json",
+  "useThisTestConfigFile": "/apps/opscotch-key-store-local-storage/test.workflow.memory.json",
   "testThisStep": "testTrigger",
   "manifest": {
     "customizations": [

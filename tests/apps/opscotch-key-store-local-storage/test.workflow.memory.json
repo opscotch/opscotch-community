@@ -12,7 +12,7 @@
             }
           },
           "resultsProcessor": {
-            "resource": "/accept-storage.js"
+            "resource": "/apps/ospcotch-key-store/accept-storage.js"
           }
         },
         {
@@ -21,7 +21,7 @@
             "storageProvider": "memory"
           },
           "resultsProcessor": {
-            "resource": "/storage-provider.js"
+            "resource": "/apps/ospcotch-key-store/storage-provider.js"
           }
         },
         {
@@ -31,7 +31,7 @@
             "storageProvider": "memory"
           },
           "resultsProcessor": {
-            "resource": "/memory-provider.js"
+            "resource": "/apps/ospcotch-key-store/memory-provider.js"
           }
         }
       ]

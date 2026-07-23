@@ -71,7 +71,7 @@
       "secretKeyStoreDomain": "opscotch-key-store-http-secret-test",
       "derivationVersion": "v2",
       "storageDeploymentAccessId": "storage-call",
-      "storageStepId": "accept-storage"
+      "storageStepId": "storage-provider"
     }
   },
   {

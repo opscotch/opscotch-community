@@ -1,7 +1,7 @@
 {
-  "fromDirectory": "../../../../../apps/opscotch-key-store",
-  "useThisTestBootstrapFile": "../../community/opscotch-community/tests/apps/opscotch-key-store/key-store-cross-deployment.bootstrap.json",
-  "useThisTestConfigFile": "../../community/opscotch-community/tests/apps/opscotch-key-store/test.workflow.cross-deployment.json",
+  "fromDirectory": "/apps/opscotch-key-store",
+  "useThisTestBootstrapFile": "/apps/opscotch-key-store/key-store-cross-deployment.bootstrap.json",
+  "useThisTestConfigFile": "../../../apps/opscotch-key-store/workflow.json",
   "testThisStep": "testTrigger",
   "manifest": {
     "customizations": [
@@ -10,8 +10,49 @@
         "sourcePath": "$.workflows[0].steps[0].trigger.deploymentAccess"
       },
       {
+        "op": "delete",
+        "sourcePath": "$.workflows[0].steps[1]"
+      },
+      {
+        "op": "add",
+        "sourcePath": "$.workflows[0].steps[5]",
+        "sourceValue": {
+          "stepId": "test-storage",
+          "resultsProcessor": {
+            "resource": "/apps/ospcotch-key-store/accept-storage.js"
+          }
+        }
+      },
+      {
+        "op": "add",
+        "sourcePath": "$.workflows[0].steps[6]",
+        "sourceValue": {
+          "stepId": "storage-provider",
+          "data": {
+            "storageProvider": "memory"
+          },
+          "resultsProcessor": {
+            "resource": "/apps/ospcotch-key-store/storage-provider.js"
+          }
+        }
+      },
+      {
         "op": "add",
         "sourcePath": "$.workflows[0].steps[7]",
+        "sourceValue": {
+          "stepId": "storage-provider-memory",
+          "persistenceFile": "key-store-integration-memory.dat",
+          "data": {
+            "storageProvider": "memory"
+          },
+          "resultsProcessor": {
+            "resource": "/apps/ospcotch-key-store/memory-provider.js"
+          }
+        }
+      },
+      {
+        "op": "add",
+        "sourcePath": "$.workflows[0].steps[8]",
         "sourceValue": {
           "stepId": "testTrigger",
           "resultsProcessor": {
@@ -22,6 +63,9 @@
     ]
   },
   "theseMetricsShouldHaveBeenSent": [
-    { "key": "key-store-record-integrity-pass", "value": 1.0 }
+    {
+      "key": "key-store-record-integrity-pass",
+      "value": 1
+    }
   ]
 }

@@ -1,17 +1,34 @@
 {
-  "fromDirectory": "../../../../../apps/opscotch-key-store",
-  "useThisTestBootstrapFile": "../../community/opscotch-community/tests/apps/opscotch-key-store/test.bootstrap.json",
-  "useThisTestConfigFile": "../../community/opscotch-community/tests/apps/opscotch-key-store/test.workflow.validation.json",
+  "fromDirectory": "/apps/opscotch-key-store",
+  "useThisTestBootstrapFile": "/apps/opscotch-key-store/test.bootstrap.json",
+  "useThisTestConfigFile": "../../../apps/opscotch-key-store/workflow.json",
   "testThisStep": "testTrigger",
   "manifest": {
     "customizations": [
       {
         "op": "delete",
         "sourcePath": "$.workflows[0].steps[0].trigger.deploymentAccess"
+      },
+      {
+        "op": "delete",
+        "sourcePath": "$.workflows[0].steps[1]"
+      },
+      {
+        "op": "add",
+        "sourcePath": "$.workflows[0].steps[5]",
+        "sourceValue": {
+          "stepId": "testTrigger",
+          "resultsProcessor": {
+            "script": "function expectError(request) { var response = context.sendToStep('accept-key-store', JSON.stringify(request)); if (!response.isErrored()) throw new Error('expected request rejection'); } expectError({}); expectError({ get: { keyId: '' } }); expectError({ get: { keyId: 'service/example' } }); expectError({ getOrGenerate: { keyId: 'service/example' } }); expectError({ getOrGenerate: { keyId: 'service/example', purpose: 'unsupported' } }); expectError({ put: { keyId: 'service/example', value: 'AQ==' } }); expectError({ get: { keyId: 'service/example', purpose: 'sign' }, getOrGenerate: { keyId: 'service/example', purpose: 'sign' } }); context.sendMetric('key-store-validation-pass', 1.0);"
+          }
+        }
       }
     ]
   },
   "theseMetricsShouldHaveBeenSent": [
-    { "key": "key-store-validation-pass", "value": 1.0 }
+    {
+      "key": "key-store-validation-pass",
+      "value": 1
+    }
   ]
 }

@@ -14,7 +14,7 @@
             }
           },
           "resultsProcessor": {
-            "resource": "/accept-key-store.js"
+            "resource": "/apps/ospcotch-key-store/accept-key-store.js"
           }
         },
         {
@@ -26,14 +26,14 @@
             }
           },
           "resultsProcessor": {
-            "resource": "/accept-key-store-admin.js"
+            "resource": "/apps/ospcotch-key-store/accept-key-store-admin.js"
           }
         },
         {
           "stepId": "key-store-get",
           "comment": "Reserved for lookup, derivation, decrypt, and response shaping.",
           "resultsProcessor": {
-            "resource": "/key-store-operation.js"
+            "resource": "/apps/ospcotch-key-store/key-store-operation.js"
           },
           "data": {
             "operation": "get"
@@ -43,7 +43,7 @@
           "stepId": "key-store-get-or-generate",
           "comment": "Lookup, generate-if-absent, encrypt, and conflict reconciliation.",
           "resultsProcessor": {
-            "resource": "/key-store-operation.js"
+            "resource": "/apps/ospcotch-key-store/key-store-operation.js"
           },
           "data": {
             "operation": "getOrGenerate"
@@ -53,7 +53,7 @@
           "stepId": "key-store-load",
           "comment": "Import and integrity-check an existing immutable key pair.",
           "resultsProcessor": {
-            "resource": "/key-store-operation.js"
+            "resource": "/apps/ospcotch-key-store/key-store-operation.js"
           },
           "data": {
             "operation": "load"

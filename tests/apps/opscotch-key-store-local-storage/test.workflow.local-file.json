@@ -12,7 +12,7 @@
             }
           },
           "resultsProcessor": {
-            "resource": "/accept-storage.js"
+            "resource": "/apps/ospcotch-key-store/accept-storage.js"
           }
         },
         {
@@ -21,7 +21,7 @@
             "storageProvider": "local-file"
           },
           "resultsProcessor": {
-            "resource": "/storage-provider.js"
+            "resource": "/apps/ospcotch-key-store/storage-provider.js"
           }
         },
         {
@@ -30,7 +30,7 @@
             "storageProvider": "local-file"
           },
           "resultsProcessor": {
-            "resource": "/local-file-provider.js"
+            "resource": "/apps/ospcotch-key-store/local-file-provider.js"
           }
         }
       ]
