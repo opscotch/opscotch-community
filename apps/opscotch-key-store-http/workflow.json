@@ -6,6 +6,28 @@
       "comment": "Forward HTTP request bodies to the authorized key-store deployment.",
       "steps": [
         {
+          "stepId": "health",
+          "comment": "Unauthenticated liveness endpoint for the HTTP adapter.",
+          "type": "scripted",
+          "trigger": {
+            "http": {
+              "method": "GET",
+              "server": "api",
+              "path": "/health"
+            }
+          },
+          "resultsProcessor": {
+            "processors": [
+              {
+                "resource": "/httpserver/clear-headers.js"
+              },
+              {
+                "script": "context.setProperty(\"status_code\", \"200\"); context.setHeader(\"content-type\", \"application/json\"); context.setBody(JSON.stringify({ status: \"ok\" }));"
+              }
+            ]
+          }
+        },
+        {
           "stepId": "accept-key-store-http",
           "comment": "HTTP entry point for get, put, and getOrGenerate requests.",
           "trigger": {

@@ -54,6 +54,20 @@ provider-specific messages.
 
 ## Bootstrap responsibilities
 
+The seed and domain values must be supplied through deployment secrets or
+environment substitution; they must not be committed to a bootstrap file. The
+HTTP test bootstraps use these variables:
+
+- `OPSCOTCH_KEY_STORE_PUBLIC_SEED_HEX`
+- `OPSCOTCH_KEY_STORE_SECRET_SEED_HEX`
+- `OPSCOTCH_KEY_STORE_PUBLIC_DOMAIN`
+- `OPSCOTCH_KEY_STORE_SECRET_DOMAIN`
+
+The public seed protects public-record integrity metadata. The secret seed is
+used for private-record encryption and must be treated as sensitive. Keep the
+public and secret domains stable for an existing store; changing either domain
+or seed makes previously stored records unverifiable or undecryptable.
+
 Key-store bootstrap data supplies:
 
 - `publicKeyStoreSeedHex` and `publicKeyStoreDomain`: public-record integrity
