@@ -1,8 +1,7 @@
 [
   {
     "deploymentId": "opscotch-key-store-http",
-    "remoteConfiguration": "/runtime/opscotch-key-store-http/workflow.json",
-    "frequency": 0,
+    "remoteConfiguration": "https://github.com/opscotch/opscotch-apps/releases/download/opscotch-key-store-http-1.0/opscotch-key-store-http.oapp",
     "startupPriority": 30,
     "allowHttpServerAccess": [
       {
@@ -17,12 +16,14 @@
         "deploymentId": "opscotch-key-store",
         "access": "call"
       }
-    ]
+    ],
+    "packaging": {
+      "packageId": "opscotch-key-store-http"
+    }
   },
   {
     "deploymentId": "opscotch-key-store-admin-http",
-    "remoteConfiguration": "/runtime/opscotch-key-store-admin-http/workflow.json",
-    "frequency": 0,
+    "remoteConfiguration": "https://github.com/opscotch/opscotch-apps/releases/download/opscotch-key-store-admin-http-1.0/opscotch-key-store-admin-http.oapp",
     "startupPriority": 25,
     "allowHttpServerAccess": [
       {
@@ -37,12 +38,14 @@
         "deploymentId": "opscotch-key-store",
         "access": "call"
       }
-    ]
+    ],
+    "packaging": {
+      "packageId": "opscotch-key-store-admin-http"
+    }
   },
   {
     "deploymentId": "opscotch-key-store",
-    "remoteConfiguration": "/runtime/opscotch-key-store/workflow.json",
-    "frequency": 0,
+    "remoteConfiguration": "https://github.com/opscotch/opscotch-apps/releases/download/opscotch-key-store-1.0/opscotch-key-store.oapp",
     "startupPriority": 20,
     "allowDeploymentAccess": [
       {
@@ -69,11 +72,14 @@
       "derivationVersion": "v2",
       "storageDeploymentAccessId": "storage-call",
       "storageStepId": "storage-provider"
+    },
+    "packaging": {
+      "packageId": "opscotch-key-store"
     }
   },
   {
     "deploymentId": "opscotch-key-store-dynamodb",
-    "remoteConfiguration": "/runtime/opscotch-key-store-dynamodb/workflow.json",
+    "remoteConfiguration": "https://github.com/opscotch/opscotch-apps/releases/download/opscotch-key-store-dynamodb-1.0/opscotch-key-store-dynamodb.oapp",
     "persistenceRoot": "/runtime/state/dynamodb",
     "frequency": 0,
     "startupPriority": 10,
@@ -90,10 +96,13 @@
       }
     ],
     "data": {
-      "tableName": "OpscotchKeyStoreHttpTest",
+      "tableName": "${OPSCOTCH_KEY_STORE_TABLE}",
       "keyField": "recordId",
       "awsServicesId": "aws-services",
       "enableTTL": false
+    },
+    "packaging": {
+      "packageId": "opscotch-key-store-dynamodb"
     }
   },
   {
