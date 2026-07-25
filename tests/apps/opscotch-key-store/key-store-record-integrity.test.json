@@ -10,12 +10,8 @@
         "sourcePath": "$.workflows[0].steps[0].trigger.deploymentAccess"
       },
       {
-        "op": "delete",
-        "sourcePath": "$.workflows[0].steps[1]"
-      },
-      {
         "op": "add",
-        "sourcePath": "$.workflows[0].steps[5]",
+        "sourcePath": "$.workflows[0].steps[3]",
         "sourceValue": {
           "stepId": "test-storage",
           "resultsProcessor": {
@@ -25,7 +21,7 @@
       },
       {
         "op": "add",
-        "sourcePath": "$.workflows[0].steps[6]",
+        "sourcePath": "$.workflows[0].steps[4]",
         "sourceValue": {
           "stepId": "storage-provider",
           "data": {
@@ -38,7 +34,7 @@
       },
       {
         "op": "add",
-        "sourcePath": "$.workflows[0].steps[7]",
+        "sourcePath": "$.workflows[0].steps[5]",
         "sourceValue": {
           "stepId": "storage-provider-memory",
           "persistenceFile": "key-store-integration-memory.dat",
@@ -52,7 +48,7 @@
       },
       {
         "op": "add",
-        "sourcePath": "$.workflows[0].steps[8]",
+        "sourcePath": "$.workflows[0].steps[6]",
         "sourceValue": {
           "stepId": "testTrigger",
           "resultsProcessor": {

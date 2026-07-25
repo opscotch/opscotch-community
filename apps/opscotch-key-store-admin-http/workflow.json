@@ -14,7 +14,14 @@
             }
           },
           "resultsProcessor": {
-            "resource": "/apps/ospcotch-key-store/accept-key-store-admin-http.js"
+            "resource": "/apps/opscotch-key-store-admin-http/accept-key-store-admin-http.js"
+          }
+        },
+        {
+          "stepId": "accept-key-store-admin",
+          "comment": "Named test seam for validating administrative imports and invoking the core load worker.",
+          "resultsProcessor": {
+            "resource": "/apps/opscotch-key-store-admin-http/accept-key-store-admin.js"
           }
         }
       ]

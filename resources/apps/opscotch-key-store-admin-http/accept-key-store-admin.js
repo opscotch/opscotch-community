@@ -37,7 +37,8 @@ doc
     const request = JSON.parse(context.getBody());
     const input = request.load;
     const response = context.sendToStep(
-      "key-store-load",
+      "key-store-admin-call",
+      "key-store-operation",
       JSON.stringify({ operation: "load", ...input })
     );
     if (response.isErrored()) throw new Error(response.getAllErrors()[0]);

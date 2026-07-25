@@ -18,45 +18,10 @@
           }
         },
         {
-          "stepId": "accept-key-store-admin",
-          "comment": "Admin-only entry point for importing immutable existing key pairs.",
-          "trigger": {
-            "deploymentAccess": {
-              "ids": ["key-store-admin-call"]
-            }
-          },
-          "resultsProcessor": {
-            "resource": "/apps/ospcotch-key-store/accept-key-store-admin.js"
-          }
-        },
-        {
-          "stepId": "key-store-get",
-          "comment": "Reserved for lookup, derivation, decrypt, and response shaping.",
+          "stepId": "key-store-operation",
+          "comment": "Execute get and getOrGenerate requests from the normal seam, plus direct administrative loads.",
           "resultsProcessor": {
             "resource": "/apps/ospcotch-key-store/key-store-operation.js"
-          },
-          "data": {
-            "operation": "get"
-          }
-        },
-        {
-          "stepId": "key-store-get-or-generate",
-          "comment": "Lookup, generate-if-absent, encrypt, and conflict reconciliation.",
-          "resultsProcessor": {
-            "resource": "/apps/ospcotch-key-store/key-store-operation.js"
-          },
-          "data": {
-            "operation": "getOrGenerate"
-          }
-        },
-        {
-          "stepId": "key-store-load",
-          "comment": "Import and integrity-check an existing immutable key pair.",
-          "resultsProcessor": {
-            "resource": "/apps/ospcotch-key-store/key-store-operation.js"
-          },
-          "data": {
-            "operation": "load"
           }
         },
         {

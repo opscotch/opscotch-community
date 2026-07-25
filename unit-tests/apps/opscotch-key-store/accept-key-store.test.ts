@@ -15,11 +15,11 @@ describe('key-store/accept-key-store', () => {
   it.each([
     ['get', { get: { keyId: 'service/example', purpose: 'sign' } }, { keyId: 'service/example', purpose: 'sign' }],
     ['getOrGenerate', { getOrGenerate: { keyId: 'service/example', purpose: 'sign' } }, { keyId: 'service/example', purpose: 'sign' }],
-  ])('routes %s requests to the matching operation step', async (operation, request, input) => {
+  ])('routes %s requests to the shared operation step', async (operation, request, input) => {
     const context = createJavascriptContext({
       body: JSON.stringify(request),
       sendToStep(call) {
-        expect(call.stepName).toBe(`key-store-${operation === 'getOrGenerate' ? 'get-or-generate' : operation}`);
+        expect(call.stepName).toBe('key-store-operation');
         expect(JSON.parse(call.body || '{}')).toEqual({ operation, ...input });
         return successfulResponse({ ok: true });
       },

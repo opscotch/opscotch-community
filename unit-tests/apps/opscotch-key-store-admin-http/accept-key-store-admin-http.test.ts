@@ -2,7 +2,7 @@ import path from 'node:path';
 import { createJavascriptContext, createResourceSuite } from '@opscotch/resource-testkit';
 import { describe, expect, it } from 'vitest';
 
-const resource = path.resolve(import.meta.dirname, '../../../resources/apps/ospcotch-key-store/accept-key-store-admin-http.js');
+const resource = path.resolve(import.meta.dirname, '../../../resources/apps/opscotch-key-store-admin-http/accept-key-store-admin-http.js');
 const suite = createResourceSuite({ resources: [{ id: 'resource', resource }] });
 
 describe('key-store-admin-http/accept-key-store-admin-http', () => {
@@ -17,7 +17,6 @@ describe('key-store-admin-http/accept-key-store-admin-http', () => {
     const context = createJavascriptContext({
       body: JSON.stringify({ body: request }),
       sendToStep(call) {
-        expect(call.deploymentAccessId).toBe('key-store-admin-call');
         expect(call.stepName).toBe('accept-key-store-admin');
         expect(call.body).toBe(request);
         return { body: JSON.stringify({ loaded: true }), isErrored: () => false };

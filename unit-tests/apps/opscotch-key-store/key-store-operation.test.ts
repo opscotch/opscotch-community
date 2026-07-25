@@ -5,8 +5,7 @@ import { describe, expect, it } from 'vitest';
 const resource = path.resolve(import.meta.dirname, '../../../resources/apps/ospcotch-key-store/key-store-operation.js');
 const suite = createResourceSuite({ resources: [{ id: 'resource', resource }] });
 
-const baseData = (operation: string, secret = true) => ({
-  operation,
+const baseData = (secret = true) => ({
   publicKeyStoreSeedHex: '00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff',
   ...(secret ? { secretKeyStoreSeedHex: 'ffeeddccbbaa99887766554433221100ffeeddccbbaa99887766554433221100' } : {}),
   publicKeyStoreDomain: 'public-unit-test',
@@ -35,8 +34,8 @@ describe('key-store/key-store-operation', () => {
   it('creates an immutable pair through the shared generator and storage seam', async () => {
     let records: { publicRecord: unknown; secretRecord: unknown } | undefined;
     const context = createJavascriptContext({
-      body: JSON.stringify({ keyId: 'service/generated', purpose: 'sign' }),
-      data: baseData('getOrGenerate'),
+      body: JSON.stringify({ operation: 'getOrGenerate', keyId: 'service/generated', purpose: 'sign' }),
+      data: baseData(),
       crypto: testCrypto,
       sendToStep(call) {
         if (call.stepName === 'key-store-generate-key-pair') {
@@ -63,8 +62,8 @@ describe('key-store/key-store-operation', () => {
   it('returns an existing pair and validates its public and secret records', async () => {
     let records: { publicRecord: any; secretRecord: any } | undefined;
     const context = createJavascriptContext({
-      body: JSON.stringify({ keyId: 'service/existing', purpose: 'authenticated' }),
-      data: baseData('getOrGenerate'),
+      body: JSON.stringify({ operation: 'getOrGenerate', keyId: 'service/existing', purpose: 'authenticated' }),
+      data: baseData(),
       crypto: testCrypto,
       sendToStep(call) {
         if (call.stepName === 'key-store-generate-key-pair') {
@@ -79,6 +78,7 @@ describe('key-store/key-store-operation', () => {
       },
     });
     await suite.run('resource', { context });
+    context.setBody(JSON.stringify({ operation: 'getOrGenerate', keyId: 'service/existing', purpose: 'authenticated' }));
     await suite.run('resource', { context });
     expect(JSON.parse(context.getBody() || '{}')).toMatchObject({
       keyId: 'service/existing', purpose: 'authenticated', keyPair: generatedKeyPair, created: false,
@@ -89,8 +89,8 @@ describe('key-store/key-store-operation', () => {
     let publicRecord: any;
     let secretRecord: any;
     const privateContext = createJavascriptContext({
-      body: JSON.stringify({ keyId: 'service/public', purpose: 'sign' }),
-      data: baseData('getOrGenerate'),
+      body: JSON.stringify({ operation: 'getOrGenerate', keyId: 'service/public', purpose: 'sign' }),
+      data: baseData(),
       crypto: testCrypto,
       sendToStep(call) {
         if (call.stepName === 'key-store-generate-key-pair') {
@@ -109,7 +109,8 @@ describe('key-store/key-store-operation', () => {
       },
     });
     await suite.run('resource', { context: privateContext });
-    privateContext.setData(JSON.stringify({ ...baseData('get', false), secretKeyStoreSeedHex: '' }));
+    privateContext.setBody(JSON.stringify({ operation: 'get', keyId: 'service/public', purpose: 'sign' }));
+    privateContext.setData(JSON.stringify({ ...baseData(false), secretKeyStoreSeedHex: '' }));
     await suite.run('resource', { context: privateContext });
     const result = JSON.parse(privateContext.getBody() || '{}');
     expect(result.keyPair).toEqual({ publicKeyHex: '0011aabb' });
@@ -118,8 +119,8 @@ describe('key-store/key-store-operation', () => {
 
   it('rejects a tampered public record', async () => {
     const context = createJavascriptContext({
-      body: JSON.stringify({ keyId: 'service/tampered', purpose: 'sign' }),
-      data: baseData('get'),
+      body: JSON.stringify({ operation: 'get', keyId: 'service/tampered', purpose: 'sign' }),
+      data: baseData(),
       crypto: testCrypto,
       sendToStep() {
         return response({
@@ -139,11 +140,12 @@ describe('key-store/key-store-operation', () => {
     let records: { publicRecord: unknown; secretRecord: unknown } | undefined;
     const context = createJavascriptContext({
       body: JSON.stringify({
+        operation: 'load',
         keyId: 'service/imported',
         purpose: 'sign',
         keyPair: generatedKeyPair,
       }),
-      data: baseData('load'),
+      data: baseData(),
       crypto: testCrypto,
       sendToStep(call) {
         const request = JSON.parse(call.body || '{}');
@@ -165,6 +167,7 @@ describe('key-store/key-store-operation', () => {
     expect(records?.secretRecord).toMatchObject({ recordType: 'secret', purpose: 'sign' });
 
     context.setBody(JSON.stringify({
+      operation: 'load',
       keyId: 'service/imported',
       purpose: 'sign',
       keyPair: generatedKeyPair,
@@ -175,6 +178,7 @@ describe('key-store/key-store-operation', () => {
     });
 
     context.setBody(JSON.stringify({
+      operation: 'load',
       keyId: 'service/imported',
       purpose: 'sign',
       keyPair: { publicKeyHex: '0011aabb', secretKeyHex: 'different' },

@@ -1,8 +1,59 @@
 doc
   .description("Execute immutable public/private key-pair operations")
+  .inSchema({
+    oneOf: [
+      {
+        type: "object",
+        required: ["operation", "keyId", "purpose"],
+        additionalProperties: false,
+        properties: {
+          operation: { const: "get" },
+          keyId: { type: "string", minLength: 1, maxLength: 256 },
+          purpose: {
+            type: "string",
+            enum: ["sign", "authenticated", "symmetric", "anonymous"]
+          }
+        }
+      },
+      {
+        type: "object",
+        required: ["operation", "keyId", "purpose"],
+        additionalProperties: false,
+        properties: {
+          operation: { const: "getOrGenerate" },
+          keyId: { type: "string", minLength: 1, maxLength: 256 },
+          purpose: {
+            type: "string",
+            enum: ["sign", "authenticated", "symmetric", "anonymous"]
+          }
+        }
+      },
+      {
+        type: "object",
+        required: ["operation", "keyId", "purpose", "keyPair"],
+        additionalProperties: false,
+        properties: {
+          operation: { const: "load" },
+          keyId: { type: "string", minLength: 1, maxLength: 256 },
+          purpose: {
+            type: "string",
+            enum: ["sign", "authenticated", "symmetric", "anonymous"]
+          },
+          keyPair: {
+            type: "object",
+            required: ["publicKeyHex", "secretKeyHex"],
+            additionalProperties: false,
+            properties: {
+              publicKeyHex: { type: ["string", "null"], minLength: 1 },
+              secretKeyHex: { type: "string", minLength: 1 }
+            }
+          }
+        }
+      }
+    ]
+  })
   .dataSchema({
     required: [
-      "operation",
       "publicKeyStoreSeedHex",
       "publicKeyStoreDomain",
       "secretKeyStoreDomain",
@@ -11,7 +62,6 @@ doc
       "storageStepId"
     ],
     properties: {
-      operation: { type: "string" },
       publicKeyStoreSeedHex: { type: "string", pattern: "^[0-9a-fA-F]{64}$" },
       secretKeyStoreSeedHex: {
         type: "string",
@@ -27,7 +77,7 @@ doc
   })
   .run(() => {
     const input = JSON.parse(context.getBody());
-    const operation = context.getData("operation");
+    const operation = input.operation;
     const bytes = context.bytes();
     const crypto = context.crypto();
     const publicSeedHex = context.getData("publicKeyStoreSeedHex");

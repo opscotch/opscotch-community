@@ -10,12 +10,8 @@
         "sourcePath": "$.workflows[0].steps[0].trigger.deploymentAccess"
       },
       {
-        "op": "delete",
-        "sourcePath": "$.workflows[0].steps[1]"
-      },
-      {
         "op": "add",
-        "sourcePath": "$.workflows[0].steps[5]",
+        "sourcePath": "$.workflows[0].steps[3]",
         "sourceValue": {
           "stepId": "testTrigger",
           "resultsProcessor": {

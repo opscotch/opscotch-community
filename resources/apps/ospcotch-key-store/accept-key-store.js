@@ -1,5 +1,5 @@
 doc
-  .description("Validate and route deployment-access key-store requests")
+  .description("Validate normal key-store requests and route them to the shared operation step")
   .asUserErrors()
   .inSchema({
     oneOf: [
@@ -65,12 +65,8 @@ doc
     };
     emitMetric(`key-store.requests.${operation}`);
 
-    const stepByOperation = {
-      get: "key-store-get",
-      getOrGenerate: "key-store-get-or-generate"
-    };
     const response = context.sendToStep(
-      stepByOperation[operation],
+      "key-store-operation",
       JSON.stringify(Object.assign({ operation }, input))
     );
     if (response.isErrored()) {

@@ -1,10 +1,9 @@
 doc
-  .description("Forward an administrative key-store load request")
+  .description("Forward an administrative key-store load request to the local validator")
   .run(() => {
     const request = JSON.parse(context.getBody());
     context.removeAllHeaders();
     const response = context.sendToStep(
-      "key-store-admin-call",
       "accept-key-store-admin",
       request.body
     );
