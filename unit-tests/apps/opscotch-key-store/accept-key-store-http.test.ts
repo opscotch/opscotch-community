@@ -25,8 +25,10 @@ describe('key-store-http/accept-key-store-http', () => {
       }),
       sendToStep(call) {
         expect(call.deploymentAccessId).toBe('key-store-call');
-        expect(call.stepName).toBe('accept-key-store');
-        expect(call.body).toBe(requestBody);
+        expect(call.stepName).toBe('key-store-operation');
+        expect(JSON.parse(call.body || '{}')).toEqual({
+          operation: 'getOrGenerate', keyId: 'service/example', purpose: 'sign',
+        });
         return successfulResponse({ keyId: 'service/example', created: true, version: 1 });
       },
     });
@@ -55,20 +57,20 @@ describe('key-store-http/accept-key-store-http', () => {
     expect(JSON.parse(context.getBody() || '{}')).toEqual({ error: 'key not found' });
   });
 
-  it('maps key-store schema failures to an HTTP 400 response', async () => {
+  it('declares a schema that excludes administrative load requests', async () => {
     const context = createJavascriptContext({
       body: JSON.stringify({ body: '{}' }),
-      sendToStep() {
-        return { systemErrors: ['No oneOf passed: invalid key-store request'] };
-      },
     });
 
-    await suite.run('resource', { context });
+    const result = await suite.run('resource', { context });
+    const schema = result.doc.inSchemaValue;
 
-    expect(context.getProperty('status_code')).toBe(400);
-    expect(JSON.parse(context.getBody() || '{}')).toEqual({
-      error: 'invalid key-store request',
-    });
+    expect(schema.oneOf).toHaveLength(2);
+    expect(schema.oneOf.map((branch) => Object.keys(branch.properties))).toEqual([
+      ['get'],
+      ['getOrGenerate'],
+    ]);
+    expect(context.__sendToStepCalls).toHaveLength(1);
   });
 
   it('propagates backend failures instead of classifying them as client errors', async () => {

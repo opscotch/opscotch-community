@@ -58,7 +58,6 @@ doc
       "publicKeyStoreDomain",
       "secretKeyStoreDomain",
       "derivationVersion",
-      "storageDeploymentAccessId",
       "storageStepId"
     ],
     properties: {
@@ -112,9 +111,9 @@ doc
       return response;
     };
 
-    const sendStorage = (body) => failIfErrored(storageTestStepId
-      ? context.sendToStep(storageTestStepId, JSON.stringify(body))
-      : context.sendToStep(storageAccessId, storageStepId, JSON.stringify(body)));
+    const sendStorage = (body) => failIfErrored(storageAccessId
+      ? context.sendToStep(storageAccessId, storageStepId, JSON.stringify(body))
+      : context.sendToStep(storageStepId, JSON.stringify(body)));
 
     const canonicalKeyId = (value) => String(value);
     const metadata = (recordType, keyId, purpose, pairId, payload) => JSON.stringify({

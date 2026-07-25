@@ -1,12 +1,58 @@
 doc
   .description("Forward an HTTP key-store request to the key-store deployment")
+  .asUserErrors()
+  .inSchema({
+    oneOf: [
+      {
+        type: "object",
+        required: ["get"],
+        additionalProperties: false,
+        properties: {
+          get: {
+            type: "object",
+            required: ["keyId", "purpose"],
+            additionalProperties: false,
+            properties: {
+              keyId: { type: "string", minLength: 1, maxLength: 256 },
+              purpose: {
+                type: "string",
+                enum: ["sign", "authenticated", "symmetric", "anonymous"]
+              }
+            }
+          }
+        }
+      },
+      {
+        type: "object",
+        required: ["getOrGenerate"],
+        additionalProperties: false,
+        properties: {
+          getOrGenerate: {
+            type: "object",
+            required: ["keyId", "purpose"],
+            additionalProperties: false,
+            properties: {
+              keyId: { type: "string", minLength: 1, maxLength: 256 },
+              purpose: {
+                type: "string",
+                enum: ["sign", "authenticated", "symmetric", "anonymous"]
+              }
+            }
+          }
+        }
+      }
+    ]
+  })
   .run(() => {
     const request = JSON.parse(context.getBody());
+    const body = JSON.parse(request.body);
+    const operation = Object.keys(body)[0];
+    const operationBody = { operation, ...body[operation] };
     context.removeAllHeaders();
     const response = context.sendToStep(
       "key-store-call",
-      "accept-key-store",
-      request.body
+      "key-store-operation",
+      JSON.stringify(operationBody)
     );
 
     if (response.isErrored()) {

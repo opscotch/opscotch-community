@@ -4,8 +4,7 @@
   "useThisTestConfigFile": "../../../apps/opscotch-key-store/workflow.json",
   "testThisStep": "testTrigger",
   "data": {
-    "storageDeploymentAccessId": "storage-call",
-    "storageStepId": "accept-storage"
+    "storageStepId": "test-storage"
   },
   "manifest": {
     "customizations": [
@@ -15,7 +14,7 @@
       },
       {
         "op": "add",
-        "sourcePath": "$.workflows[0].steps[3]",
+        "sourcePath": "$.workflows[0].steps[2]",
         "sourceValue": {
           "stepId": "test-storage",
           "resultsProcessor": {
@@ -25,7 +24,7 @@
       },
       {
         "op": "add",
-        "sourcePath": "$.workflows[0].steps[4]",
+        "sourcePath": "$.workflows[0].steps[3]",
         "sourceValue": {
           "stepId": "storage-provider",
           "data": {
@@ -38,7 +37,7 @@
       },
       {
         "op": "add",
-        "sourcePath": "$.workflows[0].steps[5]",
+        "sourcePath": "$.workflows[0].steps[4]",
         "sourceValue": {
           "stepId": "storage-provider-memory",
           "persistenceFile": "key-store-integration-memory.dat",
@@ -52,11 +51,11 @@
       },
       {
         "op": "add",
-        "sourcePath": "$.workflows[0].steps[6]",
+        "sourcePath": "$.workflows[0].steps[5]",
         "sourceValue": {
           "stepId": "testTrigger",
           "resultsProcessor": {
-            "script": "function call(request) { var response = context.sendToStep('accept-key-store', JSON.stringify(request)); if (response.isErrored()) throw new Error(response.getAllErrors()[0]); return JSON.parse(response.getBody()); } var generated = call({ getOrGenerate: { keyId: 'service/generated', purpose: 'sign' } }); if (generated.keyId !== 'service/generated' || generated.purpose !== 'sign' || generated.created !== true || generated.keyPair.secretKeyHex === undefined) throw new Error('expected generated immutable key pair'); var repeated = call({ getOrGenerate: { keyId: 'service/generated', purpose: 'sign' } }); if (repeated.created !== false || repeated.keyPair.secretKeyHex !== generated.keyPair.secretKeyHex) throw new Error('expected existing generated key pair'); var invalid = context.sendToStep('accept-key-store', JSON.stringify({ put: { keyId: 'service/generated', value: 'AQ==' } })); if (!invalid.isErrored()) throw new Error('expected immutable put rejection'); context.sendMetric('key-store-cross-deployment-pass', 1.0);"
+            "script": "function call(request) { var response = context.sendToStep('key-store-operation', JSON.stringify({ operation: Object.keys(request)[0], ...request[Object.keys(request)[0]] })); if (response.isErrored()) throw new Error(response.getAllErrors()[0]); return JSON.parse(response.getBody()); } var generated = call({ getOrGenerate: { keyId: 'service/generated', purpose: 'sign' } }); if (generated.keyId !== 'service/generated' || generated.purpose !== 'sign' || generated.created !== true || generated.keyPair.secretKeyHex === undefined) throw new Error('expected generated immutable key pair'); var repeated = call({ getOrGenerate: { keyId: 'service/generated', purpose: 'sign' } }); if (repeated.created !== false || repeated.keyPair.secretKeyHex !== generated.keyPair.secretKeyHex) throw new Error('expected existing generated key pair'); var invalid = context.sendToStep('key-store-operation', JSON.stringify({ operation: 'put', keyId: 'service/generated', value: 'AQ==' })); if (!invalid.isErrored()) throw new Error('expected immutable put rejection'); context.sendMetric('key-store-cross-deployment-pass', 1.0);"
           }
         }
       }

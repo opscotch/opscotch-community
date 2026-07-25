@@ -3,6 +3,9 @@
   "useThisTestBootstrapFile": "/apps/opscotch-key-store/key-store-cross-deployment.bootstrap.json",
   "useThisTestConfigFile": "../../../apps/opscotch-key-store/workflow.json",
   "testThisStep": "testTrigger",
+  "data": {
+    "storageStepId": "test-storage"
+  },
   "manifest": {
     "customizations": [
       {
@@ -11,7 +14,7 @@
       },
       {
         "op": "add",
-        "sourcePath": "$.workflows[0].steps[3]",
+        "sourcePath": "$.workflows[0].steps[2]",
         "sourceValue": {
           "stepId": "test-storage",
           "resultsProcessor": {
@@ -21,7 +24,7 @@
       },
       {
         "op": "add",
-        "sourcePath": "$.workflows[0].steps[4]",
+        "sourcePath": "$.workflows[0].steps[3]",
         "sourceValue": {
           "stepId": "storage-provider",
           "data": {
@@ -34,7 +37,7 @@
       },
       {
         "op": "add",
-        "sourcePath": "$.workflows[0].steps[5]",
+        "sourcePath": "$.workflows[0].steps[4]",
         "sourceValue": {
           "stepId": "storage-provider-memory",
           "persistenceFile": "key-store-integration-memory.dat",
@@ -48,11 +51,11 @@
       },
       {
         "op": "add",
-        "sourcePath": "$.workflows[0].steps[6]",
+        "sourcePath": "$.workflows[0].steps[5]",
         "sourceValue": {
           "stepId": "testTrigger",
           "resultsProcessor": {
-            "script": "function id(domain, keyId, purpose) { var bytes = context.bytes(); var input = bytes.createFromString(domain + '\\u0000' + keyId + '\\u0000' + purpose); var digest = bytes.sha256(input); var result = bytes.binaryToHex(digest); bytes.release([input, digest]); return result; } function pairId(keyId, purpose) { return id('opscotch-key-store/pair/v2', keyId, purpose); } function call(step, request) { var response = context.sendToStep(step, JSON.stringify(request)); if (response.isErrored()) throw new Error(response.getAllErrors()[0]); return JSON.parse(response.getBody()); } function expectError(request, expected) { var response = context.sendToStep('accept-key-store', JSON.stringify(request)); if (!response.isErrored()) throw new Error('expected key-store rejection'); var errors = response.getAllErrors().join(' '); if (errors.indexOf(expected) < 0) throw new Error('expected integrity error'); if (errors.indexOf('c2VjcmV0') >= 0) throw new Error('key-store error exposed plaintext'); } var keyId = 'service/tampered'; var purpose = 'sign'; var pair = pairId(keyId, purpose); var malformed = { format: 'opscotch-key-store/key-record/v2', recordType: 'public', keyId: keyId, purpose: purpose, pairId: pair, derivation: 'v2', domain: 'opscotch-key-store-public-test', payload: { publicKeyHex: '0011' }, tag: 'tampered', version: 1 }; var created = call('test-storage', { operation: 'putPairIfAbsent', pairId: pair, publicRecordId: id('opscotch-key-store/public/v2', keyId, purpose), secretRecordId: id('opscotch-key-store/secret/v2', keyId, purpose), publicRecord: malformed, secretRecord: { format: 'opscotch-key-store/key-record/v2', recordType: 'secret', keyId: keyId, purpose: purpose, pairId: pair, derivation: 'v2', domain: 'opscotch-key-store-secret-test', payload: {}, tag: 'unused', version: 1 } }); if (created.status !== 'created') throw new Error('expected malformed pair setup'); expectError({ get: { keyId: keyId, purpose: purpose } }, 'key record integrity failure'); context.sendMetric('key-store-record-integrity-pass', 1.0);"
+            "script": "function id(domain, keyId, purpose) { var bytes = context.bytes(); var input = bytes.createFromString(domain + '\\u0000' + keyId + '\\u0000' + purpose); var digest = bytes.sha256(input); var result = bytes.binaryToHex(digest); bytes.release([input, digest]); return result; } function pairId(keyId, purpose) { return id('opscotch-key-store/pair/v2', keyId, purpose); } function call(step, request) { var response = context.sendToStep(step, JSON.stringify(request)); if (response.isErrored()) throw new Error(response.getAllErrors()[0]); return JSON.parse(response.getBody()); } function expectError(request, expected) { var response = context.sendToStep('key-store-operation', JSON.stringify({ operation: Object.keys(request)[0], ...request[Object.keys(request)[0]] })); if (!response.isErrored()) throw new Error('expected key-store rejection'); var errors = response.getAllErrors().join(' '); if (errors.indexOf(expected) < 0) throw new Error('expected integrity error'); if (errors.indexOf('c2VjcmV0') >= 0) throw new Error('key-store error exposed plaintext'); } var keyId = 'service/tampered'; var purpose = 'sign'; var pair = pairId(keyId, purpose); var malformed = { format: 'opscotch-key-store/key-record/v2', recordType: 'public', keyId: keyId, purpose: purpose, pairId: pair, derivation: 'v2', domain: 'opscotch-key-store-public-test', payload: { publicKeyHex: '0011' }, tag: 'tampered', version: 1 }; var created = call('test-storage', { operation: 'putPairIfAbsent', pairId: pair, publicRecordId: id('opscotch-key-store/public/v2', keyId, purpose), secretRecordId: id('opscotch-key-store/secret/v2', keyId, purpose), publicRecord: malformed, secretRecord: { format: 'opscotch-key-store/key-record/v2', recordType: 'secret', keyId: keyId, purpose: purpose, pairId: pair, derivation: 'v2', domain: 'opscotch-key-store-secret-test', payload: {}, tag: 'unused', version: 1 } }); if (created.status !== 'created') throw new Error('expected malformed pair setup'); expectError({ get: { keyId: keyId, purpose: purpose } }, 'key record integrity failure'); context.sendMetric('key-store-record-integrity-pass', 1.0);"
           }
         }
       }

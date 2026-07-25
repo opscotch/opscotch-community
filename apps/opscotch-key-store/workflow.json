@@ -6,20 +6,13 @@
       "comment": "Validate and route requests received from explicitly authorized deployments.",
       "steps": [
         {
-          "stepId": "accept-key-store",
-          "comment": "Deployment-access-only entry point for get and getOrGenerate.",
+          "stepId": "key-store-operation",
+          "comment": "Single deployment-access entry point for all key-store operations.",
           "trigger": {
             "deploymentAccess": {
               "ids": ["key-store-call"]
             }
           },
-          "resultsProcessor": {
-            "resource": "/apps/ospcotch-key-store/accept-key-store.js"
-          }
-        },
-        {
-          "stepId": "key-store-operation",
-          "comment": "Execute get and getOrGenerate requests from the normal seam, plus direct administrative loads.",
           "resultsProcessor": {
             "resource": "/apps/ospcotch-key-store/key-store-operation.js"
           }

@@ -6,8 +6,8 @@
   "allowDeploymentAccess": [
     {
       "id": "key-store-call",
-      "deploymentId": "authorized-public-caller",
-      "access": "receive"
+      "access": "receive",
+      "anyDeployment": true
     },
     {
       "id": "storage-call",
