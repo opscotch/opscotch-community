@@ -17,12 +17,7 @@ describe('key-store-http/accept-key-store-http', () => {
       getOrGenerate: { keyId: 'service/example', purpose: 'sign' },
     });
     const context = createJavascriptContext({
-      body: JSON.stringify({
-        method: 'POST',
-        path: '/key-store',
-        headers: { 'content-type': 'application/json' },
-        body: requestBody,
-      }),
+      body: requestBody,
       sendToStep(call) {
         expect(call.deploymentAccessId).toBe('key-store-call');
         expect(call.stepName).toBe('key-store-operation');
