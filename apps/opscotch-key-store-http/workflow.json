@@ -38,7 +38,17 @@
             }
           },
           "resultsProcessor": {
-            "resource": "/apps/ospcotch-key-store/accept-key-store-http.js"
+            "processors" : [
+              {
+                "resource": "/httpserver/clear-headers.js"
+              },
+              {
+                "resource" : "/httpserver/http-body-to-body.js"
+              },
+              {
+                "resource": "/apps/ospcotch-key-store/accept-key-store-http.js"
+              }
+            ]
           }
         }
       ]
