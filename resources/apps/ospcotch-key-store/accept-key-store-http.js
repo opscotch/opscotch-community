@@ -44,8 +44,7 @@ doc
     ]
   })
   .run(() => {
-    const request = JSON.parse(context.getBody());
-    const body = JSON.parse(request.body);
+    const body = JSON.parse(context.getBody());
     const operation = Object.keys(body)[0];
     const operationBody = { operation, ...body[operation] };
     context.removeAllHeaders();
