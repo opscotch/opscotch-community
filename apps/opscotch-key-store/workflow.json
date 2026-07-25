@@ -10,7 +10,7 @@
           "comment": "Single deployment-access entry point for all key-store operations.",
           "trigger": {
             "deploymentAccess": {
-              "ids": ["key-store-call", "key-store-admin-call"]
+              "ids": ["key-store-call"]
             }
           },
           "resultsProcessor": {
