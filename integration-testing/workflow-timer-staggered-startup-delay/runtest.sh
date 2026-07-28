@@ -3,7 +3,7 @@
 set -euo pipefail
 
 SCENARIO_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-AGENT_IMAGE="${OPSCOTCH_AGENT_IMAGE:-ghcr.io/opscotch/opscotch-agent:3.1.7-dev-linux-amd64}"
+AGENT_IMAGE="${OPSCOTCH_AGENT_IMAGE:-ghcr.io/opscotch/opscotch-agent:3.2.0-dev-linux-amd64}"
 TIMEOUT_SECONDS="${INTEGRATION_TEST_TIMEOUT_SECONDS:-120}"
 BASELINE_TOLERANCE_MS="${INTEGRATION_TEST_TOLERANCE_MS:-1000}"
 
@@ -244,7 +244,7 @@ run_phase() {
         --volume "$phase_persistence:/persistence" \
         --volume "$temp_dir:/artifacts" \
         --env BOOTSTRAP_FILE="/fixtures/$bootstrap_file" \
-        --env OPSCOTCH_ACCEPT_LEGAL=yes \
+        --env OPSCOTCH_LEGAL_ACCEPTED \
         "$AGENT_IMAGE" >/dev/null
 
     wait_for_marker "metric.received" "workflow metric receipt"
