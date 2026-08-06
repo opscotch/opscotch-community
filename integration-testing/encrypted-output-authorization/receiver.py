@@ -8,6 +8,7 @@ from pathlib import Path
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--port", type=int, required=True)
+    parser.add_argument("--bind-address", default="127.0.0.1")
     parser.add_argument("--expected-authorization", required=True)
     parser.add_argument("--state-directory", type=Path, required=True)
     return parser.parse_args()
@@ -64,7 +65,7 @@ def main() -> int:
     args = parse_args()
     args.state_directory.mkdir(parents=True, exist_ok=True)
     handler = build_handler(args.expected_authorization, args.state_directory)
-    server = ThreadingHTTPServer(("127.0.0.1", args.port), handler)
+    server = ThreadingHTTPServer((args.bind_address, args.port), handler)
     server.serve_forever()
     return 0
 

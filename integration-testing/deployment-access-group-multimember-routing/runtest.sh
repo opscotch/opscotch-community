@@ -3,10 +3,10 @@
 set -euo pipefail
 
 SCENARIO_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-AGENT_IMAGE="${OPSCOTCH_AGENT_IMAGE:-opscotch-agent-java:dev}"
+AGENT_IMAGE="${OPSCOTCH_AGENT_IMAGE:-ghcr.io/opscotch/opscotch-agent-beta:3.1.8-2-dev-linux-amd64}"
 TIMEOUT_SECONDS="${INTEGRATION_TEST_TIMEOUT_SECONDS:-90}"
 
-for command in curl docker python3; do
+for command in docker python3; do
     if ! command -v "$command" >/dev/null 2>&1; then
         printf 'Required command not found: %s\n' "$command" >&2
         exit 2
@@ -19,8 +19,11 @@ if [[ -z "${OPSCOTCH_LEGAL_ACCEPTED:-}" ]]; then
 fi
 
 temp_dir="$(mktemp -d "${TMPDIR:-/tmp}/opscotch-deployment-access-group.XXXXXX")"
-agent_container="opscotch-deployment-access-group-$$"
-receiver_pid=""
+project_name="opscotch-deployment-access-group-$$"
+compose_file="$SCENARIO_DIR/compose.yaml"
+fixture_dir="$temp_dir/fixtures"
+state_dir="$temp_dir/state"
+persistence_dir="$temp_dir/persistence"
 keep_failed="${KEEP_FAILED_INTEGRATION_TEST:-0}"
 
 cleanup() {
@@ -29,69 +32,54 @@ cleanup() {
     if (( status != 0 )); then
         printf '\n--- receiver state ---\n' >&2
         for file in \
-            "$temp_dir/failure.txt" \
-            "$temp_dir/complete.txt" \
-            "$temp_dir/received-paths.json" \
-            "$temp_dir/requests.ndjson"
+            "$state_dir/failure.txt" \
+            "$state_dir/complete.txt" \
+            "$state_dir/received-paths.json" \
+            "$state_dir/requests.ndjson"
         do
             if [[ -f "$file" ]]; then
                 printf '\n%s\n' "$file" >&2
                 cat "$file" >&2
             fi
         done
-        printf '\n--- receiver log tail ---\n' >&2
-        [[ -f "$temp_dir/receiver.log" ]] && tail -200 "$temp_dir/receiver.log" >&2 || true
-        printf '\n--- agent log tail ---\n' >&2
-        docker logs "$agent_container" 2>&1 | tail -300 >&2 || true
+        printf '\n--- compose logs ---\n' >&2
+        docker compose -p "$project_name" -f "$compose_file" logs --no-color --tail 200 >&2 || true
     fi
 
-    docker rm -f "$agent_container" >/dev/null 2>&1 || true
-    if [[ -n "$receiver_pid" ]]; then
-        kill "$receiver_pid" >/dev/null 2>&1 || true
-        wait "$receiver_pid" >/dev/null 2>&1 || true
-    fi
-
+    docker compose -p "$project_name" -f "$compose_file" down -v --remove-orphans >/dev/null 2>&1 || true
     if (( status != 0 )) && [[ "$keep_failed" == "1" ]]; then
         printf '\nRetained scenario directory: %s\n' "$temp_dir" >&2
-        return 0
+    else
+        rm -rf "$temp_dir"
     fi
-
-    rm -rf "$temp_dir"
 }
 trap cleanup EXIT INT TERM
 
-mkdir -p "$temp_dir/state" "$temp_dir/persistence"
+mkdir -p "$fixture_dir" "$state_dir" "$persistence_dir"
 for deployment_id in caller remote-a remote-b; do
     mkdir -p \
-        "$temp_dir/persistence/$deployment_id/metrics" \
-        "$temp_dir/persistence/$deployment_id/logs"
+        "$persistence_dir/$deployment_id/metrics" \
+        "$persistence_dir/$deployment_id/logs"
 done
-read -r receiver_port caller_port remote_a_port remote_b_port < <(
-    python3 "$SCENARIO_DIR/reserve_ports.py" 4
-)
 
 python3 "$SCENARIO_DIR/generate_fixtures.py" \
-    --receiver-port "$receiver_port" \
-    --caller-port "$caller_port" \
-    --remote-a-port "$remote_a_port" \
-    --remote-b-port "$remote_b_port" \
-    --output-directory "$temp_dir"
+    --receiver-host receiver \
+    --receiver-port 8080 \
+    --caller-port 8081 \
+    --remote-a-port 8082 \
+    --remote-b-port 8083 \
+    --output-directory "$fixture_dir"
 
-python3 "$SCENARIO_DIR/receiver.py" \
-    --port "$receiver_port" \
-    --expected-paths "$temp_dir/expected-paths.json" \
-    --state-directory "$temp_dir" \
-    >"$temp_dir/receiver.log" 2>&1 &
-receiver_pid=$!
+export SCENARIO_DIR FIXTURE_DIR="$fixture_dir" STATE_DIR="$state_dir" PERSISTENCE_DIR="$persistence_dir" AGENT_IMAGE OPSCOTCH_LEGAL_ACCEPTED
 
 wait_for_completion() {
     local deadline=$((SECONDS + TIMEOUT_SECONDS))
     while (( SECONDS < deadline )); do
-        if [[ -s "$temp_dir/failure.txt" ]]; then
-            cat "$temp_dir/failure.txt" >&2
+        if [[ -s "$state_dir/failure.txt" ]]; then
+            cat "$state_dir/failure.txt" >&2
             return 1
         fi
-        if [[ -s "$temp_dir/complete.txt" ]]; then
+        if [[ -s "$state_dir/complete.txt" ]]; then
             return 0
         fi
         sleep 0.25
@@ -101,24 +89,10 @@ wait_for_completion() {
 }
 
 printf 'Using Docker image: %s\n' "$AGENT_IMAGE" >&2
-docker run --detach \
-    --name "$agent_container" \
-    --network host \
-    --volume "$temp_dir:/config:ro" \
-    --volume "$temp_dir/persistence:/persistence" \
-    --env BOOTSTRAP_FILE=bootstrap.json \
-    --env OPSCOTCH_OPTS=--accept-legal=yes \
-    --env OPSCOTCH_LEGAL_ACCEPTED \
-    "$AGENT_IMAGE" >/dev/null
-
+docker compose -p "$project_name" -f "$compose_file" up -d --remove-orphans >/dev/null
 wait_for_completion
 
-if [[ -s "$temp_dir/failure.txt" ]]; then
-    cat "$temp_dir/failure.txt" >&2
-    exit 1
-fi
-
-python3 - "$temp_dir/received-paths.json" <<'PY'
+python3 - "$state_dir/received-paths.json" <<'PY'
 import json
 import pathlib
 import sys

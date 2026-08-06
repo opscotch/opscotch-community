@@ -3,11 +3,11 @@
 set -euo pipefail
 
 SCENARIO_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-AGENT_IMAGE="${OPSCOTCH_AGENT_IMAGE:-ghcr.io/opscotch/opscotch-agent:3.1.7-dev-linux-amd64}"
+AGENT_IMAGE="${OPSCOTCH_AGENT_IMAGE:-ghcr.io/opscotch/opscotch-agent-beta:3.1.8-2-dev-linux-amd64}"
 TIMEOUT_SECONDS="${INTEGRATION_TEST_TIMEOUT_SECONDS:-10}"
 keep_failed="${KEEP_FAILED_INTEGRATION_TEST:-0}"
 
-for command in curl docker python3; do
+for command in docker python3; do
     if ! command -v "$command" >/dev/null 2>&1; then
         printf 'Required command not found: %s\n' "$command" >&2
         exit 2
@@ -20,42 +20,30 @@ if [[ -z "${OPSCOTCH_LEGAL_ACCEPTED:-}" ]]; then
 fi
 
 temp_dir="$(mktemp -d "${TMPDIR:-/tmp}/opscotch-external-secrets-source-loading.XXXXXX")"
-agent_container=""
-receiver_pid=""
+project_name="opscotch-external-secrets-source-loading-$$"
+compose_file="$SCENARIO_DIR/compose.yaml"
+fixture_dir="$temp_dir/fixtures"
+state_dir="$temp_dir/state"
+persistence_dir="$temp_dir/persistence"
 
 cleanup() {
     local status=$?
-
     if (( status != 0 )); then
+        printf '\n--- compose logs ---\n' >&2
+        docker compose -p "$project_name" -f "$compose_file" logs --no-color --tail 200 >&2 || true
         printf '\n--- receiver state ---\n' >&2
         for file in \
-            "$temp_dir/state/failure.txt" \
-            "$temp_dir/state/complete.txt" \
-            "$temp_dir/state/received-paths.json"
+            "$state_dir/failure.txt" \
+            "$state_dir/complete.txt" \
+            "$state_dir/received-paths.json"
         do
             if [[ -f "$file" ]]; then
                 printf '\n%s\n' "$file" >&2
                 cat "$file" >&2
             fi
         done
-        printf '\n--- receiver log tail ---\n' >&2
-        if [[ -f "$temp_dir/receiver.log" ]]; then
-            tail -200 "$temp_dir/receiver.log" >&2 || true
-        fi
-        printf '\n--- agent log tail ---\n' >&2
-        if [[ -n "$agent_container" ]]; then
-            docker logs "$agent_container" 2>&1 | tail -200 >&2 || true
-        fi
     fi
-
-    if [[ -n "$agent_container" ]]; then
-        docker rm -f "$agent_container" >/dev/null 2>&1 || true
-    fi
-    if [[ -n "$receiver_pid" ]]; then
-        kill "$receiver_pid" >/dev/null 2>&1 || true
-        wait "$receiver_pid" >/dev/null 2>&1 || true
-    fi
-
+    docker compose -p "$project_name" -f "$compose_file" down -v --remove-orphans >/dev/null 2>&1 || true
     if (( status != 0 )) && [[ "$keep_failed" == "1" ]]; then
         printf '\nRetained scenario directory: %s\n' "$temp_dir" >&2
     else
@@ -64,55 +52,50 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-read -r receiver_port < <(python3 "$SCENARIO_DIR/reserve_port.py")
-
-mkdir -p "$temp_dir/fixtures" "$temp_dir/persistence" "$temp_dir/state"
+mkdir -p "$fixture_dir" "$state_dir" "$persistence_dir"
 for deployment_id in \
     external-secrets-file \
     external-secrets-url \
     external-secrets-hostrecord \
     external-secrets-combined
 do
-    mkdir -p "$temp_dir/persistence/$deployment_id/metrics"
+    mkdir -p "$persistence_dir/$deployment_id/metrics"
 done
 
 python3 "$SCENARIO_DIR/generate_fixtures.py" \
-    --receiver-port "$receiver_port" \
-    --output-directory "$temp_dir/fixtures"
+    --receiver-host receiver \
+    --receiver-port 8080 \
+    --output-directory "$fixture_dir"
 
-python3 "$SCENARIO_DIR/receiver.py" \
-    --port "$receiver_port" \
-    --fixtures-directory "$temp_dir/fixtures" \
-    --state-directory "$temp_dir/state" \
-    --expected-paths "$temp_dir/fixtures/expected-paths.json" \
-    >"$temp_dir/receiver.log" 2>&1 &
-receiver_pid=$!
+export SCENARIO_DIR FIXTURE_DIR="$fixture_dir" STATE_DIR="$state_dir" PERSISTENCE_DIR="$persistence_dir" AGENT_IMAGE OPSCOTCH_LEGAL_ACCEPTED
+export BOOTSTRAP_FILE=bootstrap-file.json OPSCOTCH_SECRETS_FROM=file:/fixtures/file.properties
 
-wait_for_receiver() {
+wait_for_file() {
+    local path="$1"
     local deadline=$((SECONDS + TIMEOUT_SECONDS))
     while (( SECONDS < deadline )); do
-        if curl --silent --fail --max-time 1 "http://127.0.0.1:$receiver_port/health" >/dev/null 2>&1; then
-            return 0
-        fi
-        if [[ -s "$temp_dir/state/failure.txt" ]]; then
-            cat "$temp_dir/state/failure.txt" >&2
+        if [[ -s "$state_dir/failure.txt" ]]; then
+            cat "$state_dir/failure.txt" >&2
             return 1
+        fi
+        if [[ -s "$path" ]]; then
+            return 0
         fi
         sleep 0.25
     done
-    printf 'Timed out waiting for receiver health on port %s\n' "$receiver_port" >&2
+    printf 'Timed out waiting for %s\n' "$path" >&2
     return 1
 }
 
-wait_for_path() {
+wait_for_received_path() {
     local expected_path="$1"
     local deadline=$((SECONDS + TIMEOUT_SECONDS))
     while (( SECONDS < deadline )); do
-        if [[ -s "$temp_dir/state/failure.txt" ]]; then
-            cat "$temp_dir/state/failure.txt" >&2
+        if [[ -s "$state_dir/failure.txt" ]]; then
+            cat "$state_dir/failure.txt" >&2
             return 1
         fi
-        if python3 - "$temp_dir/state/received-paths.json" "$expected_path" <<'PY'
+        if python3 - "$state_dir/received-paths.json" "$expected_path" <<'PY'
 import json
 import pathlib
 import sys
@@ -129,63 +112,60 @@ PY
         fi
         sleep 0.25
     done
-    printf 'Timed out waiting for %s\n' "$expected_path" >&2
-    if [[ -f "$temp_dir/state/received-paths.json" ]]; then
-        cat "$temp_dir/state/received-paths.json" >&2
-    fi
+    printf 'Timed out waiting for received path %s\n' "$expected_path" >&2
     return 1
 }
 
-assert_exact_paths() {
-    python3 - "$temp_dir/state/received-paths.json" "$temp_dir/fixtures/expected-paths.json" <<'PY'
+reset_receiver_state() {
+    docker compose -p "$project_name" -f "$compose_file" exec -T receiver python3 - <<'PY'
+import urllib.request
+urllib.request.urlopen(
+    urllib.request.Request("http://127.0.0.1:8080/reset", method="POST"),
+    timeout=5,
+).read()
+PY
+}
+
+wait_for_receiver() {
+    local deadline=$((SECONDS + TIMEOUT_SECONDS))
+    while (( SECONDS < deadline )); do
+        if docker compose -p "$project_name" -f "$compose_file" logs --no-color receiver 2>/dev/null | grep -q 'Serving'; then
+            return 0
+        fi
+        sleep 0.25
+    done
+}
+
+run_phase() {
+    local bootstrap_file="$1"
+    local source_spec_file="$2"
+    local expected_path="$3"
+
+    printf 'Using Docker image: %s\n' "$AGENT_IMAGE" >&2
+    export OPSCOTCH_SECRETS_FROM="$(<"$fixture_dir/$source_spec_file")" BOOTSTRAP_FILE="$bootstrap_file"
+    docker compose -p "$project_name" -f "$compose_file" up -d --remove-orphans --force-recreate agent >/dev/null
+
+    wait_for_received_path "$expected_path"
+    reset_receiver_state
+}
+
+docker compose -p "$project_name" -f "$compose_file" up -d --remove-orphans --wait receiver >/dev/null
+reset_receiver_state
+
+run_phase bootstrap-file.json file-source.txt /metrics/file
+run_phase bootstrap-url.json url-source.txt /metrics/url
+run_phase bootstrap-hostrecord.json hostrecord-source.txt /metrics/hostrecord
+run_phase bootstrap-combined.json combined-source.txt /metrics/file/url/hostrecord
+
+python3 - "$state_dir/received-paths.json" "$fixture_dir/expected-paths.json" <<'PY'
 import json
 import pathlib
 import sys
 
-received_path = pathlib.Path(sys.argv[1])
-expected_path = pathlib.Path(sys.argv[2])
-received = json.loads(received_path.read_text()) if received_path.exists() else []
-expected = json.loads(expected_path.read_text())
+received = json.loads(pathlib.Path(sys.argv[1]).read_text()) if pathlib.Path(sys.argv[1]).exists() else []
+expected = json.loads(pathlib.Path(sys.argv[2]).read_text())
 if sorted(received) != sorted(expected):
-    print(f"expected paths: {sorted(expected)}")
-    print(f"actual paths:   {sorted(received)}")
-    raise SystemExit(1)
+    raise SystemExit(f"unexpected received paths: {received}")
 PY
-}
 
-run_phase() {
-    local phase_name="$1"
-    local bootstrap_file="$2"
-    local source_spec_file="$3"
-    local expected_path="$4"
-
-    agent_container="external-secrets-source-loading-${phase_name}-$$"
-    printf 'Using Docker image: %s\n' "$AGENT_IMAGE" >&2
-    docker run --detach \
-        --name "$agent_container" \
-        --network host \
-        --volume "$temp_dir/fixtures:/config:ro" \
-        --volume "$temp_dir/fixtures:/fixtures:ro" \
-        --volume "$temp_dir/persistence:/persistence" \
-        --env BOOTSTRAP_FILE="$bootstrap_file" \
-        --env OPSCOTCH_LEGAL_ACCEPTED \
-        --env OPSCOTCH_OPTS=--accept-legal=yes \
-        --env OPSCOTCH_SECRETS_FROM="$(<"$temp_dir/fixtures/$source_spec_file")" \
-        "$AGENT_IMAGE" >/dev/null
-
-    wait_for_path "$expected_path"
-    docker logs "$agent_container" >"$temp_dir/agent-${phase_name}.log" 2>&1 || true
-    docker rm -f "$agent_container" >/dev/null 2>&1 || true
-    agent_container=""
-}
-
-wait_for_receiver
-
-run_phase "file" "bootstrap-file.json" "file-source.txt" "/metrics/file"
-run_phase "url" "bootstrap-url.json" "url-source.txt" "/metrics/url"
-run_phase "hostrecord" "bootstrap-hostrecord.json" "hostrecord-source.txt" "/metrics/hostrecord"
-run_phase "combined" "bootstrap-combined.json" "combined-source.txt" "/metrics/file/url/hostrecord"
-
-assert_exact_paths
-
-printf 'Verified file, URL, hostrecord, and combined external secret sources\n'
+printf 'Verified file, URL, hostrecord, and combined external secret sources with docker compose\n'

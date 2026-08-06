@@ -3,11 +3,14 @@
 set -euo pipefail
 
 SCENARIO_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-AGENT_IMAGE="${OPSCOTCH_AGENT_IMAGE:-ghcr.io/opscotch/opscotch-agent:3.1.6-dev}"
+AGENT_IMAGE="${OPSCOTCH_AGENT_IMAGE:-ghcr.io/opscotch/opscotch-agent-beta:3.1.8-2-dev-linux-amd64}"
 TIMEOUT_SECONDS="${INTEGRATION_TEST_TIMEOUT_SECONDS:-90}"
 DEPLOYMENT_COUNT=20
+project_name="opscotch-buffer-recovery-$$"
+compose_file="$SCENARIO_DIR/compose.yaml"
+keep_failed="${KEEP_FAILED_INTEGRATION_TEST:-0}"
 
-for command in curl docker python3; do
+for command in docker python3; do
     if ! command -v "$command" >/dev/null 2>&1; then
         printf 'Required command not found: %s\n' "$command" >&2
         exit 2
@@ -20,22 +23,30 @@ if [[ -z "${OPSCOTCH_LEGAL_ACCEPTED:-}" ]]; then
 fi
 
 temp_dir="$(mktemp -d "${TMPDIR:-/tmp}/opscotch-buffer-recovery.XXXXXX")"
-agent_container="opscotch-buffer-recovery-$$"
-receiver_pid=""
-receiver_label=""
+current_state_dir=""
 
 cleanup() {
-    status=$?
+    local status=$?
     if (( status != 0 )); then
-        printf '\n--- receiver log ---\n' >&2
-        tail -100 "$temp_dir/receiver-$receiver_label.log" >&2 2>/dev/null || true
-        printf '\n--- agent log ---\n' >&2
-        docker logs "$agent_container" 2>&1 | tail -300 >&2 || true
+        printf '\n--- compose logs ---\n' >&2
+        docker compose -p "$project_name" -f "$compose_file" logs --no-color --tail 250 >&2 || true
+        printf '\n--- receiver state ---\n' >&2
+        if [[ -n "$current_state_dir" ]]; then
+            for file in \
+                "$current_state_dir/failure.txt" \
+                "$current_state_dir/all-outputs.received" \
+                "$current_state_dir/received-metrics.json" \
+                "$current_state_dir/received-logs.json"
+            do
+                if [[ -f "$file" ]]; then
+                    printf '\n%s\n' "$file" >&2
+                    cat "$file" >&2
+                fi
+            done
+        fi
     fi
-
-    stop_receiver >/dev/null 2>&1 || true
-    docker rm -f "$agent_container" >/dev/null 2>&1 || true
-    if (( status != 0 )) && [[ "${KEEP_FAILED_INTEGRATION_TEST:-0}" == "1" ]]; then
+    docker compose -p "$project_name" -f "$compose_file" down -v --remove-orphans >/dev/null 2>&1 || true
+    if (( status != 0 )) && [[ "$keep_failed" == "1" ]]; then
         printf 'Preserved failed test artifacts in %s\n' "$temp_dir" >&2
         return
     fi
@@ -62,11 +73,20 @@ python3 "$SCENARIO_DIR/generate_fixtures.py" \
     --agent-ports "$agent_ports_csv" \
     --output-directory "$temp_dir/fixtures"
 
+export SCENARIO_DIR FIXTURE_DIR="$temp_dir/fixtures" STATE_DIR="$temp_dir/state" PERSISTENCE_DIR="$temp_dir/persistence" AGENT_IMAGE OPSCOTCH_LEGAL_ACCEPTED
+
 wait_for_url() {
     local url="$1"
     local deadline=$((SECONDS + TIMEOUT_SECONDS))
     while (( SECONDS < deadline )); do
-        if curl --silent --fail --max-time 1 "$url" >/dev/null 2>&1; then
+        if docker compose -p "$project_name" -f "$compose_file" exec -T client python3 - "$url" <<'PY'
+import sys
+import urllib.request
+
+with urllib.request.urlopen(sys.argv[1], timeout=3) as response:
+    response.read()
+PY
+        then
             return 0
         fi
         sleep 0.25
@@ -126,46 +146,28 @@ start_receiver() {
     local label="$2"
     local status="${3:-200}"
     local delay="${4:-0}"
-    receiver_label="$label"
     local state_directory="$temp_dir/state-$label"
     mkdir -p "$state_directory"
+    current_state_dir="$state_directory"
 
-    python3 "$SCENARIO_DIR/receiver.py" \
-        --port "$receiver_port" \
-        --expected-metrics "$temp_dir/fixtures/expected-$phase-metrics.json" \
-        --expected-logs "$temp_dir/fixtures/expected-$phase-logs.json" \
-        --state-directory "$state_directory" \
-        --response-status "$status" \
-        --response-delay "$delay" \
-        >"$temp_dir/receiver-$label.log" 2>&1 &
-    receiver_pid=$!
-    wait_for_url "http://127.0.0.1:$receiver_port/health"
-}
-
-stop_receiver() {
-    if [[ -n "$receiver_pid" ]]; then
-        kill "$receiver_pid" 2>/dev/null || true
-        wait "$receiver_pid" 2>/dev/null || true
-        receiver_pid=""
-    fi
+    export EXPECTED_METRICS_FILE="expected-$phase-metrics.json" \
+        EXPECTED_LOGS_FILE="expected-$phase-logs.json" \
+        STATE_DIR="$state_directory" \
+        RESPONSE_STATUS="$status" \
+        RESPONSE_DELAY="$delay"
+    docker compose -p "$project_name" -f "$compose_file" up -d --remove-orphans --force-recreate receiver client >/dev/null
+    wait_for_url "http://receiver:8080/health"
 }
 
 start_agent() {
     printf 'Using Docker image: %s\n' "$AGENT_IMAGE" >&2
-    docker run --detach \
-        --name "$agent_container" \
-        --network host \
-        --volume "$temp_dir/fixtures:/fixtures:ro" \
-        --volume "$temp_dir/persistence:/persistence" \
-        --env BOOTSTRAP_FILE=/fixtures/bootstrap.json \
-        --env OPSCOTCH_LEGAL_ACCEPTED \
-        "$AGENT_IMAGE" >/dev/null
+    docker compose -p "$project_name" -f "$compose_file" up -d --remove-orphans agent >/dev/null
 }
 
 wait_for_deployments() {
     local port
     for port in "${agent_ports[@]}"; do
-        wait_for_url "http://127.0.0.1:$port/health"
+        wait_for_url "http://agent:$port/health"
     done
 }
 
@@ -174,9 +176,22 @@ trigger_phase() {
     local deployment_limit="${2:-$DEPLOYMENT_COUNT}"
     local index
     for ((index = 0; index < deployment_limit; index++)); do
-        curl --silent --show-error --fail \
-            --request POST \
-            "http://127.0.0.1:${agent_ports[$index]}/emit-$phase" >/dev/null
+        docker compose -p "$project_name" -f "$compose_file" exec -T client python3 - \
+            "${agent_ports[$index]}" "$phase" <<'PY'
+import sys
+import urllib.request
+
+port = sys.argv[1]
+phase = sys.argv[2]
+with urllib.request.urlopen(
+    urllib.request.Request(
+        f"http://agent:{port}/emit-{phase}",
+        method="POST",
+    ),
+    timeout=10,
+) as response:
+    response.read()
+PY
     done
 }
 
@@ -238,11 +253,10 @@ PY
 recover_phase() {
     local phase="$1"
     local label="$2"
-    stop_receiver
     start_receiver "$phase" "$label"
     wait_for_outputs "$temp_dir/state-$label" "$phase"
     sleep 2
-    stop_receiver
+    docker compose -p "$project_name" -f "$compose_file" stop receiver >/dev/null
 }
 
 test_status_policy() {
@@ -258,12 +272,12 @@ test_status_policy() {
     assert_retry_cadence "$temp_dir/state-$failure_label/requests.ndjson"
 
     if [[ -n "$warning_pattern" ]]; then
-        docker logs "$agent_container" >"$temp_dir/$failure_label-agent.log" 2>&1
+        docker compose -p "$project_name" -f "$compose_file" logs --no-color agent >"$temp_dir/$failure_label-agent.log" 2>&1
         first_warning_count="$(
             grep -c "$warning_pattern" "$temp_dir/$failure_label-agent.log" || true
         )"
         sleep 2
-        docker logs "$agent_container" >"$temp_dir/$failure_label-agent-later.log" 2>&1
+        docker compose -p "$project_name" -f "$compose_file" logs --no-color agent >"$temp_dir/$failure_label-agent-later.log" 2>&1
         later_warning_count="$(
             grep -c "$warning_pattern" "$temp_dir/$failure_label-agent-later.log" || true
         )"
@@ -283,19 +297,19 @@ wait_for_deployments
 trigger_phase online
 wait_for_outputs "$temp_dir/state-online" online
 sleep 2
-stop_receiver
+docker compose -p "$project_name" -f "$compose_file" stop receiver >/dev/null
 
 # Connection refusal: warnings are emitted once per continuous outage and the
 # payload remains available for recovery.
 connection_warning='Connection Failure while trying to send data'
 trigger_phase connection
 sleep 4
-docker logs "$agent_container" >"$temp_dir/connection-agent.log" 2>&1
+docker compose -p "$project_name" -f "$compose_file" logs --no-color agent >"$temp_dir/connection-agent.log" 2>&1
 first_connection_warnings="$(
     grep -c "$connection_warning" "$temp_dir/connection-agent.log" || true
 )"
 sleep 2
-docker logs "$agent_container" >"$temp_dir/connection-agent-later.log" 2>&1
+docker compose -p "$project_name" -f "$compose_file" logs --no-color agent >"$temp_dir/connection-agent-later.log" 2>&1
 later_connection_warnings="$(
     grep -c "$connection_warning" "$temp_dir/connection-agent-later.log" || true
 )"
@@ -318,7 +332,7 @@ test_status_policy status-302 302
 start_receiver timeout timeout-delay 200 15
 trigger_phase timeout
 sleep 12
-docker logs "$agent_container" >"$temp_dir/timeout-agent.log" 2>&1
+docker compose -p "$project_name" -f "$compose_file" logs --no-color agent >"$temp_dir/timeout-agent.log" 2>&1
 if ! grep -q "$connection_warning" "$temp_dir/timeout-agent.log"; then
     printf 'No connection failure was logged after delayed-response timeout\n' >&2
     exit 1
