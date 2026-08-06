@@ -42,8 +42,8 @@ The scenario script:
 - owns its fixtures, temporary processes, ports, assertions, and cleanup;
 - writes useful failure details to standard error;
 - exits `0` on success and non-zero on failure.
-- prints the Docker image it will use immediately before each `docker run`
-  invocation, including repeated runs for restart or multi-phase scenarios.
+- prints the Docker image it will use immediately before each container start,
+  including repeated runs for restart or multi-phase scenarios.
 
 Scenarios should prefer the Docker Opscotch agent. Dev-agent scenarios may
 mount raw workflow JSON directly; use the standalone packager only when
@@ -75,6 +75,8 @@ focused on one externally observable behavior.
   stable. Otherwise keep the scenario self-contained.
 - Do not modify the root runner for a normal scenario. It discovers executable
   `*/runtest.sh` files automatically.
+- Use `docker compose` when it improves portability or avoids host-network
+  coupling; otherwise `docker run` remains acceptable.
 
 ### Scenario layout
 
