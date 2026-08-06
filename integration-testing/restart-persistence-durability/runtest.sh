@@ -4,15 +4,15 @@ set -euo pipefail
 
 SCENARIO_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 HELPER_DIR="$SCENARIO_DIR/../multi-bootstrap-buffer-recovery"
-AGENT_IMAGE="${OPSCOTCH_AGENT_IMAGE:-ghcr.io/opscotch/opscotch-agent:3.1.6-dev}"
+AGENT_IMAGE="${OPSCOTCH_AGENT_IMAGE:-ghcr.io/opscotch/opscotch-agent-beta:3.1.8-2-dev-linux-amd64}"
 TIMEOUT_SECONDS="${INTEGRATION_TEST_TIMEOUT_SECONDS:-90}"
 DEPLOYMENT_COUNT=20
 
-for command in curl docker python3; do
-    command -v "$command" >/dev/null 2>&1 || {
+for command in docker python3; do
+    if ! command -v "$command" >/dev/null 2>&1; then
         printf 'Required command not found: %s\n' "$command" >&2
         exit 2
-    }
+    fi
 done
 
 if [[ -z "${OPSCOTCH_LEGAL_ACCEPTED:-}" ]]; then
@@ -21,14 +21,32 @@ if [[ -z "${OPSCOTCH_LEGAL_ACCEPTED:-}" ]]; then
 fi
 
 temp_dir="$(mktemp -d "${TMPDIR:-/tmp}/opscotch-restart-durability.XXXXXX")"
-agent_container="opscotch-restart-durability-$$"
-receiver_pid=""
+project_name="opscotch-restart-durability-$$"
+compose_file="$SCENARIO_DIR/compose.yaml"
+fixture_dir="$temp_dir/fixtures"
+state_dir="$temp_dir/state"
+persistence_dir="$temp_dir/persistence"
+keep_failed="${KEEP_FAILED_INTEGRATION_TEST:-0}"
 
 cleanup() {
     local status=$?
-    [[ -z "$receiver_pid" ]] || kill "$receiver_pid" 2>/dev/null || true
-    docker rm -f "$agent_container" >/dev/null 2>&1 || true
-    if (( status != 0 )) && [[ "${KEEP_FAILED_INTEGRATION_TEST:-0}" == "1" ]]; then
+    if (( status != 0 )); then
+        printf '\n--- compose logs ---\n' >&2
+        docker compose -p "$project_name" -f "$compose_file" logs --no-color --tail 250 >&2 || true
+        for file in \
+            "$state_dir/failure.txt" \
+            "$state_dir/all-outputs.received" \
+            "$state_dir/received-metrics.json" \
+            "$state_dir/received-logs.json"
+        do
+            if [[ -f "$file" ]]; then
+                printf '\n%s\n' "$file" >&2
+                cat "$file" >&2
+            fi
+        done
+    fi
+    docker compose -p "$project_name" -f "$compose_file" down -v --remove-orphans >/dev/null 2>&1 || true
+    if (( status != 0 )) && [[ "$keep_failed" == "1" ]]; then
         printf 'Preserved failed test artifacts in %s\n' "$temp_dir" >&2
         return
     fi
@@ -36,29 +54,43 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-read -ra reserved_ports <<<"$(
-    python3 "$HELPER_DIR/reserve_ports.py" "$((DEPLOYMENT_COUNT + 1))"
-)"
-receiver_port="${reserved_ports[0]}"
-agent_ports=("${reserved_ports[@]:1}")
+receiver_port=8080
+agent_ports=()
+for ((deployment_number = 1; deployment_number <= DEPLOYMENT_COUNT; deployment_number++)); do
+    agent_ports+=("$((18080 + deployment_number))")
+done
 agent_ports_csv="$(IFS=,; printf '%s' "${agent_ports[*]}")"
 
-mkdir -p "$temp_dir/fixtures" "$temp_dir/persistence"
+mkdir -p "$fixture_dir" "$state_dir" "$persistence_dir"
 for deployment_number in $(seq 1 "$DEPLOYMENT_COUNT"); do
     mkdir -p \
-        "$temp_dir/persistence/restart-durability-$deployment_number/metrics"
+        "$persistence_dir/restart-durability-$deployment_number/metrics"
 done
 
 python3 "$SCENARIO_DIR/generate_fixtures.py" \
+    --receiver-host receiver \
     --receiver-port "$receiver_port" \
     --agent-ports "$agent_ports_csv" \
-    --output-directory "$temp_dir/fixtures"
+    --output-directory "$fixture_dir"
+
+export SCENARIO_DIR HELPER_DIR FIXTURE_DIR="$fixture_dir" STATE_DIR="$state_dir" \
+    PERSISTENCE_DIR="$persistence_dir" AGENT_IMAGE OPSCOTCH_LEGAL_ACCEPTED
 
 wait_for_url() {
     local url="$1"
     local deadline=$((SECONDS + TIMEOUT_SECONDS))
     while (( SECONDS < deadline )); do
-        curl --silent --fail --max-time 1 "$url" >/dev/null 2>&1 && return
+        if docker compose -p "$project_name" -f "$compose_file" exec -T client \
+            python3 - "$url" <<'PY' >/dev/null 2>&1
+import sys
+import urllib.request
+
+with urllib.request.urlopen(sys.argv[1], timeout=1) as response:
+    response.read()
+PY
+        then
+            return 0
+        fi
         sleep 0.25
     done
     printf 'Timed out waiting for %s\n' "$url" >&2
@@ -67,33 +99,37 @@ wait_for_url() {
 
 start_agent() {
     printf 'Using Docker image: %s\n' "$AGENT_IMAGE" >&2
-    docker run --detach \
-        --name "$agent_container" \
-        --network host \
-        --volume "$temp_dir/fixtures:/fixtures:ro" \
-        --volume "$temp_dir/persistence:/persistence" \
-        --env BOOTSTRAP_FILE=/fixtures/bootstrap.json \
-        --env OPSCOTCH_LEGAL_ACCEPTED \
-        "$AGENT_IMAGE" >/dev/null
+    docker compose -p "$project_name" -f "$compose_file" up -d \
+        --remove-orphans --force-recreate agent >/dev/null
 }
 
 wait_for_deployments() {
     local port
     for port in "${agent_ports[@]}"; do
-        wait_for_url "http://127.0.0.1:$port/health"
+        wait_for_url "http://agent:$port/health"
     done
 }
 
 trigger_restart() {
     local port
     for port in "${agent_ports[@]}"; do
-        curl --silent --show-error --fail --request POST \
-            "http://127.0.0.1:$port/emit-restart" >/dev/null
+        docker compose -p "$project_name" -f "$compose_file" exec -T client \
+            python3 - "$port" <<'PY'
+import sys
+import urllib.request
+
+port = sys.argv[1]
+with urllib.request.urlopen(
+    urllib.request.Request(f"http://agent:{port}/emit-restart", method="POST"),
+    timeout=1,
+) as response:
+    response.read()
+PY
     done
 }
 
 wait_for_persisted_batches() {
-    python3 - "$temp_dir/persistence" "$TIMEOUT_SECONDS" <<'PY'
+    python3 - "$persistence_dir" "$TIMEOUT_SECONDS" <<'PY'
 import json
 import pathlib
 import sys
@@ -101,10 +137,10 @@ import time
 
 root = pathlib.Path(sys.argv[1])
 deadline = time.monotonic() + int(sys.argv[2])
-files = list(root.glob("restart-durability-*/metrics/receiver.dat-properties-*"))
 observed = set()
 
 while time.monotonic() < deadline:
+    files = list(root.glob("restart-durability-*/metrics/receiver.dat-properties-*"))
     for path in files:
         try:
             entries = json.loads(path.read_text())
@@ -123,7 +159,7 @@ PY
 
 inspect_persistence() {
     local label="$1"
-    python3 - "$temp_dir/persistence" "$label" <<'PY'
+    python3 - "$persistence_dir" "$label" <<'PY'
 import json
 import pathlib
 import sys
@@ -152,9 +188,12 @@ PY
 
 stop_agent() {
     local started_at="$SECONDS"
-    docker stop --time 120 "$agent_container" >/dev/null
+    local agent_container
+    agent_container="$(docker compose -p "$project_name" -f "$compose_file" ps -q agent)"
+    docker compose -p "$project_name" -f "$compose_file" stop -t 120 agent >/dev/null
     local elapsed=$((SECONDS - started_at))
-    docker logs "$agent_container" >"$temp_dir/pre-restart-agent.log" 2>&1
+    docker compose -p "$project_name" -f "$compose_file" logs --no-color agent \
+        >"$temp_dir/pre-restart-agent.log" 2>&1
     docker inspect \
         --format 'exitCode={{.State.ExitCode}} oomKilled={{.State.OOMKilled}} error={{json .State.Error}}' \
         "$agent_container" >"$temp_dir/pre-restart-container-state.txt"
@@ -168,35 +207,31 @@ stop_agent() {
         inspect_persistence after-shutdown
     } | tee "$temp_dir/shutdown-report.txt"
 
-    docker rm "$agent_container" >/dev/null
+    docker compose -p "$project_name" -f "$compose_file" rm -f agent >/dev/null
 }
 
 start_receiver() {
-    mkdir -p "$temp_dir/state"
-    python3 "$HELPER_DIR/receiver.py" \
-        --port "$receiver_port" \
-        --expected-metrics "$temp_dir/fixtures/expected-restart-metrics.json" \
-        --expected-logs "$temp_dir/fixtures/expected-restart-logs.json" \
-        --state-directory "$temp_dir/state" \
-        >"$temp_dir/receiver.log" 2>&1 &
-    receiver_pid=$!
-    wait_for_url "http://127.0.0.1:$receiver_port/health"
+    export EXPECTED_METRICS_FILE=expected-restart-metrics.json \
+        EXPECTED_LOGS_FILE=expected-restart-logs.json
+    docker compose -p "$project_name" -f "$compose_file" up -d \
+        --remove-orphans --force-recreate receiver client >/dev/null
+    wait_for_url "http://receiver:$receiver_port/health"
 }
 
 wait_for_outputs() {
     local deadline=$((SECONDS + TIMEOUT_SECONDS))
     while (( SECONDS < deadline )); do
-        [[ ! -s "$temp_dir/state/failure.txt" ]] || {
-            cat "$temp_dir/state/failure.txt" >&2
+        [[ ! -s "$state_dir/failure.txt" ]] || {
+            cat "$state_dir/failure.txt" >&2
             return 1
         }
-        [[ ! -s "$temp_dir/state/all-outputs.received" ]] || return
+        [[ ! -s "$state_dir/all-outputs.received" ]] || return
         sleep 0.25
     done
 
     python3 - \
-        "$temp_dir/fixtures/expected-restart-metrics.json" \
-        "$temp_dir/state/received-metrics.json" <<'PY'
+        "$fixture_dir/expected-restart-metrics.json" \
+        "$state_dir/received-metrics.json" <<'PY'
 import json
 import pathlib
 import sys
@@ -212,6 +247,8 @@ raise SystemExit(
 PY
 }
 
+docker compose -p "$project_name" -f "$compose_file" up -d \
+    --remove-orphans client >/dev/null
 start_agent
 wait_for_deployments
 trigger_restart
