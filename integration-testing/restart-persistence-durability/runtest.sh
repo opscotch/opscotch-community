@@ -6,6 +6,7 @@ SCENARIO_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 HELPER_DIR="$SCENARIO_DIR/../multi-bootstrap-buffer-recovery"
 AGENT_IMAGE="${OPSCOTCH_AGENT_IMAGE:-ghcr.io/opscotch/opscotch-agent-beta:3.1.8-2-dev-linux-amd64}"
 TIMEOUT_SECONDS="${INTEGRATION_TEST_TIMEOUT_SECONDS:-90}"
+POST_RESTART_TIMEOUT_SECONDS="${INTEGRATION_TEST_POST_RESTART_TIMEOUT_SECONDS:-180}"
 DEPLOYMENT_COUNT=20
 
 for command in docker python3; do
@@ -15,6 +16,7 @@ for command in docker python3; do
     fi
 done
 
+# Use the user-provided OPSCOTCH_LEGAL_ACCEPTED from the shell environment; do not hardcode a value here.
 if [[ -z "${OPSCOTCH_LEGAL_ACCEPTED:-}" ]]; then
     printf 'OPSCOTCH_LEGAL_ACCEPTED must be set for Docker agent tests\n' >&2
     exit 2
@@ -31,13 +33,16 @@ keep_failed="${KEEP_FAILED_INTEGRATION_TEST:-0}"
 cleanup() {
     local status=$?
     if (( status != 0 )); then
+        docker compose -p "$project_name" -f "$compose_file" logs --no-color agent \
+            >"$temp_dir/post-restart-agent.log" 2>&1 || true
         printf '\n--- compose logs ---\n' >&2
         docker compose -p "$project_name" -f "$compose_file" logs --no-color --tail 250 >&2 || true
         for file in \
             "$state_dir/failure.txt" \
             "$state_dir/all-outputs.received" \
             "$state_dir/received-metrics.json" \
-            "$state_dir/received-logs.json"
+            "$state_dir/received-logs.json" \
+            "$temp_dir/post-restart-agent.log"
         do
             if [[ -f "$file" ]]; then
                 printf '\n%s\n' "$file" >&2
@@ -186,6 +191,50 @@ print(
 PY
 }
 
+wait_for_shutdown_persistence() {
+    python3 - "$persistence_dir" "$TIMEOUT_SECONDS" <<'PY'
+import json
+import pathlib
+import sys
+import time
+
+root = pathlib.Path(sys.argv[1])
+deadline = time.monotonic() + int(sys.argv[2])
+last_report = ""
+
+while time.monotonic() < deadline:
+    files = list(root.glob("restart-durability-*/metrics/receiver.dat-properties-*"))
+    valid = restart = 0
+    invalid = []
+
+    for path in files:
+        try:
+            entries = json.loads(path.read_text())
+            valid += 1
+        except (OSError, json.JSONDecodeError) as error:
+            invalid.append(f"{path.parent.parent.name}: {error}")
+            continue
+
+        properties = {entry["k"]: entry["v"] for entry in entries}
+        restart += "-restart-" in str(properties.get("STEP_LAST"))
+
+    last_report = (
+        f"files={len(files)}, valid_json={valid}, "
+        f"restart_batches={restart}, invalid={invalid}"
+    )
+    if len(files) == 20 and valid == 20 and restart == 20 and not invalid:
+        print(f"after-shutdown: {last_report}")
+        raise SystemExit(0)
+
+    time.sleep(0.1)
+
+raise SystemExit(
+    f"Timed out waiting for shutdown persistence to settle: "
+    f"after-shutdown: {last_report}"
+)
+PY
+}
+
 stop_agent() {
     local started_at="$SECONDS"
     local agent_container
@@ -204,7 +253,7 @@ stop_agent() {
         printf 'shutdownStarted=%s workflowShutdownComplete=%s\n' \
             "$(grep -c 'Shutting down agent - waiting for running tasks to complete' "$temp_dir/pre-restart-agent.log" || true)" \
             "$(grep -c 'Workflow shutdown complete:' "$temp_dir/pre-restart-agent.log" || true)"
-        inspect_persistence after-shutdown
+        wait_for_shutdown_persistence
     } | tee "$temp_dir/shutdown-report.txt"
 
     docker compose -p "$project_name" -f "$compose_file" rm -f agent >/dev/null
@@ -219,13 +268,13 @@ start_receiver() {
 }
 
 wait_for_outputs() {
-    local deadline=$((SECONDS + TIMEOUT_SECONDS))
+    local deadline=$((SECONDS + POST_RESTART_TIMEOUT_SECONDS))
     while (( SECONDS < deadline )); do
         [[ ! -s "$state_dir/failure.txt" ]] || {
             cat "$state_dir/failure.txt" >&2
             return 1
         }
-        [[ ! -s "$state_dir/all-outputs.received" ]] || return
+        [[ ! -s "$state_dir/all-outputs.received" ]] || return 0
         sleep 0.25
     done
 
