@@ -1,0 +1,33 @@
+{
+  "workflows": [
+    {
+      "name": "workflow property schema validation",
+      "steps": [
+        {
+          "stepId": "pre-property-schema",
+          "type": "scripted",
+          "resultsProcessor": {
+            "script": "doc.inPropertySchema({ required: [\"mustHavePreInput\"], additionalProperties: true, properties: { mustHavePreInput: { type: \"string\" } } }).run(() => { context.setProperty(\"pre-body-ran\", \"yes\"); throw new Error(\"pre-property-schema body executed unexpectedly\"); });"
+          }
+        },
+        {
+          "stepId": "post-property-schema",
+          "type": "scripted",
+          "resultsProcessor": {
+            "script": "doc.outPropertySchema({ required: [\"mustHaveOutput\"], additionalProperties: true, properties: { mustHaveOutput: { type: \"number\" } } }).run(() => { context.setProperty(\"post-body-ran\", \"yes\"); context.setProperty(\"mustHaveOutput\", \"not-a-number\"); });"
+          }
+        },
+        {
+          "stepId": "testTrigger",
+          "type": "scripted",
+          "trigger": {
+            "runOnce": true
+          },
+          "resultsProcessor": {
+            "script": "var pre = context.sendToStep(\"pre-property-schema\", \"\"); if (!pre.isErrored()) throw new Error(\"expected pre-property-schema to fail\"); if (context.getProperty(\"pre-body-ran\")) throw new Error(\"pre-property-schema body executed before validation\"); var post = context.sendToStep(\"post-property-schema\", \"\"); if (!post.isErrored()) throw new Error(\"expected post-property-schema to fail\"); if (String(context.getProperty(\"post-body-ran\") || \"\") !== \"yes\") throw new Error(\"post-property-schema body did not execute before validation\"); var errors = post.getAllErrors().join(\" \"); if (errors.indexOf(\"property\") < 0) throw new Error(\"expected outPropertySchema failure details\"); context.sendMetric(\"workflow-property-schema-validation-pass\", 1.0);"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "fromDirectory": "/general/",
+  "testThisStep": "testTrigger",
+  "useThisTestConfigFile": "workflow-property-schema-validation.config.json",
+  "theseMetricsShouldHaveBeenSent": [
+    {
+      "key": "workflow-property-schema-validation-pass",
+      "value": 1.0
+    }
+  ]
+}
