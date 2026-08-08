@@ -13,6 +13,7 @@ TRIGGER_PERIOD_MS = 60_000
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--phase-name", required=True)
+    parser.add_argument("--receiver-host", default="127.0.0.1")
     parser.add_argument("--receiver-port", type=int, required=True)
     parser.add_argument("--shutdown-timeout-seconds", type=int, required=True)
     parser.add_argument("--output-directory", type=Path, required=True)
@@ -53,7 +54,12 @@ def workflow(phase_name: str) -> dict:
     }
 
 
-def bootstrap(phase_name: str, receiver_port: int, shutdown_timeout_seconds: int) -> dict:
+def bootstrap(
+    phase_name: str,
+    receiver_host: str,
+    receiver_port: int,
+    shutdown_timeout_seconds: int,
+) -> dict:
     deployment_id = f"shutdown-http-drain-timeout-{phase_name}"
     return {
         "deploymentId": deployment_id,
@@ -64,7 +70,7 @@ def bootstrap(phase_name: str, receiver_port: int, shutdown_timeout_seconds: int
         "allowExternalHostAccess": [
             {
                 "id": "target",
-                "host": f"http://127.0.0.1:{receiver_port}",
+                "host": f"http://{receiver_host}:{receiver_port}",
                 "allowList": [
                     {
                         "method": "GET",
@@ -96,7 +102,14 @@ def main() -> int:
     )
     (args.output_directory / "bootstrap.json").write_text(
         json.dumps(
-            [bootstrap(args.phase_name, args.receiver_port, args.shutdown_timeout_seconds)],
+            [
+                bootstrap(
+                    args.phase_name,
+                    args.receiver_host,
+                    args.receiver_port,
+                    args.shutdown_timeout_seconds,
+                )
+            ],
             indent=2,
         )
         + "\n"

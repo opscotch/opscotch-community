@@ -11,6 +11,7 @@ from pathlib import Path
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--port", type=int, required=True)
+    parser.add_argument("--bind-address", default="127.0.0.1")
     parser.add_argument("--expected-paths", type=Path, required=True)
     parser.add_argument("--state-directory", type=Path, required=True)
     return parser.parse_args()
@@ -117,7 +118,7 @@ def main() -> int:
     args.state_directory.mkdir(parents=True, exist_ok=True)
     expected_paths = set(json.loads(args.expected_paths.read_text()))
     handler = build_handler(expected_paths, args.state_directory)
-    ThreadingHTTPServer(("127.0.0.1", args.port), handler).serve_forever()
+    ThreadingHTTPServer((args.bind_address, args.port), handler).serve_forever()
     return 0
 
 

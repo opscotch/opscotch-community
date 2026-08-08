@@ -10,6 +10,7 @@ from pathlib import Path
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--port", type=int, required=True)
+    parser.add_argument("--bind-address", default="127.0.0.1")
     parser.add_argument("--fixtures-directory", type=Path, required=True)
     parser.add_argument("--state-directory", type=Path, required=True)
     parser.add_argument("--expected-paths", type=Path, required=True)
@@ -74,6 +75,22 @@ def build_handler(fixtures_directory: Path, state_directory: Path, expected_path
             self.close_connection = True
 
         def do_POST(self) -> None:
+            if self.path == "/reset":
+                with lock:
+                    for name in (
+                        "failure.txt",
+                        "complete.txt",
+                    ):
+                        (state_directory / name).unlink(missing_ok=True)
+                self.send_response(200)
+                self.send_header("Content-Type", "text/plain; charset=utf-8")
+                self.send_header("Content-Length", "5")
+                self.send_header("Connection", "close")
+                self.end_headers()
+                self.wfile.write(b"reset")
+                self.close_connection = True
+                return
+
             if not self.path.startswith("/metrics/"):
                 self.send_error(404)
                 return
@@ -124,7 +141,7 @@ def main() -> int:
     args.state_directory.mkdir(parents=True, exist_ok=True)
     expected_paths = set(json.loads(args.expected_paths.read_text()))
     handler = build_handler(args.fixtures_directory, args.state_directory, expected_paths)
-    ThreadingHTTPServer(("127.0.0.1", args.port), handler).serve_forever()
+    ThreadingHTTPServer((args.bind_address, args.port), handler).serve_forever()
     return 0
 
 

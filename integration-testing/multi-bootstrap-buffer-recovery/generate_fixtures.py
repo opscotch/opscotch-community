@@ -23,6 +23,7 @@ BATCH_ITEMS = 2500
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
+    parser.add_argument("--receiver-host", default="127.0.0.1")
     parser.add_argument("--receiver-port", type=int, required=True)
     parser.add_argument("--agent-ports", required=True)
     parser.add_argument("--output-directory", type=Path, required=True)
@@ -94,6 +95,7 @@ def workflow(deployment_number: int) -> dict:
 def bootstrap_definition(
     deployment_number: int,
     agent_port: int,
+    receiver_host: str,
     receiver_port: int,
 ) -> dict:
     deployment_id = f"buffer-recovery-{deployment_number}"
@@ -108,7 +110,7 @@ def bootstrap_definition(
             "logs": {
                 "enabled": True,
                 "routingToken": deployment_id,
-                "outputUrl": f"http://127.0.0.1:{receiver_port}/logs",
+                "outputUrl": f"http://{receiver_host}:{receiver_port}/logs",
                 "persistenceRoot": f"/persistence/{deployment_id}/logs",
             },
         },
@@ -116,7 +118,7 @@ def bootstrap_definition(
             "metricOutput": {
                 "enabled": True,
                 "routingToken": deployment_id,
-                "outputUrl": f"http://127.0.0.1:{receiver_port}/metrics",
+                "outputUrl": f"http://{receiver_host}:{receiver_port}/metrics",
                 "persistenceRoot": f"/persistence/{deployment_id}/metrics",
             },
             "errorHandling": {
@@ -167,6 +169,7 @@ def main() -> int:
             bootstrap_definition(
                 deployment_number,
                 agent_port,
+                args.receiver_host,
                 args.receiver_port,
             )
         )

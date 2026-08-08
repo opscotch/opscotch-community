@@ -19,6 +19,7 @@ if ! docker compose version >/dev/null 2>&1; then
     exit 2
 fi
 
+# Use the user-provided OPSCOTCH_LEGAL_ACCEPTED from the shell environment; do not hardcode a value here.
 if [[ -z "${OPSCOTCH_LEGAL_ACCEPTED:-}" ]]; then
     printf 'OPSCOTCH_LEGAL_ACCEPTED must be set for Docker agent tests\n' >&2
     exit 2
