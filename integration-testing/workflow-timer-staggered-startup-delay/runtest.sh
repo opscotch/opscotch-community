@@ -3,17 +3,18 @@
 set -euo pipefail
 
 SCENARIO_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-AGENT_IMAGE="${OPSCOTCH_AGENT_IMAGE:-ghcr.io/opscotch/opscotch-agent:3.2.0-dev-linux-amd64}"
+AGENT_IMAGE="${OPSCOTCH_AGENT_IMAGE:-ghcr.io/opscotch/opscotch-agent-beta:3.1.8-2-dev-linux-amd64}"
 TIMEOUT_SECONDS="${INTEGRATION_TEST_TIMEOUT_SECONDS:-120}"
 BASELINE_TOLERANCE_MS="${INTEGRATION_TEST_TOLERANCE_MS:-1000}"
 
-for command in curl docker python3; do
+for command in docker python3; do
     if ! command -v "$command" >/dev/null 2>&1; then
         printf 'Required command not found: %s\n' "$command" >&2
         exit 2
     fi
 done
 
+# Use the user-provided OPSCOTCH_LEGAL_ACCEPTED from the shell environment; do not hardcode a value here.
 if [[ -z "${OPSCOTCH_LEGAL_ACCEPTED:-}" ]]; then
     printf 'OPSCOTCH_LEGAL_ACCEPTED must be set for Docker agent tests\n' >&2
     exit 2
@@ -22,10 +23,12 @@ fi
 temp_dir="$(mktemp -d "${TMPDIR:-/tmp}/opscotch-timer-stagger.XXXXXX")"
 artifact_root="${INTEGRATION_TEST_ARTIFACT_DIR:-$SCENARIO_DIR/artifacts}"
 artifact_dir="$artifact_root/$(date -u +%Y%m%dT%H%M%SZ)-$$"
-agent_container="opscotch-timer-stagger-$$"
-receiver_pid=""
+project_name="opscotch-timer-stagger-$$"
+compose_file="$SCENARIO_DIR/compose.yaml"
 keep_failed="${KEEP_FAILED_INTEGRATION_TEST:-0}"
 baseline_offset_file="$temp_dir/baseline-offset.json"
+fixture_dir="$artifact_dir/fixtures"
+persistence_root="$temp_dir/persistence"
 
 cleanup() {
     local status=$?
@@ -33,40 +36,23 @@ cleanup() {
     if (( status != 0 )); then
         printf '\n--- receiver state ---\n' >&2
         for file in \
-            "$temp_dir/state/failure.txt" \
-            "$temp_dir/state/metric.received" \
-            "$temp_dir/state/received-metrics.json"
+            "$temp_dir/baseline/state/failure.txt" \
+            "$temp_dir/baseline/state/metric.received" \
+            "$temp_dir/baseline/state/received-metrics.json" \
+            "$temp_dir/staggered/state/failure.txt" \
+            "$temp_dir/staggered/state/metric.received" \
+            "$temp_dir/staggered/state/received-metrics.json"
         do
             if [[ -f "$file" ]]; then
                 printf '\n%s\n' "$file" >&2
                 cat "$file" >&2
             fi
         done
-        printf '\n--- agent log tail ---\n' >&2
-        if [[ -f "$temp_dir/agent.log" ]]; then
-            tail -200 "$temp_dir/agent.log" >&2 || true
-        else
-            for container in \
-                "${agent_container}-baseline" \
-                "${agent_container}-staggered" \
-                "$agent_container"
-            do
-                docker logs "$container" 2>&1 | tail -200 >&2 || true
-            done
-        fi
+        printf '\n--- compose logs ---\n' >&2
+        docker compose -p "$project_name" -f "$compose_file" logs --no-color --tail 200 >&2 || true
     fi
 
-    for container in \
-        "$agent_container-baseline" \
-        "$agent_container-staggered" \
-        "$agent_container"
-    do
-        docker rm -f "$container" >/dev/null 2>&1 || true
-    done
-    if [[ -n "$receiver_pid" ]]; then
-        kill "$receiver_pid" >/dev/null 2>&1 || true
-        wait "$receiver_pid" >/dev/null 2>&1 || true
-    fi
+    docker compose -p "$project_name" -f "$compose_file" down -v --remove-orphans >/dev/null 2>&1 || true
 
     if (( status != 0 )) && [[ "$keep_failed" == "1" ]]; then
         printf '\nRetained scenario directory: %s\n' "$temp_dir" >&2
@@ -76,46 +62,21 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-mkdir -p "$artifact_dir" "$temp_dir/state"
-port="$(python3 "$SCENARIO_DIR/reserve_port.py")"
+mkdir -p "$artifact_dir" "$fixture_dir" "$persistence_root"
 
 python3 "$SCENARIO_DIR/generate_fixtures.py" \
-    --receiver-port "$port" \
-    --output-directory "$artifact_dir/fixtures"
+    --receiver-host receiver \
+    --receiver-port 8080 \
+    --output-directory "$fixture_dir"
 
-python3 "$SCENARIO_DIR/receiver.py" \
-    --port "$port" \
-    --expected-metric-name "workflow-timer-staggered-startup-delay-metric" \
-    --state-directory "$temp_dir/state" \
-    >"$temp_dir/receiver.log" 2>&1 &
-receiver_pid=$!
-
-wait_for_health() {
-    local deadline=$((SECONDS + TIMEOUT_SECONDS))
-    while (( SECONDS < deadline )); do
-        if curl --silent --fail --max-time 1 "http://127.0.0.1:$port/health" >/dev/null 2>&1; then
-            return 0
-        fi
-        if [[ -s "$temp_dir/state/failure.txt" ]]; then
-            cat "$temp_dir/state/failure.txt" >&2
-            return 1
-        fi
-        sleep 0.25
-    done
-    printf 'Timed out waiting for receiver health on port %s\n' "$port" >&2
-    return 1
-}
+export SCENARIO_DIR FIXTURE_DIR="$fixture_dir" PERSISTENCE_DIR="$persistence_root" AGENT_IMAGE OPSCOTCH_LEGAL_ACCEPTED
 
 wait_for_marker() {
     local marker="$1"
     local description="$2"
     local deadline=$((SECONDS + TIMEOUT_SECONDS))
     while (( SECONDS < deadline )); do
-        if [[ -s "$temp_dir/state/failure.txt" ]]; then
-            cat "$temp_dir/state/failure.txt" >&2
-            return 1
-        fi
-        if [[ -s "$temp_dir/state/$marker" ]]; then
+        if [[ -s "$marker" ]]; then
             return 0
         fi
         sleep 0.25
@@ -125,12 +86,11 @@ wait_for_marker() {
 }
 
 wait_for_agent_log_line() {
-    local container="$1"
-    local pattern="$2"
-    local description="$3"
+    local pattern="$1"
+    local description="$2"
     local deadline=$((SECONDS + TIMEOUT_SECONDS))
     while (( SECONDS < deadline )); do
-        if docker logs "$container" 2>&1 | grep -qF "$pattern"; then
+        if docker compose -p "$project_name" -f "$compose_file" logs --no-color agent 2>/dev/null | grep -qF "$pattern"; then
             return 0
         fi
         sleep 0.25
@@ -223,42 +183,22 @@ run_phase() {
     local phase_persistence="$phase_dir/persistence"
     local phase_log="$phase_dir/agent.log"
     local phase_output="$phase_dir/observed.json"
-    local phase_container="${agent_container}-${phase_name}"
     local phase_persistence_root="$phase_persistence/workflow-timer-staggered-startup-delay/$phase_name"
 
-    mkdir -p \
-        "$phase_state" \
-        "$phase_persistence_root/metrics" \
-        "$phase_persistence_root/logs"
-    docker rm -f "$phase_container" >/dev/null 2>&1 || true
-
-    curl --silent --show-error --fail \
-        --request POST \
-        "http://127.0.0.1:$port/reset" >/dev/null
+    mkdir -p "$phase_state" "$phase_persistence_root/metrics"
 
     printf 'Using Docker image: %s\n' "$AGENT_IMAGE" >&2
-    docker run --detach \
-        --name "$phase_container" \
-        --network host \
-        --volume "$artifact_dir/fixtures:/fixtures:ro" \
-        --volume "$phase_persistence:/persistence" \
-        --volume "$temp_dir:/artifacts" \
-        --env BOOTSTRAP_FILE="/fixtures/$bootstrap_file" \
-        --env OPSCOTCH_LEGAL_ACCEPTED \
-        "$AGENT_IMAGE" >/dev/null
+    export BOOTSTRAP_FILE="$bootstrap_file" STATE_DIR="$phase_state" PERSISTENCE_DIR="$phase_persistence"
+    docker compose -p "$project_name" -f "$compose_file" up -d --remove-orphans --force-recreate receiver agent >/dev/null
 
-    wait_for_marker "metric.received" "workflow metric receipt"
-    wait_for_agent_log_line "$phase_container" "Agent startup complete and ready in" "agent startup completion"
+    wait_for_marker "$phase_state/metric.received" "workflow metric receipt"
 
-    docker stop --time 10 "$phase_container" >/dev/null
-    docker logs "$phase_container" >"$phase_log" 2>&1
-    docker rm "$phase_container" >/dev/null
-
-    parse_phase_output "$phase_log" "$temp_dir/state/received-metrics.json" "$phase_output"
+    docker compose -p "$project_name" -f "$compose_file" logs --no-color --no-log-prefix agent >"$phase_log" 2>&1
+    parse_phase_output "$phase_log" "$phase_state/received-metrics.json" "$phase_output"
 
     cp "$phase_log" "$artifact_dir/$phase_name-agent.log"
     cp "$phase_output" "$artifact_dir/$phase_name-observed.json"
-    cp "$temp_dir/state/received-metrics.json" "$artifact_dir/$phase_name-received-metrics.json"
+    cp "$phase_state/received-metrics.json" "$artifact_dir/$phase_name-received-metrics.json"
 
     python3 - "$phase_output" "$expect_stagger" "$BASELINE_TOLERANCE_MS" "$baseline_offset_file" <<'PY'
 import json
@@ -310,9 +250,9 @@ print(
     f"startup={startup_ts} metric={metric_ts} offset={offset_ms}ms"
 )
 PY
-}
 
-wait_for_health
+    docker compose -p "$project_name" -f "$compose_file" down -v --remove-orphans >/dev/null
+}
 
 run_phase "baseline" "bootstrap-baseline.json" "no"
 run_phase "staggered" "bootstrap-staggered.json" "yes"

@@ -7,6 +7,7 @@ from pathlib import Path
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
+    parser.add_argument("--receiver-host", default="127.0.0.1")
     parser.add_argument("--agent-ports", required=True)
     parser.add_argument("--receiver-port", type=int, required=True)
     parser.add_argument("--workflow", type=Path, required=True)
@@ -27,7 +28,8 @@ def output_config(url: str, deployment_id: str, persistence_root: str) -> dict:
 def bootstrap_definition(
     definition_number: int,
     agent_port: int,
-    receiver: str,
+    receiver_host: str,
+    receiver_port: int,
 ) -> dict:
     deployment_id = f"encrypted-output-authorization-{definition_number}"
     persistence_root = f"/persistence/{deployment_id}"
@@ -42,12 +44,12 @@ def bootstrap_definition(
             "errorHandling": {
                 "enableLocalLogging": True,
                 "metrics": output_config(
-                    f"{receiver}/metric/{definition_number}",
+                    f"http://{receiver_host}:{receiver_port}/metric/{definition_number}",
                     deployment_id,
                     f"{persistence_root}/metrics",
                 ),
                 "logs": output_config(
-                    f"{receiver}/log/{definition_number}",
+                    f"http://{receiver_host}:{receiver_port}/log/{definition_number}",
                     deployment_id,
                     f"{persistence_root}/logs",
                 ),
@@ -76,7 +78,6 @@ def main() -> int:
     if len(agent_ports) != 2:
         raise ValueError(f"Expected 2 agent ports, got {len(agent_ports)}")
 
-    receiver = f"http://127.0.0.1:{args.receiver_port}"
     workflow_contents = args.workflow.read_text()
     for definition_number in range(1, 3):
         workflow_path = (
@@ -85,7 +86,12 @@ def main() -> int:
         workflow_path.write_text(workflow_contents)
 
     bootstrap = [
-        bootstrap_definition(definition_number, agent_port, receiver)
+        bootstrap_definition(
+            definition_number,
+            agent_port,
+            args.receiver_host,
+            args.receiver_port,
+        )
         for definition_number, agent_port in enumerate(agent_ports, start=1)
     ]
     args.output.write_text(json.dumps(bootstrap, indent=2) + "\n")
