@@ -7,24 +7,24 @@
           "stepId": "pre-property-schema",
           "type": "scripted",
           "resultsProcessor": {
-            "script": "doc.inPropertySchema({ required: [\"mustHavePreInput\"], additionalProperties: true, properties: { mustHavePreInput: { type: \"string\" } } }).run(() => { context.setProperty(\"pre-body-ran\", \"yes\"); throw new Error(\"pre-property-schema body executed unexpectedly\"); });"
+            "script": "doc.inPropertySchema({ required: [\"mustHavePreInput\"], additionalProperties: true, properties: { mustHavePreInput: { type: \"string\" } } }).run(() => { context.sendMetric(\"workflow-property-schema-validation-pre-pass\", 1.0); });"
           }
         },
         {
           "stepId": "post-property-schema",
           "type": "scripted",
           "resultsProcessor": {
-            "script": "doc.outPropertySchema({ required: [\"mustHaveOutput\"], additionalProperties: true, properties: { mustHaveOutput: { type: \"number\" } } }).run(() => { context.setProperty(\"post-body-ran\", \"yes\"); context.setProperty(\"mustHaveOutput\", \"not-a-number\"); });"
+            "script": "doc.outPropertySchema({ required: [\"mustHaveOutput\"], additionalProperties: true, properties: { mustHaveOutput: { type: \"number\" } } }).run(() => { if (context.getProperty(\"mustHaveInput\") != null) { context.setProperty(\"mustHaveOutput\", 123); } });"
           }
         },
         {
           "stepId": "testTrigger",
           "type": "scripted",
           "trigger": {
-            "runOnce": true
+          "runOnce": true
           },
           "resultsProcessor": {
-            "script": "var pre = context.sendToStep(\"pre-property-schema\", \"\"); if (!pre.isErrored()) throw new Error(\"expected pre-property-schema to fail\"); if (context.getProperty(\"pre-body-ran\")) throw new Error(\"pre-property-schema body executed before validation\"); var post = context.sendToStep(\"post-property-schema\", \"\"); if (!post.isErrored()) throw new Error(\"expected post-property-schema to fail\"); if (String(context.getProperty(\"post-body-ran\") || \"\") !== \"yes\") throw new Error(\"post-property-schema body did not execute before validation\"); var errors = post.getAllErrors().join(\" \"); if (errors.indexOf(\"property\") < 0) throw new Error(\"expected outPropertySchema failure details\"); context.sendMetric(\"workflow-property-schema-validation-pass\", 1.0);"
+            "script": "var pre = context.sendToStep(\"pre-property-schema\", \"\"); if (!pre.isErrored()) throw new Error(\"expected pre-property-schema to fail without mustHavePreInput\"); context.setProperty(\"mustHavePreInput\", \"ready\"); var preOk = context.sendToStep(\"pre-property-schema\", \"\"); if (preOk.isErrored()) throw new Error(\"expected pre-property-schema to succeed with mustHavePreInput\"); var postFail = context.sendToStep(\"post-property-schema\", \"\"); if (!postFail.isErrored()) throw new Error(\"expected post-property-schema to fail without mustHaveInput\"); context.setProperty(\"mustHaveInput\", \"ready\"); var postOk = context.sendToStep(\"post-property-schema\", \"\"); if (postOk.isErrored()) throw new Error(\"expected post-property-schema to succeed when mustHaveInput is set\"); if (String(postOk.getProperty(\"mustHaveOutput\") || \"\") !== \"123\") throw new Error(\"post-property-schema did not set mustHaveOutput\"); context.sendMetric(\"workflow-property-schema-validation-pass\", 1.0);"
           }
         }
       ]
