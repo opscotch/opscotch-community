@@ -1,0 +1,547 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://opscotch.co/workflow.schema.json",
+  "title": "opscotch workflow",
+  "description": "The workflow configuration for the opscotch agent",
+  "type": "object",
+  "required": [
+    "workflows"
+  ],
+  "unevaluatedProperties": false,
+  "properties": {
+    "comment": {
+      "$ref": "#/$defs/comment"
+    },
+    "workflows": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/workflow"
+      }
+    },
+    "data": {
+      "type": "object"
+    },
+    "messages": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/message"
+      }
+    },
+    "defaultStepProperties": {
+      "$ref": "#/$defs/defaultStepProperties"
+    },
+    "random": {
+      "type": "number"
+    }
+  },
+  "$defs": {
+    "stringBoolean": {
+      "oneOf": [
+        {
+          "type": "boolean",
+          "title": "Enabled (boolean)"
+        },
+        {
+          "title": "Enabled (string boolean)",
+          "type": "string",
+          "enum": [
+            "true",
+            "false"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "\\$\\{.+\\}",
+          "title": "Enabled (environment variable string)"
+        }
+      ]
+    },
+    "comment": {
+      "oneOf": [
+        {
+          "type": "array",
+          "title": "Multiple comment",
+          "items": {
+            "type": "string"
+          }
+        },
+        {
+          "type": "string",
+          "title": "Single comment"
+        }
+      ]
+    },
+    "workflow": {
+      "unevaluatedProperties": false,
+      "title": "opscotch route",
+      "description": "Defines workflow routes",
+      "type": "object",
+      "required": [
+        "name",
+        "steps"
+      ],
+      "properties": {
+        "comment": {
+          "$ref": "#/$defs/comment"
+        },
+        "enabled": {
+          "description": "Enable or disables the loading of the route",
+          "$ref": "#/$defs/stringBoolean"
+        },
+        "name": {
+          "description": "The user friendly name of the route",
+          "type": "string"
+        },
+        "steps": {
+          "description": "The list of actions to take to perform the intention of the route",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/step"
+          }
+        },
+        "defaultStepProperties": {
+          "$ref": "#/$defs/defaultStepProperties"
+        },
+        "data": {
+          "type": "object",
+          "description": "Additional properties that will be merged with child data objects for use in steps"
+        }
+      }
+    },
+    "stepBase": {
+      "type": "object",
+      "properties": {
+        "comment": {
+          "$ref": "#/$defs/comment"
+        },
+        "enabled": {
+          "description": "Enable or disables the loading of the step",
+          "$ref": "#/$defs/stringBoolean"
+        },
+        "debug": {
+          "description": "Enable or disables debug output for this step",
+          "$ref": "#/$defs/stringBoolean"
+        },
+        "type": {
+          "description": "Defines the type of the step",
+          "type": "string",
+          "enum": [
+            "scripted",
+            "scripted-split-aggregate",
+            "scripted-auth",
+            "httpFile"
+          ],
+          "default": "scripted"
+        },
+        "urlGenerator": {
+          "type": "object",
+          "description": "Defines how to generate the URL",
+          "$ref": "#/$defs/processor"
+        },
+        "resultsProcessor": {
+          "type": "object",
+          "description": "Defines how to process the result of the call to the host",
+          "$ref": "#/$defs/processor"
+        },
+        "payloadGenerator": {
+          "type": "object",
+          "description": "Defines how to generate the call payload",
+          "$ref": "#/$defs/processor"
+        },
+        "authenticationProcessor": {
+          "type": "object",
+          "description": "Performs authentication tasks",
+          "$ref": "#/$defs/processor"
+        },
+        "splitGenerator": {
+          "type": "object",
+          "description": "When using type scripted-split-aggregate, defines how to generate the list to be operated on",
+          "$ref": "#/$defs/processor"
+        },
+        "itemResultProcessor": {
+          "type": "object",
+          "description": "When using scripted-split-aggregate, defines if and how to process items before they're added to the list",
+          "$ref": "#/$defs/processor"
+        },
+        "httpStatusHandling": {
+          "type": "object",
+          "description": "Defines how to handle http status codes",
+          "patternProperties": {
+            ".*": {
+              "$ref": "#/$defs/processor"
+            }
+          }
+        },
+        "httpConnectFailedProcessor": {
+          "type": "object",
+          "description": "Defines how to handle failed http connections",
+          "$ref": "#/$defs/processor"
+        },
+        "httpTimeout": {
+          "type": "number",
+          "description": "http timeout in milliseconds (set to 0 to disable read timeout)"
+        },
+        "singleThreaded": {
+          "description": "When set to none, a step can be run multiple times concurrently. When set to return a step can only be run one at a time and the execution will immediately return.",
+          "type": "string",
+          "default": "none",
+          "enum": [
+            "none",
+            "return"
+          ]
+        },
+        "trigger": {
+          "type": "object",
+          "$ref": "#/$defs/trigger"
+        },
+        "persistenceFile": {
+          "type": "string",
+          "description": "Defines a cache/memory/key-value store that the Step has access to"
+        },
+        "persistenceFileFlush": {
+          "$ref": "#/$defs/stringBoolean",
+          "description": "Forces the persistence file to be flushed"
+        },
+        "persistence": {
+          "type": "object",
+          "required": [
+            "persistenceFile"
+          ],
+          "properties": {
+            "persistenceFile": {
+              "type": "string",
+              "description": "Defines a cache/memory/key-value store that the Step has access to"
+            },
+            "hexSymmetricKey": {
+              "type": "string"
+            },
+            "saveRatio": {
+              "type": "number"
+            },
+            "obfuscate": {
+              "type": "boolean"
+            }
+          }
+        },
+        "data": {
+          "type": "object",
+          "description": "Additional properties that will be merged with child data objects for use in steps"
+        },
+        "timestampOverride": {
+          "type": "number",
+          "description": "For testing"
+        }
+      }
+    },
+    "defaultStepProperties": {
+      "title": "opscotch step defaults",
+      "description": "Defines default workflow step properties",
+      "type": "object",
+      "unevaluatedProperties": false,
+      "allOf": [
+        {
+          "$ref": "#/$defs/stepBase"
+        }
+      ]
+    },
+    "step": {
+      "title": "opscotch step",
+      "description": "Defines workflow step",
+      "type": "object",
+      "unevaluatedProperties": false,
+      "required": [
+        "stepId"
+      ],
+      "properties": {
+        "stepId": {
+          "type": "string",
+          "description": "Sets the unique id of the step"
+        }
+      },
+      "if": {
+        "properties": {
+          "type": {
+            "const": "scripted-split-aggregate"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "#/$defs/stepBase"
+        }
+      ]
+    },
+    "processor": {
+      "unevaluatedProperties": false,
+      "title": "opscotch javascript processor",
+      "description": "Defines workflow step processor",
+      "type": "object",
+      "oneOf": [
+        {
+          "required": [
+            "processors"
+          ],
+          "not": {
+            "anyOf": [
+              {
+                "required": [
+                  "script"
+                ]
+              },
+              {
+                "required": [
+                  "resource"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "anyOf": [
+            {
+              "required": [
+                "script"
+              ]
+            },
+            {
+              "required": [
+                "resource"
+              ]
+            }
+          ],
+          "not": {
+            "required": [
+              "processors"
+            ]
+          }
+        }
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "script": {
+                "type": "null"
+              }
+            },
+            "required": [
+              "script"
+            ]
+          },
+          "then": {
+            "required": [
+              "resource"
+            ]
+          }
+        }
+      ],
+      "properties": {
+        "comment": {
+          "$ref": "#/$defs/comment"
+        },
+        "script": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The string version of the script to execute"
+        },
+        "resource": {
+          "type": "string",
+          "description": "A file path to the script to execute"
+        },
+        "processors": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/processor"
+          }
+        },
+        "data": {
+          "type": "object",
+          "description": "Additional properties that will be merged with parent data objects for use in step source"
+        }
+      }
+    },
+    "trigger": {
+      "unevaluatedProperties": false,
+      "type": "object",
+      "required": [],
+      "properties": {
+        "runOnce": {
+          "type": "boolean"
+        },
+        "runOnceNoTrace": {
+          "type": "boolean"
+        },
+        "timer": {
+          "type": "object",
+          "properties": {
+            "delay": {
+              "type": "number"
+            },
+            "period": {
+              "type": "number"
+            },
+            "noTrace": {
+              "type": "boolean"
+            }
+          }
+        },
+        "fileWatcher": {
+          "type": "object",
+          "description": "Defines a trigger when new lines are added to a file",
+          "required": [
+            "bootstrapFileId",
+            "eventSplitter"
+          ],
+          "properties": {
+            "bootstrapFileId": {
+              "type": "string",
+              "description": "Defines the allowed file access from the bootstrap"
+            },
+            "patterns": {
+              "description": "A list of (Java) regular expressions used for file selection",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "eventSplitter": {
+              "type": "string",
+              "description": "Defines the (Java) regular expressions used to split event"
+            },
+            "splitAtEnd": {
+              "type": "boolean",
+              "description": "When true the delimiter is at the end of the line"
+            },
+            "noTrace": {
+              "type": "boolean"
+            }
+          }
+        },
+        "http": {
+          "type": "object",
+          "description": "Defines a trigger when a HTTP request is received",
+          "required": [
+            "server",
+            "path"
+          ],
+          "properties": {
+            "server": {
+              "type": "string",
+              "description": "Defines the allowed Http Server access from the bootstrap"
+            },
+            "path": {
+              "type": "string",
+              "description": "Defines the path to listen for"
+            },
+            "method": {
+              "type": "string",
+              "description": "Defines the HTTP method to listen for"
+            },
+            "multiPartUploadByteLimit": {
+              "type": "integer",
+              "description": "If multipart uploads are expected it is required to set the memory limit"
+            },
+            "noTrace": {
+              "type": "boolean"
+            }
+          }
+        },
+        "tcp": {
+          "type": "object",
+          "description": "Defines a trigger when TCP data is received",
+          "required": [
+            "server"
+          ],
+          "oneOf": [
+            {
+              "required": [
+                "fixedLength"
+              ]
+            },
+            {
+              "required": [
+                "delimiter"
+              ]
+            }
+          ],
+          "properties": {
+            "server": {
+              "type": "string",
+              "description": "Defines the allowed Http Server access from the bootstrap"
+            },
+            "fixedLength": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Defines the length for fixed sized frames"
+            },
+            "delimiter": {
+              "type": "string",
+              "description": "Defines the delimiter used to split incoming bytes"
+            },
+            "stripDelimiter": {
+              "type": "boolean",
+              "description": "When true the delimiter will be removed from emitted payloads"
+            },
+            "batchSize": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Number of frames to batch before triggering the workflow"
+            },
+            "maxBatchWindowMillis": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Maximum time in milliseconds before flushing a batch"
+            }
+          }
+        },
+        "deploymentAccess": {
+          "type": "object",
+          "description": "Defines a trigger when a deployment access request is received",
+          "required": [
+            "ids"
+          ],
+          "properties": {
+            "ids": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string"
+              },
+              "description": "Defines the allowed deployment access ids from the bootstrap"
+            },
+            "noTrace": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    },
+    "message": {
+      "unevaluatedProperties": false,
+      "type": "object",
+      "required": [
+        "expiry",
+        "stepId",
+        "key",
+        "value"
+      ],
+      "properties": {
+        "expiry": {
+          "type": "string"
+        },
+        "stepId": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        },
+        "value": {}
+      }
+    }
+  }
+}

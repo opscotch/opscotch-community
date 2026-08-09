@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://opscotch.co/testrunner.schema.json",
+  "title": "opscotch Test Runner configuration",
+  "description": "The initial configuration for the opscotch test runner",
+  "type" : "object",
+  "unevaluatedProperties": false,
+  "allOf": [
+    {
+      "oneOf" : [
+        {
+          "required": ["resourceDir"],
+          "not": {"required": ["resourceDirs"]}
+        },
+        {
+          "required": ["resourceDirs"],
+          "not": {"required": ["resourceDir"]}
+        }
+      ]
+    },
+    {
+      "oneOf" : [
+        {
+          "required": ["testDir"],
+          "not": {"required": ["testDirs"]}
+        },
+        {
+          "required": ["testDirs"],
+          "not": {"required": ["testDir"]}
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "resourceDir" :  {
+      "type" : "string"
+    },
+    "resourceDirs" :  {
+      "type" : "array",
+      "minItems" : 1,
+      "items" : {
+        "type" : "string"
+      }
+    },
+    "testDir" :  {
+      "type" : "string"
+    },
+    "testDirs" :  {
+      "type" : "array",
+      "minItems" : 1,
+      "items" : {
+        "type" : "string"
+      }
+    },
+    "concurrency" : {
+      "type" : "number"
+    },
+    "debug" : {
+      "type" : "boolean",
+      "default" : false
+    },
+    "iterations" : {
+      "type" : "number"
+    },
+    "stopOnFailure" : {
+      "type" : "boolean",
+      "default" : false
+    },
+    "variables" : {
+      "type" : "object",
+      "description" : "Key-value pairs of variables to be emitted to the agent via the secrets endpoint",
+      "additionalProperties": {
+        "type" : "string"
+      }
+    }
+  }
+}
