@@ -1,7 +1,8 @@
 {
   "comment": "Poll GitHub pull requests (via issues API) for configured label/assignee criteria and route matched tickets to configured deployment step targets.",
   "defaultStepProperties": {
-    "type": "scripted"
+    "type": "scripted",
+    "debug": true
   },
   "workflows": [
     {
