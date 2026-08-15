@@ -65,6 +65,20 @@ doc
                             body: { type: "string" }
                         }
                     }
+                },
+                errors: {
+                    type: "array",
+                    items: {
+                        type: "object",
+                        additionalProperties: true,
+                        required: ["systemError"],
+                        properties: {
+                            systemError: { type: "string" },
+                            status_code: { type: "string" },
+                            response: {},
+                            httpErrorKind: { type: "string" }
+                        }
+                    }
                 }
             }
         }
@@ -238,12 +252,44 @@ doc
         var pollGroups = JSON.parse(context.getBody());
 
         var totalItems = 0;
+        var aggregatedErrors = [];
         for (var gCount = 0; gCount < pollGroups.length; gCount += 1) {
             totalItems += Array.isArray((pollGroups[gCount] || {}).items) ? pollGroups[gCount].items.length : 0;
+            var groupErrors = Array.isArray((pollGroups[gCount] || {}).errors) ? pollGroups[gCount].errors : [];
+            for (var e = 0; e < groupErrors.length; e += 1) {
+                var error = groupErrors[e] || {};
+                var systemError = String(error.systemError || "").trim();
+                if (!systemError) {
+                    continue;
+                }
+                aggregatedErrors.push({
+                    systemError: systemError,
+                    status_code: String(error.status_code || "").trim(),
+                    httpErrorKind: String(error.httpErrorKind || "").trim(),
+                    response: String(error.response || "").trim()
+                });
+                context.addSystemError(systemError);
+            }
         }
+
+        if (aggregatedErrors.length > 0) {
+            var handledFailureSummary = {
+                poll_group_count: pollGroups.length,
+                handled_errors_count: aggregatedErrors.length,
+                handled_errors: aggregatedErrors
+            };
+            var handledFailureMessage = "github-watcher handled poll failure(s): " + JSON.stringify(handledFailureSummary);
+            if (typeof context.diagnosticLog === "function") {
+                context.diagnosticLog(handledFailureMessage);
+            } else {
+                console.log(handledFailureMessage);
+            }
+        }
+
         logDecision(decisionLoggingEnabled, "poll-result", {
             poll_group_count: pollGroups.length,
             polled_items: totalItems,
+            errors_count: aggregatedErrors.length,
             handoff_delay_seconds: issueHandoffDelaySeconds
         });
 
@@ -463,11 +509,13 @@ doc
         context.setPersistedItem("issueUpdatedAtByNumber", JSON.stringify(issueWatermarks));
         logDecision(decisionLoggingEnabled, "poll-summary", {
             scanned_issues: scanned,
-            dispatched_actions: dispatched
+            dispatched_actions: dispatched,
+            errors_count: aggregatedErrors.length
         });
         context.setBody(JSON.stringify({
-            status: "ok",
+            status: aggregatedErrors.length > 0 ? "ok_with_errors" : "ok",
             scanned_issues: scanned,
-            dispatched_actions: dispatched
+            dispatched_actions: dispatched,
+            handled_errors_count: aggregatedErrors.length
         }));
     });

@@ -34,6 +34,39 @@ function pollGroup(items: unknown[], options: {
 }
 
 describe('poll-results-processor', () => {
+  it('records poll failures from the aggregate error envelope', async () => {
+    const context = createJavascriptContext({
+      body: JSON.stringify([
+        {
+          repo: 'opscotch/hopscotch',
+          assignee: 'machinoal2-cell',
+          watchEntity: 'pr',
+          criteria: [{ label: 'triage', deploymentId: 'ticket-actions', stepId: 'dispatch-triage' }],
+          items: [],
+          errors: [{
+            systemError: 'GitHub polling request failed with status 403: forbidden',
+            status_code: '403',
+            response: 'forbidden',
+            httpErrorKind: 'github-poll',
+          }],
+        },
+      ]),
+      data: {},
+    });
+
+    await suite.run("resource", { context });
+
+    expect(context.hasSystemErrors()).toBe(true);
+    expect(context.getSystemErrors()).toContain('GitHub polling request failed with status 403: forbidden');
+    expect(context.__logs.join('\n')).toContain('github-watcher handled poll failure(s)');
+    expect(JSON.parse(context.getBody() || '{}')).toEqual({
+      status: 'ok_with_errors',
+      scanned_issues: 0,
+      dispatched_actions: 0,
+      handled_errors_count: 1,
+    });
+  });
+
   it('dispatches matching issue and updates watermark', async () => {
     const issues = [
       {
@@ -91,6 +124,7 @@ describe('poll-results-processor', () => {
       status: 'ok',
       scanned_issues: 2,
       dispatched_actions: 1,
+      handled_errors_count: 0,
     });
   });
 
@@ -119,6 +153,7 @@ describe('poll-results-processor', () => {
       status: 'ok',
       scanned_issues: 1,
       dispatched_actions: 0,
+      handled_errors_count: 0,
     });
   });
 
@@ -172,6 +207,7 @@ describe('poll-results-processor', () => {
       status: 'ok',
       scanned_issues: 1,
       dispatched_actions: 0,
+      handled_errors_count: 0,
     });
   });
 
@@ -212,6 +248,7 @@ describe('poll-results-processor', () => {
       status: 'ok',
       scanned_issues: 1,
       dispatched_actions: 0,
+      handled_errors_count: 0,
     });
   });
 
@@ -244,6 +281,7 @@ describe('poll-results-processor', () => {
       status: 'ok',
       scanned_issues: 1,
       dispatched_actions: 0,
+      handled_errors_count: 0,
     });
   });
 

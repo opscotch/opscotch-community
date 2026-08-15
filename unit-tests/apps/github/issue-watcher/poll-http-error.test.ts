@@ -13,7 +13,15 @@ describe('poll-http-error', () => {
     const context = createJavascriptContext({
       body: 'forbidden',
       data: { httpErrorKind: 'github-poll' },
-      properties: { status_code: '403' },
+      properties: {
+        status_code: '403',
+        gh_poll_group: JSON.stringify({
+          repo: 'opscotch/hopscotch',
+          assignee: 'machinoal2-cell',
+          watchEntity: 'pr',
+          criteria: [{ label: 'triage', deploymentId: 'ticket-actions', stepId: 'dispatch-triage' }],
+        }),
+      },
     });
 
     await suite.run("resource", { context });
@@ -24,6 +32,17 @@ describe('poll-http-error', () => {
       status: 'error',
       status_code: '403',
       response: 'forbidden',
+      repo: 'opscotch/hopscotch',
+      assignee: 'machinoal2-cell',
+      watchEntity: 'pr',
+      criteria: [{ label: 'triage', deploymentId: 'ticket-actions', stepId: 'dispatch-triage' }],
+      items: [],
+      errors: [{
+        systemError: 'GitHub polling request failed with status 403: forbidden',
+        status_code: '403',
+        response: 'forbidden',
+        httpErrorKind: 'github-poll',
+      }],
     });
   });
 });
