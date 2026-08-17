@@ -1,0 +1,762 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://opscotch.co/bootstrap.schema.json",
+  "title": "opscotch Bootstrap array",
+  "description": "The initial configuration for the opscotch agent",
+  "type": "array",
+  "minItems" : 1,
+  "items": {
+    "$ref": "#/$defs/record"
+  },
+  "$defs" : {
+    "stringBoolean" : {
+      "oneOf": [
+        {
+          "type": "boolean",
+          "title": "Enabled (boolean)"
+        },
+        {
+          "title": "Enabled (string boolean)",
+          "type": "string",
+          "enum": [
+            "true",
+            "false"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "\\$\\{.+\\}",
+          "title": "Enabled (environment variable string)"
+        }
+      ]
+    },
+    "record" : {
+      "title": "opscotch Bootstrap record",
+      "description": "The individual bootstrap configuration record for the opscotch agent bootstrap",
+      "type": "object",
+      "required": ["deploymentId", "remoteConfiguration"],
+      "properties": {
+        "enabled" : {
+          "description" : "Setting to false disables the loading of this bootstrap",
+          "$ref": "#/$defs/stringBoolean"
+        },
+        "licensing" : {
+          "$ref": "#/$defs/licensing"
+        },
+        "agentPrivateKey": {
+          "description": "The private key for the agent to decrypt the remote configuration",
+          "type": "string"
+        },
+        "persistenceRoot" : {
+          "description" : "Defines the filesystem storage root for persistence",
+          "type": "string"
+        },
+        "deploymentId": {
+          "description": "A Service Provider defined value that must be unique per deployed agent configuration",
+          "type": "string"
+        },
+        "packaging" : {
+          "$ref": "#/$defs/packaging"
+        },
+        "keys" : {
+          "description": "A list of keys that are available to workflows for cryptographic usage",
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/$defs/key"
+          }
+        },
+        "remoteConfiguration": {
+          "description": "A URL or file path to the main configuration",
+          "type": "string"
+        },
+        "remoteConfigurationAuth": {
+          "description": "When using a URL remoteConfiguration, setting this property will set the Authorization header",
+          "type": "string"
+        },
+        "remoteConfigurationHeaders": {
+          "description": "When using a URL remoteConfiguration, these headers are added to the HTTP request",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "remoteConfigurationTimeout" : {
+          "description": "When using a URL remoteConfiguration, sets the HTTP timeout in milliseconds. When frequency > 0, this value must be less than frequency.",
+          "type": "number"
+        },
+        "frequency": {
+          "description": "Sets how often configuration updates are checked in milliseconds. For URL remoteConfiguration this is HTTP polling. For file remoteConfiguration this controls whether update watching is enabled. Set to 0 to disable all updates after startup (load once only).",
+          "type": "number"
+        },
+        "deferLoading": {
+          "description": "When true, each step initializes only trigger wiring at startup and defers full step setup until first execution.",
+          "$ref": "#/$defs/stringBoolean"
+        },
+        "startupPriority": {
+          "description": "Startup activation ordering priority across deployments in the bootstrap. Lower numbers activate first.",
+          "type": "number"
+        },
+        "errorHandling": {
+          "description": "Determines the behavior of error handling while loading the main configuration",
+          "$ref": "#/$defs/errorhandling"
+        },
+        "workflow" : {
+          "description": "Determines the behaviour of error handling and metrics for the workflow",
+          "type" : "object",
+          "properties" : {
+            "errorHandling": {
+              "description": "Determines the behavior of error handling while loading the main configuration",
+              "$ref": "#/$defs/errorhandling"
+            },
+            "metricOutput" : {
+              "$ref": "#/$defs/output"
+            },
+            "outputs" : {
+              "description": "Additional outputs that can be referenced by id from workflows",
+              "type" : "array",
+              "items" : {
+                "$ref": "#/$defs/output"
+              }
+            },
+            "shutdownTimeout": {
+              "description": "Sets how long to wait in milliseconds for active workflow runs to finish during agent shutdown before the shared HTTP client is closed and in-flight HTTP calls are cancelled.",
+              "type": "number",
+              "default": 60000
+            },
+            "maxTimerConcurrency": {
+              "description": "Sets the maximum number of active executions allowed from one workflow timer. Null uses no per-timer limit.",
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 1,
+              "default": null
+            },
+            "timers": {
+              "description": "Controls bootstrap-time behavior for workflow timers",
+              "type": "object",
+              "properties": {
+                "staggerPct": {
+                  "description": "Applies a one-time randomized startup delay to repeating workflow timers. Valid range is 0..100.",
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 100,
+                  "default": 0
+                }
+              }
+            }
+          }
+        },
+        "agentControl": {
+          "$ref": "#/$defs/agentControl"
+        },
+        "allowExternalHostAccess" : {
+          "type" : "array",
+          "items": {
+            "$ref": "#/$defs/host"
+          }
+        },
+        "allowFileAccess" : {
+          "type" : "array",
+          "items": {
+            "$ref": "#/$defs/filePermitter"
+          }
+        },
+        "allowHttpServerAccess" : {
+          "type" : "array",
+          "items": {
+            "$ref": "#/$defs/httpServerPermitter"
+          }
+        },
+        "allowDeploymentAccess" : {
+          "type" : "array",
+          "items": {
+            "$ref": "#/$defs/deploymentAccessPermitter"
+          }
+        },
+        "reloadTimeout" : {
+          "type" : "number",
+          "description" : "Defines the maximum time in milliseconds to wait for a workflow to terminate"
+        },
+        "data" : {
+          "description": "Additional properties that will be merged with the main configuration data field and be available to all child elements in the main configuration tree (expect the hosts property)",
+          "type" : "object"
+        }
+      },
+      "unevaluatedProperties": false
+    },
+    "licensing" : {
+      "type" : "object",
+      "properties": {
+        "licenseHost" : {
+          "description": "Host to use for obtaining a license",
+          "type": "string"
+        },
+        "licenseHostPoolId" : {
+          "type" : "string",
+          "description": "Specify a license pool to use"
+        }
+      }
+    },
+    "packaging" : {
+      "description": "Defines how to open the packaged configuration",
+      "type" : "object",
+      "additionalProperties": false,
+      "properties" : {
+        "packageId" : {
+          "description": "This packageId must match the packageId field in the package to ensure that the expected package is being deployed",
+          "type" : "string"
+        },
+        "requiredSigners" : {
+          "description": "A list of signers signatures that must be present in the package",
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/$defs/signer"
+          }
+        },
+        "requiredAdditionalSignerCount" : {
+          "description": "Set the number of additional signers required from the `additionalSigners` list",
+          "type": "number"
+        },
+        "additionalSigners" : {
+          "type": "array",
+          "items": {
+            "$ref" : "#/$defs/signer"
+          }
+        },
+        "packagerIdentities" : {
+          "description": "A list of public key ids of packaging identities that proves the authenticity of the package. The private key for this package deployment must be in the `keys` list.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "agentControl": {
+      "description": "Controls behaviour that allows workflows to influence the agent lifecycle",
+      "type": "object",
+      "properties": {
+        "workflowCanShutdownAgent": {
+          "description": "Allow workflows to request that the agent shuts down",
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "key" : {
+      "description": "A key used to perform cryptographic operations in the agent and workflows. Each key has a specific required length and purpose.",
+      "type": "object",
+      "required": ["id", "purpose", "type", "keyHex"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "A unique identifier used to reference a specific key"
+        },
+        "purpose": {
+          "type": "string",
+          "enum": ["sign", "authenticated", "symmetric", "anonymous"],
+          "description": "Cryptographic purpose this key is used for: sign - digital signatures, authenticated - mutual public/private authenticated encryption, symmetric - symmetric key encryption, anonymous - anonymous public key encryption"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["public", "secret"],
+          "description": "Whether this key is public or secret"
+        },
+        "keyHex": {
+          "type": "string",
+          "description": "Hex-encoded key material",
+          "pattern": "^[0-9a-fA-F]+$"
+        },
+        "metadata": {
+          "type": "object",
+          "properties": {
+            "description": {
+              "type": "string",
+              "description": "Optional human-readable description"
+            }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": { "purpose": { "const": "sign" }, "type": { "const": "secret" } }
+          },
+          "then": { "patternProperties": { "keyHex": { "pattern": "^[0-9a-fA-F]{128}$" } } }
+        },
+        {
+          "if": {
+            "properties": { "purpose": { "const": "sign" }, "type": { "const": "public" } }
+          },
+          "then": { "patternProperties": { "keyHex": { "pattern": "^[0-9a-fA-F]{64}$" } } }
+        },
+        {
+          "if": {
+            "properties": { "purpose": { "const": "authenticated" } }
+          },
+          "then": { "patternProperties": { "keyHex": { "pattern": "^[0-9a-fA-F]{64}$" } } }
+        },
+        {
+          "if": {
+            "properties": { "purpose": { "const": "symmetric" } }
+          },
+          "then": {
+            "properties": { "type": { "const": "secret" } },
+            "patternProperties": { "keyHex": { "pattern": "^[0-9a-fA-F]{64}$" } }
+          }
+        },
+        {
+          "if": {
+            "properties": { "purpose": { "const": "anonymous" }, "type": { "const": "secret" } }
+          },
+          "then": { "patternProperties": { "keyHex": { "pattern": "^[0-9a-fA-F]{64}$" } } }
+        },
+        {
+          "if": {
+            "properties": { "purpose": { "const": "anonymous" }, "type": { "const": "public" } }
+          },
+          "then": { "patternProperties": { "keyHex": { "pattern": "^[0-9a-fA-F]{64}$" } } }
+        }
+      ]
+    },
+    "signer" : {
+      "description": "A signer is a key that is used to sign, or verifiy the signature of data",
+      "required": ["id"],
+      "properties": {
+        "id" : {
+          "type": "string",
+          "description": "Unique identifier for this signer - it should match the id of the key used to sign the package"
+        },
+        "description" : {
+          "type": "string",
+          "description": "Optional human-readable description"
+        }
+      }
+    },
+    "host" : {
+      "title": "opscotch remote host definition",
+      "description": "A HTTP(S) host that the agent is expected to communicate with",
+      "type": "object",
+      "required": ["id"],
+      "properties": {
+        "id": {
+          "description": "A unique string that identifies this host in workflow configurations",
+          "type": "string"
+        },
+        "host": {
+          "description": "A URL that is used as the base for constructing URLs to call",
+          "type": "string"
+        },
+        "transport": {
+          "description": "Defines how this host is reached",
+          "type": "string",
+          "enum": ["http", "inProc"],
+          "default": "http"
+        },
+        "inProcServerId": {
+          "description": "When transport is inProc, identifies the bootstrap http server to route to internally",
+          "type": "string"
+        },
+        "inProcDeploymentId": {
+          "description": "When transport is inProc, optionally route to a different deploymentId",
+          "type": "string"
+        },
+        "headers": {
+          "description": "A object of HTTP headers to be sent with every call",
+          "type": "object"
+        },
+        "authenticationHost" : {
+          "$ref": "#/$defs/stringBoolean"
+        },
+        "allowList": {
+          "description": "A list of allowed <http method, url path> tuples that may be called on this host",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/hostAllowItem"
+          }
+        },
+        "data" : {
+          "description": "Additional properties that will accessible during authentication steps",
+          "type" : "object"
+        },
+        "httpTimeout" : {
+          "type" : "number",
+          "description" : "Default http timeout in milliseconds for steps that call this host"
+        }
+      },
+      "if": {
+        "properties": {
+          "transport": {
+            "enum": ["http"]
+          }
+        }
+      },
+      "then": {
+        "required": ["host"]
+      },
+      "else": {
+        "if": {
+          "properties": {
+            "transport": {
+              "enum": ["inProc"]
+            }
+          }
+        },
+        "then": {
+          "required": ["inProcServerId"]
+        }
+      },
+      "unevaluatedProperties": false
+    },
+    "hostAllowItem" : {
+      "unevaluatedProperties": false,
+      "title": "opscotch allowlist item",
+      "description": "Defines allowed http access patterns",
+      "type": "object",
+      "properties": {
+        "method": {
+          "enum": [
+            "GET",
+            "HEAD",
+            "POST",
+            "PUT",
+            "DELETE",
+            "OPTIONS",
+            "PATCH"
+          ]
+        },
+        "uriPattern" : {
+          "type": "string"
+        }
+      }
+    },
+    "errorhandling" : {
+      "title": "opscotch Error Handling",
+      "description": "Defines how errors are handled",
+      "type": "object",
+      "required": [],
+      "properties": {
+        "enableLocalLogging": {
+          "description": "Enable or disables logging of errors and information to the agent standard out",
+          "$ref": "#/$defs/stringBoolean"
+        },
+        "metrics": {
+          "description": "Defines how error metrics are sent to a remote system",
+          "$ref": "#/$defs/output"
+        },
+        "logs": {
+          "description": "Defines how error logs are sent to a remote system",
+          "$ref": "#/$defs/output"
+        },
+        "redactionPatterns": {
+          "description": "Defines regex patterns to apply redaction to log statements",
+          "type": "array",
+          "items" : {
+            "type" : "string"
+          }
+        }
+      },
+      "unevaluatedProperties": false
+    },
+    "output" : {
+      "title": "opscotch Output Handling",
+      "description": "Configuration for how to send data to a remote system",
+      "type": "object",
+      "if" : {
+        "oneOf" : [
+          {
+            "properties" : {
+              "enabled" : {
+                "const" : false
+              }
+            }
+          },
+          {
+            "properties" : {
+              "enabled" : {
+                "const" : "false"
+              }
+            }
+          }
+        ]
+      },
+      "then" : {
+      },
+      "else" : {
+        "if": {
+          "properties": {
+            "type": {
+              "const": "otel"
+            }
+          }
+        },
+        "then": {
+          "required": ["routingToken", "outputUrl"]
+        },
+        "else": {
+          "required": ["routingToken", "outputUrl"]
+        }
+      },
+      "properties": {
+        "id": {
+          "description": "A unique id used to reference this output from workflows",
+          "type": "string"
+        },
+        "enabled": {
+          "description": "Enables or disables the sending of data",
+          "$ref": "#/$defs/stringBoolean"
+        },
+        "type": {
+          "description": "The output type. When set to 'otel', an OTEL sender is used",
+          "type": "string"
+        },
+        "typeProperties": {
+          "description": "Type-specific properties keyed by the type name",
+          "type": "object",
+          "properties": {
+            "otel": {
+              "type": "object",
+              "properties": {
+                "endpoint": {
+                  "description": "OTLP endpoint for the OTEL exporter",
+                  "type": "string"
+                },
+                "protocol": {
+                  "description": "OTLP protocol (grpc or http)",
+                  "type": "string"
+                },
+                "intervalMs": {
+                  "description": "Metric export interval in milliseconds",
+                  "type": "number"
+                },
+                "timeoutMs": {
+                  "description": "Exporter timeout in milliseconds",
+                  "type": "number"
+                },
+                "headers": {
+                  "description": "Additional headers for OTLP exporter",
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                }
+              },
+              "additionalProperties": true
+            }
+          },
+          "additionalProperties": {
+            "type": "object"
+          }
+        },
+        "routingToken": {
+          "description": "A Service Provider defined value that must be unique per deployed agent",
+          "type": "string"
+        },
+        "outputUrl": {
+          "description": "The URL that data is transmitted to",
+          "type": "string"
+        },
+        "outputAuthorization": {
+          "description": "Set the Authorization header",
+          "type": "string"
+        },
+        "persistenceRoot": {
+          "description": "Sets the persistence root for the output queue storage",
+          "type": "string"
+        }
+      },
+      "unevaluatedProperties": false
+    },
+    "filePermitter" : {
+      "title": "opscotch File Permitter",
+      "description": "Define controlled access to files",
+      "type": "object",
+      "required": ["id", "directoryOrFile"],
+      "properties": {
+        "id" : {
+          "description": "An id that must be unique to this bootstrap",
+          "type": "string"
+        },
+        "directoryOrFile" : {
+          "description": "A path to a directory or file",
+          "type": "string"
+        },
+        "patterns" : {
+          "description": "A list of (Java) Regular Expressions that can be used to further restrict access to files in the directory",
+          "type": "array",
+          "items" : {
+            "type": "string"
+          }
+        },
+        "READ" : {
+          "description": "When true files will be readable",
+          "type": "boolean"
+        },
+        "LIST" : {
+          "description": "When true directories will be listable",
+          "type": "boolean"
+        },
+        "WRITE" : {
+          "description": "When true files will be writable",
+          "type": "boolean"
+        },
+        "DELETE" : {
+          "description": "When true files will be deletable",
+          "type": "boolean"
+        },
+        "required" : {
+          "type" : "boolean",
+          "description": "if set to true the file or directory must exist"
+        }
+      }
+    },
+    "httpServerPermitter" : {
+      "title": "opscotch Http Server Permitter",
+      "description": "Define controlled access to a server",
+      "type": "object",
+      "required": ["id"],
+      "properties": {
+        "id" : {
+          "description": "An id that must be unique to this bootstrap",
+          "type": "string"
+        },
+        "port" : {
+          "description": "Set the port - must be unique to the host",
+          "type": "integer",
+          "maximum": 65535
+        },
+        "tcp" : {
+          "description": "When true this server will allow TCP triggers",
+          "type": "boolean"
+        },
+        "bindAddress" : {
+          "description": "Bind address for the server",
+          "type": "string",
+          "default": "127.0.0.1"
+        },
+        "inProcOnly" : {
+          "description": "When true, this server will not bind to a network port and will only be available for in-process routing",
+          "type": "boolean",
+          "default": false
+        },
+        "serveFromPackagedAsset" : {
+          "description": "Defines how to serve static files from a packaged asset (zip file)",
+          "type": "object",
+          "properties": {
+            "packagedAssetFileId" : {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "inProcOnly": { "const": true }
+            },
+            "required": ["inProcOnly"]
+          },
+          "then": {
+            "not": { "required": ["port"] }
+          },
+          "else": {
+            "required": ["port"]
+          }
+        }
+      ]
+    },
+    "deploymentAccessPermitter" : {
+      "title": "opscotch Deployment Access Permitter",
+      "description": "Define controlled access between deployments in the same agent",
+      "type": "object",
+      "required": ["id", "access"],
+      "properties": {
+        "id" : {
+          "description": "An id that must be unique to this bootstrap",
+          "type": "string"
+        },
+        "deploymentId" : {
+          "description": "Legacy shorthand for a single deploymentId in the access group (preferred shape is deploymentIds)",
+          "type": "string"
+        },
+        "deploymentIds" : {
+          "description": "The deploymentIds that belong to this access group",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "anyDeployment" : {
+          "description": "When access is receive, allow calls from any deployment",
+          "type": "boolean",
+          "default": false
+        },
+        "startupWaitTimeoutMs": {
+          "description": "When access is call, maximum time in milliseconds to wait for target deployment startup readiness during cross-deployment calls.",
+          "type": "number"
+        },
+        "access" : {
+          "description": "Access mode for this deployment link",
+          "type": "string",
+          "enum": ["call", "receive"]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "access": { "const": "call" }
+            }
+          },
+          "then": {
+            "anyOf": [
+              { "required": ["deploymentId"] },
+              { "required": ["deploymentIds"] }
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "access": { "const": "receive" },
+              "anyDeployment": { "const": true }
+            },
+            "required": ["anyDeployment"]
+          },
+          "then": {
+            "not": {
+              "anyOf": [
+                { "required": ["deploymentId"] },
+                { "required": ["deploymentIds"] }
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "access": { "const": "receive" }
+            },
+            "not": {
+              "properties": {
+                "anyDeployment": { "const": true }
+              }
+            }
+          },
+          "then": {
+            "anyOf": [
+              { "required": ["deploymentId"] },
+              { "required": ["deploymentIds"] }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}
