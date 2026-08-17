@@ -40,6 +40,7 @@ DEPLOYMENTS = (
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
+    parser.add_argument("--receiver-host", default="127.0.0.1")
     parser.add_argument("--receiver-port", type=int, required=True)
     parser.add_argument("--output-directory", type=Path, required=True)
     return parser.parse_args()
@@ -66,7 +67,9 @@ def workflow() -> dict:
     }
 
 
-def bootstrap_record(deployment_id: str, receiver_port: int, path_token: str) -> dict:
+def bootstrap_record(
+    deployment_id: str, receiver_host: str, receiver_port: int, path_token: str
+) -> dict:
     persistence_root = f"/persistence/{deployment_id}"
     return {
         "enabled": True,
@@ -82,7 +85,7 @@ def bootstrap_record(deployment_id: str, receiver_port: int, path_token: str) ->
             "metricOutput": {
                 "enabled": True,
                 "routingToken": deployment_id,
-                "outputUrl": f"http://127.0.0.1:{receiver_port}/metrics/{path_token}",
+                "outputUrl": f"http://{receiver_host}:{receiver_port}/metrics/{path_token}",
                 "persistenceRoot": f"{persistence_root}/metrics",
             },
             "errorHandling": {
@@ -106,6 +109,7 @@ def main() -> int:
             json.dumps(
                 [bootstrap_record(
                     deployment["deployment_id"],
+                    args.receiver_host,
                     args.receiver_port,
                     deployment["path_token"],
                 )],
@@ -123,7 +127,7 @@ def main() -> int:
 
     hostrecord = {
         "id": "external-secrets-hostrecord",
-        "host": f"http://127.0.0.1:{args.receiver_port}/hostrecord.properties",
+        "host": f"http://{args.receiver_host}:{args.receiver_port}/hostrecord.properties",
         "headers": {
             "X-Source-Case": "hostrecord",
         },
@@ -136,14 +140,14 @@ def main() -> int:
         "file:/fixtures/file.properties\n"
     )
     (args.output_directory / "url-source.txt").write_text(
-        f"http://127.0.0.1:{args.receiver_port}/plain.properties\n"
+        f"http://{args.receiver_host}:{args.receiver_port}/plain.properties\n"
     )
     (args.output_directory / "hostrecord-source.txt").write_text(
         f"hostrecord:{encoded_hostrecord}\n"
     )
     (args.output_directory / "combined-source.txt").write_text(
         "file:/fixtures/file.properties;"
-        f"http://127.0.0.1:{args.receiver_port}/plain.properties;"
+        f"http://{args.receiver_host}:{args.receiver_port}/plain.properties;"
         f"hostrecord:{encoded_hostrecord}\n"
     )
     (args.output_directory / "expected-paths.json").write_text(

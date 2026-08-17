@@ -17,6 +17,7 @@ class ReusableThreadingHTTPServer(ThreadingHTTPServer):
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--port", type=int, required=True)
+    parser.add_argument("--bind-address", default="127.0.0.1")
     parser.add_argument("--expected-metrics", type=Path, required=True)
     parser.add_argument("--expected-logs", type=Path, required=True)
     parser.add_argument("--state-directory", type=Path, required=True)
@@ -155,7 +156,7 @@ def main() -> int:
         args.response_status,
         args.response_delay,
     )
-    server = ReusableThreadingHTTPServer(("127.0.0.1", args.port), handler)
+    server = ReusableThreadingHTTPServer((args.bind_address, args.port), handler)
     server.serve_forever()
     return 0
 

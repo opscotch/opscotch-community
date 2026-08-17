@@ -12,6 +12,7 @@ TIMER_PERIOD_MS = 600_000
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
+    parser.add_argument("--receiver-host", default="127.0.0.1")
     parser.add_argument("--receiver-port", type=int, required=True)
     parser.add_argument("--output-directory", type=Path, required=True)
     return parser.parse_args()
@@ -69,7 +70,9 @@ def workflow(deployment_number: int) -> dict:
     }
 
 
-def bootstrap_definition(deployment_number: int, receiver_port: int) -> dict:
+def bootstrap_definition(
+    deployment_number: int, receiver_host: str, receiver_port: int
+) -> dict:
     deployment_id = f"twenty-bootstrap-{deployment_number}"
     return {
         "deploymentId": deployment_id,
@@ -82,7 +85,7 @@ def bootstrap_definition(deployment_number: int, receiver_port: int) -> dict:
             "logs": {
                 "enabled": True,
                 "routingToken": deployment_id,
-                "outputUrl": f"http://127.0.0.1:{receiver_port}/logs",
+                "outputUrl": f"http://{receiver_host}:{receiver_port}/logs",
                 "persistenceRoot": f"/persistence/{deployment_id}/logs",
             },
         },
@@ -90,7 +93,7 @@ def bootstrap_definition(deployment_number: int, receiver_port: int) -> dict:
             "metricOutput": {
                 "enabled": True,
                 "routingToken": deployment_id,
-                "outputUrl": f"http://127.0.0.1:{receiver_port}/metrics",
+                "outputUrl": f"http://{receiver_host}:{receiver_port}/metrics",
                 "persistenceRoot": f"/persistence/{deployment_id}/metrics",
             },
             "errorHandling": {
@@ -113,7 +116,9 @@ def main() -> int:
             json.dumps(workflow(deployment_number), indent=2) + "\n"
         )
         definitions.append(
-            bootstrap_definition(deployment_number, args.receiver_port)
+            bootstrap_definition(
+                deployment_number, args.receiver_host, args.receiver_port
+            )
         )
         for item in range(1, ITEMS_PER_DEPLOYMENT + 1):
             expected_metrics.append(

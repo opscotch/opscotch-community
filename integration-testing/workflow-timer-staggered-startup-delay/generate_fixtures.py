@@ -15,6 +15,7 @@ PERIOD_MS = 60_000
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
+    parser.add_argument("--receiver-host", default="127.0.0.1")
     parser.add_argument("--receiver-port", type=int, required=True)
     parser.add_argument("--output-directory", type=Path, required=True)
     return parser.parse_args()
@@ -44,6 +45,7 @@ def workflow() -> dict:
 
 
 def bootstrap_record(
+    receiver_host: str,
     receiver_port: int,
     stagger_pct: Optional[int],
     phase_name: str,
@@ -53,7 +55,7 @@ def bootstrap_record(
         "metricOutput": {
             "enabled": True,
             "routingToken": DEPLOYMENT_ID,
-            "outputUrl": f"http://127.0.0.1:{receiver_port}/metrics",
+            "outputUrl": f"http://{receiver_host}:{receiver_port}/metrics",
             "persistenceRoot": f"{persistence_root}/metrics",
         },
         "errorHandling": {
@@ -82,11 +84,21 @@ def main() -> int:
         json.dumps(workflow(), indent=2) + "\n"
     )
     (args.output_directory / "bootstrap-baseline.json").write_text(
-        json.dumps([bootstrap_record(args.receiver_port, None, "baseline")], indent=2)
+        json.dumps(
+            [bootstrap_record(args.receiver_host, args.receiver_port, None, "baseline")],
+            indent=2,
+        )
         + "\n"
     )
     (args.output_directory / "bootstrap-staggered.json").write_text(
-        json.dumps([bootstrap_record(args.receiver_port, 100, "staggered")], indent=2)
+        json.dumps(
+            [
+                bootstrap_record(
+                    args.receiver_host, args.receiver_port, 100, "staggered"
+                )
+            ],
+            indent=2,
+        )
         + "\n"
     )
     (args.output_directory / "metadata.json").write_text(

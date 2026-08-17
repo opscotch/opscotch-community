@@ -1,0 +1,47 @@
+services:
+  receiver:
+    image: python:3.12-alpine
+    command:
+      - python3
+      - /scenario/receiver.py
+      - --bind-address
+      - 0.0.0.0
+      - --port
+      - "8080"
+      - --expected-metrics
+      - /fixtures/${EXPECTED_METRICS_FILE:-expected-restart-metrics.json}
+      - --expected-logs
+      - /fixtures/${EXPECTED_LOGS_FILE:-expected-restart-logs.json}
+      - --state-directory
+      - /state
+    volumes:
+      - ${HELPER_DIR}/receiver.py:/scenario/receiver.py:ro
+      - ${FIXTURE_DIR}:/fixtures:ro
+      - ${STATE_DIR}:/state
+    healthcheck:
+      test:
+        - CMD
+        - python3
+        - -c
+        - import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health', timeout=1).read()
+      interval: 1s
+      timeout: 2s
+      retries: 30
+      start_period: 1s
+
+  agent:
+    image: ${AGENT_IMAGE}
+    environment:
+      BOOTSTRAP_FILE: /fixtures/bootstrap.json
+      OPSCOTCH_LEGAL_ACCEPTED: ${OPSCOTCH_LEGAL_ACCEPTED}
+      OPSCOTCH_OPTS: --accept-legal=yes
+    volumes:
+      - ${FIXTURE_DIR}:/fixtures:ro
+      - ${PERSISTENCE_DIR}:/persistence
+
+  client:
+    image: python:3.12-alpine
+    command:
+      - sh
+      - -c
+      - exec sleep infinity

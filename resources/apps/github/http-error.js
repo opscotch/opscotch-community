@@ -16,6 +16,17 @@ doc
         var kind = context.getData("httpErrorKind").trim();
         var statusCode = String(context.getProperty("status_code") || "unknown");
         var responseBody = context.getBody() || "";
+        var responseSnippet = String(responseBody || "").trim();
+        if (responseSnippet.length > 200) {
+            responseSnippet = responseSnippet.slice(0, 200) + "...";
+        }
+        var pollGroup = null;
+        try {
+            pollGroup = JSON.parse(context.getProperty("gh_poll_group") || "null");
+        } catch (e) {
+            pollGroup = null;
+        }
+
         var result = {
             systemError: "HTTP request failed with status " + statusCode,
             body: {
@@ -26,17 +37,17 @@ doc
         };
 
         if (kind === "github-poll") {
-            result.systemError = "GitHub polling request failed with status " + statusCode;
+            result.systemError = "GitHub polling request failed with status " + statusCode + (responseSnippet ? ": " + responseSnippet : "");
         } else if (kind === "github-update") {
-            result.systemError = "GitHub issue update request failed with status " + statusCode;
+            result.systemError = "GitHub issue update request failed with status " + statusCode + (responseSnippet ? ": " + responseSnippet : "");
         } else if (kind === "github-actions") {
-            result.systemError = "GitHub actions request failed with status " + statusCode;
+            result.systemError = "GitHub actions request failed with status " + statusCode + (responseSnippet ? ": " + responseSnippet : "");
         } else if (kind === "github-fetch-comments") {
-            result.systemError = "GitHub issue comments request failed with status " + statusCode;
+            result.systemError = "GitHub issue comments request failed with status " + statusCode + (responseSnippet ? ": " + responseSnippet : "");
             result.body.comments = [];
             result.body.comments_count = 0;
         } else if (kind === "openclaw-reviewer") {
-            result.systemError = "OpenClaw reviewer invoke failed with status " + statusCode;
+            result.systemError = "OpenClaw reviewer invoke failed with status " + statusCode + (responseSnippet ? ": " + responseSnippet : "");
             result.body = {
                 queued: false,
                 status_code: statusCode,
@@ -56,6 +67,21 @@ doc
         } else {
             result.body.handler_kind = kind;
         }
+
+        if (pollGroup && pollGroup.repo && pollGroup.assignee && pollGroup.watchEntity && Array.isArray(pollGroup.criteria)) {
+            result.body.repo = pollGroup.repo;
+            result.body.assignee = pollGroup.assignee;
+            result.body.watchEntity = pollGroup.watchEntity;
+            result.body.criteria = pollGroup.criteria;
+            result.body.items = [];
+        }
+
+        result.body.errors = [{
+            systemError: result.systemError,
+            status_code: statusCode,
+            response: responseBody,
+            httpErrorKind: kind
+        }];
 
         context.addSystemError(result.systemError);
         context.setBody(JSON.stringify(result.body));

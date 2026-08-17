@@ -13,6 +13,7 @@ ACCESS_GROUP_ID = "bridge"
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
+    parser.add_argument("--receiver-host", default="127.0.0.1")
     parser.add_argument("--receiver-port", type=int, required=True)
     parser.add_argument("--caller-port", type=int, required=True)
     parser.add_argument("--remote-a-port", type=int, required=True)
@@ -137,7 +138,7 @@ def main() -> int:
             REMOTE_A_DEPLOYMENT_ID,
             args.remote_a_port,
             "target.workflow.json",
-            f"http://127.0.0.1:{args.receiver_port}/metrics/remote-a",
+            f"http://{args.receiver_host}:{args.receiver_port}/metrics/remote-a",
             "receive",
             [CALLER_DEPLOYMENT_ID],
         ),
@@ -145,7 +146,7 @@ def main() -> int:
             REMOTE_B_DEPLOYMENT_ID,
             args.remote_b_port,
             "target.workflow.json",
-            f"http://127.0.0.1:{args.receiver_port}/metrics/remote-b",
+            f"http://{args.receiver_host}:{args.receiver_port}/metrics/remote-b",
             "receive",
             [CALLER_DEPLOYMENT_ID],
         ),
