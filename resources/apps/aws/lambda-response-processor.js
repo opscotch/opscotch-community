@@ -1,6 +1,21 @@
 doc
     .dataSchema(
         {
+            $defs: {
+                handler: {
+                    type: "object",
+                    required: ["deploymentAccessId", "stepId"],
+                    properties: {
+                        deploymentAccessId: {
+                            type: "string"
+                        },
+                        "stepId": {
+                            type: "string"
+                        }
+                    },
+                    additionalProperties: false
+                }
+            },
             required : [ "eventRouting"],
             properties : {
                 lambdaDebug : {
@@ -22,22 +37,7 @@ doc
                         { required: ["apigw-v1"] },
                         { required: ["apigw-v2"] },
                         { required: ["eventbridge"] }
-                    ],
-                    "$defs": {
-                        handler: {
-                        type: "object",
-                        required: ["deploymentAccessId", "stepId"],
-                        properties: {
-                            deploymentAccessId: {
-                                type: "string"
-                            },
-                            "stepId": {
-                                type: "string"
-                            }
-                        },
-                        additionalProperties: false
-                        }
-                    }
+                    ]
                 }
             }
             
