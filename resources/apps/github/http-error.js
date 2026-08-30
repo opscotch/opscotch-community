@@ -46,20 +46,24 @@ doc
             result.systemError = "GitHub issue comments request failed with status " + statusCode + (responseSnippet ? ": " + responseSnippet : "");
             result.body.comments = [];
             result.body.comments_count = 0;
-        } else if (kind === "openclaw-reviewer") {
-            result.systemError = "OpenClaw reviewer invoke failed with status " + statusCode + (responseSnippet ? ": " + responseSnippet : "");
+        } else if (kind === "openclaw-reviewer" || kind === "cli-sidecar-reviewer") {
+            var reviewerName = kind === "cli-sidecar-reviewer" ? "CLI sidecar reviewer" : "OpenClaw reviewer";
+            var reviewerCode = kind === "cli-sidecar-reviewer" ? "cli_sidecar_invoke_failed" : "openclaw_invoke_failed";
+            result.systemError = reviewerName + " invoke failed with status " + statusCode + (responseSnippet ? ": " + responseSnippet : "");
             result.body = {
                 queued: false,
+                status: "error",
                 status_code: statusCode,
-                response: responseBody
+                response: responseBody,
+                error: {
+                    code: reviewerCode,
+                    message: result.systemError,
+                    retryable: true
+                }
             };
             if (typeof context.diagnosticLog === "function") {
-                context.diagnosticLog("openclaw invoke error response: " + JSON.stringify({
-                    status_code: statusCode,
-                    response: responseBody
-                }));
-            } else {
-                console.log("openclaw invoke error response: " + JSON.stringify({
+                context.diagnosticLog("reviewer invoke error response: " + JSON.stringify({
+                    kind: kind,
                     status_code: statusCode,
                     response: responseBody
                 }));
