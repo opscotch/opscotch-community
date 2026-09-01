@@ -126,6 +126,21 @@ doc
       keys: Object.keys(triggerResult)
     }));
 
+    // A failed dispatch cannot produce a new run. Return the API error now so
+    // callers can report the actual GitHub failure instead of a misleading
+    // run-resolution timeout after polling.
+    if (triggerResult.status === "error" || triggerResult.status_code >= 400 || triggerResult.errors) {
+      context.setBody(JSON.stringify({
+        status: "error",
+        operation: "trigger-and-resolve-workflow-run",
+        repo: repo,
+        workflow_id: workflowId,
+        trigger_response: triggerResult,
+        polls_used: 0
+      }));
+      return;
+    }
+
     var resolved = null;
     var polls = 0;
     var minCreatedTs = dispatchStartTs - 2 * 60 * 1000;

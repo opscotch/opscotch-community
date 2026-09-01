@@ -93,6 +93,41 @@ describe('github/action-runner actions-trigger-and-resolve-run', () => {
     expect(out.run_number).toBe(12);
   });
 
+  it('returns dispatch errors without polling for a run', async () => {
+    const context = createJavascriptContext({
+      timestamp: Date.now(),
+      data: { hostId: 'github-api' },
+      body: JSON.stringify({
+        operation: 'trigger-and-resolve-workflow-run',
+        repo: 'opscotch/builder',
+        workflow_id: 'multistage-build.yml',
+        ref: 'main',
+      }),
+      sendToStep: (call) => {
+        if (call.stepName === 'github-action-list-runs') {
+          return { body: JSON.stringify({ runs: [] }) };
+        }
+        if (call.stepName === 'github-action-trigger-only') {
+          return { body: JSON.stringify({ status: 'error', status_code: '422', response: 'Invalid workflow input', errors: [{ message: 'Unexpected input: buildagents' }] }) };
+        }
+        return { body: '{}' };
+      },
+    });
+
+    await suite.run('resource', { context });
+
+    const out = JSON.parse(context.getBody() || '{}');
+    expect(out).toMatchObject({
+      status: 'error',
+      operation: 'trigger-and-resolve-workflow-run',
+      repo: 'opscotch/builder',
+      workflow_id: 'multistage-build.yml',
+      polls_used: 0,
+      trigger_response: { status_code: '422', response: 'Invalid workflow input' },
+    });
+    expect(context.__sendToStepCalls.filter((call) => call.stepName === 'github-action-list-runs')).toHaveLength(1);
+  });
+
   // TODO: Skipped - test runner doesn't implement schema validation yet
   // The inSchema marks fields as required but testkit runs .run() directly
   // without pre-validation, so code proceeds to polling logic instead of failing early
