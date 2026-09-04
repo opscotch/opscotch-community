@@ -30,8 +30,18 @@ doc
                         updated_at: { type: "string" },
                         html_url: { type: "string" },
                         path: { type: "string" },
-                        line: { type: "integer" },
-                        original_line: { type: "integer" },
+                        line: {
+                            oneOf: [
+                                { type: "integer" },
+                                { type: "null" }
+                            ]
+                        },
+                        original_line: {
+                            oneOf: [
+                                { type: "integer" },
+                                { type: "null" }
+                            ]
+                        },
                         diff_hunk: { type: "string" },
                         resolved: { type: "boolean" },
                         is_resolved: { type: "boolean" },
@@ -102,8 +112,18 @@ doc
                                                                                     updatedAt: { type: "string" },
                                                                                     url: { type: "string" },
                                                                                     path: { type: "string" },
-                                                                                    line: { type: "integer" },
-                                                                                    originalLine: { type: "integer" },
+                                                                                    line: {
+                                                                                        oneOf: [
+                                                                                            { type: "integer" },
+                                                                                            { type: "null" }
+                                                                                        ]
+                                                                                    },
+                                                                                    originalLine: {
+                                                                                        oneOf: [
+                                                                                            { type: "integer" },
+                                                                                            { type: "null" }
+                                                                                        ]
+                                                                                    },
                                                                                     diffHunk: { type: "string" }
                                                                                 }
                                                                             }
@@ -157,8 +177,18 @@ doc
                         updated_at: { type: "string" },
                         html_url: { type: "string" },
                         path: { type: "string" },
-                        line: { type: "integer" },
-                        original_line: { type: "integer" },
+                        line: {
+                            oneOf: [
+                                { type: "integer" },
+                                { type: "null" }
+                            ]
+                        },
+                        original_line: {
+                            oneOf: [
+                                { type: "integer" },
+                                { type: "null" }
+                            ]
+                        },
                         diff_hunk: { type: "string" },
                         review_thread_id: { type: "string" },
                         review_thread_resolved: { type: "boolean" }
