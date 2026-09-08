@@ -4,8 +4,9 @@ test('constructs subscriptions with optional filters', () => {
   expect(buildSubscribeMessage({})).toEqual({ action: 'subscribe' });
   expect(buildSubscribeMessage({ metricNames: ' cpu_used, memory_used ', dimensions: 'ori=1, deploymentId=abc' })).toEqual({ action: 'subscribe', metric_names: ['cpu_used', 'memory_used'], dimensions: { ori: '1', deploymentId: 'abc' } });
 });
-test('parses a metric batch and discards malformed values', () => {
-  expect(parseLiveFrame(JSON.stringify({ metrics: [{ timestamp: '2026-01-01T00:00:00Z', name: 'cpu', value: 2 }, { name: 'bad', value: 1 }] })).observations).toEqual([{ timestamp: '2026-01-01T00:00:00.000Z', metricName: 'cpu', value: 2, dimensions: {} }]);
+test('parses a metric batch and retains the complete latest metric body', () => {
+  const metric = { timestamp: '2026-01-01T00:00:00Z', name: 'cpu', value: 2, dimensions: { host: 'api-1' }, trace: { requestId: 'abc' } };
+  expect(parseLiveFrame(JSON.stringify({ metrics: [metric, { name: 'bad', value: 1 }] })).observations).toEqual([{ timestamp: '2026-01-01T00:00:00.000Z', metricName: 'cpu', value: 2, dimensions: { host: 'api-1' }, raw: metric }]);
   expect(parseLiveFrame('{').error).toMatch(/invalid/i);
 });
 test('deduplicates timestamps and bounds metric history', () => {
