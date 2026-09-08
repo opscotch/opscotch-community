@@ -1,38 +1,6 @@
-.App {
-  text-align: center;
-}
-
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
-}
-
-.App-link {
-  color: #61dafb;
-}
-
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
+main { color: #17212b; font-family: Arial, sans-serif; margin: 0 auto; max-width: 1500px; padding: 1rem; }
+header { align-items: center; display: flex; gap: 1rem; } header img { height: 42px; } header h1 { margin: 0; } header button { margin-left: auto; }
+button { background: #2867b2; border: 0; border-radius: 4px; color: white; cursor: pointer; padding: .6rem .9rem; } button + button { margin-left: .5rem; }
+.status { margin: .25rem 0; } .status.connected { color: #198754; } .status.error { color: #b42318; } .status.reconnecting, .status.connecting { color: #9a6700; }
+.settings { background: #f4f7fb; border-radius: 6px; display: grid; gap: .6rem; margin: 1rem 0; max-width: 680px; padding: 1rem; }.settings h2, .settings p { margin: 0; }.settings input[type='url'], .settings input[type='password'], .settings input:not([type]) { box-sizing: border-box; padding: .55rem; width: 100%; }
+.charts { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }.metric-chart { border: 1px solid #d5dce5; border-radius: 6px; padding: .5rem; }.metric-chart h2 { font-size: 1rem; margin: .25rem; }.empty, .overflow { color: #52606d; padding: 2rem 0; }
