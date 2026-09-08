@@ -16,7 +16,8 @@ test('deduplicates timestamps and bounds metric history', () => {
 });
 test('requests and validates a Metrics Store browser ticket', async () => {
   const fetchImpl = jest.fn().mockResolvedValue({ ok: true, json: async () => ({ url: 'wss://metrics.example/live?ticket=one-time' }) });
-  await expect(requestMetricsStoreTicket('https://metrics.example/ticket', fetchImpl)).resolves.toBe('wss://metrics.example/live?ticket=one-time');
-  expect(fetchImpl).toHaveBeenCalledWith('https://metrics.example/ticket', { method: 'POST' });
-  await expect(requestMetricsStoreTicket('https://metrics.example/ticket', async () => ({ ok: true, json: async () => ({ url: 'https://not-a-websocket' }) }))).rejects.toThrow(/invalid WebSocket URL/i);
+  await expect(requestMetricsStoreTicket('https://metrics.example/ticket', 'Bearer v2.reader.signature', fetchImpl)).resolves.toBe('wss://metrics.example/live?ticket=one-time');
+  expect(fetchImpl).toHaveBeenCalledWith('https://metrics.example/ticket', { method: 'POST', headers: { Authorization: 'Bearer v2.reader.signature' } });
+  await expect(requestMetricsStoreTicket('https://metrics.example/ticket')).rejects.toThrow(/Authorization is required/i);
+  await expect(requestMetricsStoreTicket('https://metrics.example/ticket', 'Bearer v2.reader.signature', async () => ({ ok: true, json: async () => ({ url: 'https://not-a-websocket' }) }))).rejects.toThrow(/invalid WebSocket URL/i);
 });
