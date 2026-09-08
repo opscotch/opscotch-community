@@ -1,5 +1,6 @@
-import { clearLiveToken, loadConnectorConfig, saveConnectorConfig, STORAGE_KEY } from './connectorConfig';
+import { loadConnectorConfig, saveConnectorConfig, STORAGE_KEY } from './connectorConfig';
 
 beforeEach(() => localStorage.clear());
 test('migrates the legacy polling URL', () => { localStorage.setItem('url', 'http://legacy'); expect(loadConnectorConfig().polling.url).toBe('http://legacy'); });
-test('round trips and clears local live credentials', () => { saveConnectorConfig({ activeConnector: 'live', polling: { url: '' }, live: { url: 'wss://metrics', token: 'secret', metricNames: 'cpu', dimensions: '' } }); expect(JSON.parse(localStorage.getItem(STORAGE_KEY)).live.token).toBe('secret'); clearLiveToken(); expect(loadConnectorConfig().live.token).toBe(''); });
+test('migrates the live connector without retaining its browser token', () => { localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 1, activeConnector: 'live', live: { url: 'https://metrics-store/ticket', token: 'secret' } })); expect(loadConnectorConfig()).toMatchObject({ activeConnector: 'metricsStore', metricsStore: { apiUrl: 'https://metrics-store/ticket' } }); expect(JSON.parse(localStorage.getItem(STORAGE_KEY))).not.toHaveProperty('live'); });
+test('stores Metrics Store API settings without a token', () => { saveConnectorConfig({ activeConnector: 'metricsStore', polling: { url: '' }, metricsStore: { apiUrl: 'https://metrics-store/ticket', metricNames: 'cpu', dimensions: '' } }); expect(JSON.parse(localStorage.getItem(STORAGE_KEY))).toEqual(expect.objectContaining({ activeConnector: 'metricsStore', metricsStore: expect.objectContaining({ apiUrl: 'https://metrics-store/ticket' }) })); });
