@@ -80,6 +80,18 @@ def build_handler(
                     r"bootstrap-\d+-[a-z0-9-]+-(?:metric|log)-\d{3,4}",
                     body,
                 )
+                deployments = sorted(
+                    {
+                        match.group(1)
+                        for token in token_matches
+                        if (
+                            match := re.match(
+                                r"bootstrap-(\d+)-", token
+                            )
+                        )
+                    },
+                    key=int,
+                )
                 journal_entry = {
                     "timestamp": time.time(),
                     "path": self.path,
@@ -87,6 +99,7 @@ def build_handler(
                     "recordCount": len(records),
                     "bodyHash": hashlib.sha256(raw_body).hexdigest(),
                     "sampleToken": token_matches[0] if token_matches else None,
+                    "deployments": deployments,
                 }
                 with (state_directory / "requests.ndjson").open("a") as journal:
                     journal.write(json.dumps(journal_entry) + "\n")

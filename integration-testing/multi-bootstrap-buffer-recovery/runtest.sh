@@ -172,6 +172,94 @@ wait_for_deployments() {
     done
 }
 
+capture_agent_logs() {
+    docker compose -p "$project_name" -f "$compose_file" logs --no-color agent
+}
+
+wait_for_deployment_activation() {
+    local activation_log="$temp_dir/activation.log"
+    local deadline=$((SECONDS + TIMEOUT_SECONDS))
+
+    # A listener can answer /health before all registries have completed their
+    # startup work.  Gate the load test on the agent's explicit completion log
+    # for every deployment instead of assuming a fixed startup duration.
+    while (( SECONDS < deadline )); do
+        capture_agent_logs >"$activation_log" 2>&1
+        local activated
+        activated="$(
+            { grep -E 'Startup activation complete for deploymentId: buffer-recovery-[0-9]+, activated=true' "$activation_log" || true; } \
+                | sed -E 's/.*deploymentId: (buffer-recovery-[0-9]+), activated=true.*/\1/' \
+                | sort -u \
+                | wc -l
+        )"
+        if (( activated == DEPLOYMENT_COUNT )); then
+            printf 'Observed startup activation completion for %s deployments\n' "$activated" >&2
+            return 0
+        fi
+        if grep -q 'Startup activation failed for deploymentId:' "$activation_log"; then
+            printf 'Agent reported a deployment activation failure\n' >&2
+            return 1
+        fi
+        sleep 0.25
+    done
+
+    printf 'Timed out waiting for deployment activation; observed %s/%s completion logs\n' \
+        "$activated" "$DEPLOYMENT_COUNT" >&2
+    return 1
+}
+
+agent_log_count() {
+    local pattern="$1"
+    local log_file="$2"
+    capture_agent_logs >"$log_file" 2>&1
+    grep -c "$pattern" "$log_file" || true
+}
+
+assert_warning_suppressed() {
+    local label="$1"
+    local warning_pattern="$2"
+    local baseline="$3"
+    local deadline=$((SECONDS + TIMEOUT_SECONDS))
+    local stable_count=""
+    local stable_since=0
+    local count
+
+    # The connection phase starts work asynchronously.  Rather than sampling
+    # in the middle of first attempts, wait until warning production has
+    # quiesced after the activation barrier.  Repeated warnings prevent this
+    # condition and time out, which is the failure this assertion is intended
+    # to detect.
+    while (( SECONDS < deadline )); do
+        count="$(agent_log_count "$warning_pattern" "$temp_dir/$label-agent.log")"
+        if (( count > baseline )); then
+            if [[ "$count" == "$stable_count" ]]; then
+                if (( SECONDS - stable_since >= 3 )); then
+                    break
+                fi
+            else
+                stable_count="$count"
+                stable_since=$SECONDS
+            fi
+        fi
+        sleep 0.25
+    done
+
+    if [[ -z "$stable_count" ]] || (( SECONDS >= deadline )); then
+        printf 'Warnings did not quiesce for %s: baseline=%s latest=%s\n' \
+            "$label" "$baseline" "${count:-0}" >&2
+        return 1
+    fi
+
+    sleep 2
+    local later_count
+    later_count="$(agent_log_count "$warning_pattern" "$temp_dir/$label-agent-later.log")"
+    if (( later_count != stable_count )); then
+        printf 'Warning suppression failed for %s: stable=%s later=%s\n' \
+            "$label" "$stable_count" "$later_count" >&2
+        return 1
+    fi
+}
+
 trigger_phase() {
     local phase="$1"
     local deployment_limit="${2:-$DEPLOYMENT_COUNT}"
@@ -205,50 +293,83 @@ request_count() {
     wc -l <"$journal"
 }
 
-assert_retries() {
+assert_uniform_policy() {
     local journal="$1"
-    local minimum="$2"
-    local count
-    count="$(request_count "$journal")"
-    if (( count < minimum )); then
-        printf 'Expected at least %s delivery attempts, found %s\n' \
-            "$minimum" "$count" >&2
-        return 1
-    fi
-}
-
-assert_retry_cadence() {
-    local journal="$1"
-    python3 - "$journal" <<'PY'
+    local policy="$2"
+    python3 - "$journal" "$DEPLOYMENT_COUNT" "$policy" <<'PY'
 import collections
 import json
 import pathlib
 import statistics
 import sys
 
-entries = [
-    json.loads(line)
-    for line in pathlib.Path(sys.argv[1]).read_text().splitlines()
-    if line.strip()
-]
-by_hash = collections.defaultdict(list)
+path = pathlib.Path(sys.argv[1])
+deployment_count = int(sys.argv[2])
+policy = sys.argv[3]
+entries = (
+    [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
+    if path.exists()
+    else []
+)
+attempts = collections.defaultdict(list)
 for entry in entries:
-    by_hash[entry["bodyHash"]].append(entry["timestamp"])
+    for deployment in entry.get("deployments", []):
+        attempts[(deployment, entry["path"])].append(entry["timestamp"])
 
-intervals = []
-for timestamps in by_hash.values():
-    timestamps.sort()
-    intervals.extend(
-        right - left for left, right in zip(timestamps, timestamps[1:])
+missing_initial = []
+missing_retry = []
+unexpected_retry = []
+bad_cadence = []
+for deployment in map(str, range(1, deployment_count + 1)):
+    for path_name in ("/metrics", "/logs"):
+        timestamps = sorted(attempts[(deployment, path_name)])
+        name = f"buffer-recovery-{deployment}:{path_name}"
+        if not timestamps:
+            missing_initial.append(name)
+            continue
+        if policy == "initial":
+            continue
+        if policy == "drop" and len(timestamps) != 1:
+            unexpected_retry.append(f"{name}={len(timestamps)} attempts")
+            continue
+        if policy == "drop":
+            continue
+        if len(timestamps) < 2:
+            missing_retry.append(name)
+            continue
+        median = statistics.median(
+            right - left for left, right in zip(timestamps, timestamps[1:])
+        )
+        if not 0.5 <= median <= 2.5:
+            bad_cadence.append(f"{name}={median:.2f}s")
+
+if missing_initial or missing_retry or unexpected_retry or bad_cadence:
+    print(
+        f"Non-uniform {policy} policy state: "
+        f"missing initial={missing_initial}; "
+        f"missing retry={missing_retry}; "
+        f"unexpected retry={unexpected_retry}; "
+        f"bad cadence={bad_cadence}",
+        file=sys.stderr,
     )
-
-if not intervals:
-    raise SystemExit("No repeated request body was observed")
-median = statistics.median(intervals)
-if not 0.5 <= median <= 2.5:
-    raise SystemExit(f"Unexpected median retry interval: {median:.3f}s")
-print(f"median retry interval={median:.2f}s")
+    raise SystemExit(1)
+print(f"verified {policy} policy for {deployment_count} deployments across metrics and logs")
 PY
+}
+
+wait_for_uniform_policy() {
+    local journal="$1"
+    local policy="$2"
+    local deadline=$((SECONDS + TIMEOUT_SECONDS))
+
+    while (( SECONDS < deadline )); do
+        if assert_uniform_policy "$journal" "$policy" >/dev/null 2>&1; then
+            assert_uniform_policy "$journal" "$policy"
+            return 0
+        fi
+        sleep 0.25
+    done
+    assert_uniform_policy "$journal" "$policy"
 }
 
 recover_phase() {
@@ -264,37 +385,34 @@ test_status_policy() {
     local phase="$1"
     local status="$2"
     local warning_pattern="${3:-}"
-    local failure_label="$phase-failure"
+    local policy="$4"
+    local failure_label="$phase-$policy"
 
     start_receiver "$phase" "$failure_label" "$status"
-    trigger_phase "$phase"
-    sleep 4
-    assert_retries "$temp_dir/state-$failure_label/requests.ndjson" 60
-    assert_retry_cadence "$temp_dir/state-$failure_label/requests.ndjson"
-
+    local warning_baseline=0
     if [[ -n "$warning_pattern" ]]; then
-        docker compose -p "$project_name" -f "$compose_file" logs --no-color agent >"$temp_dir/$failure_label-agent.log" 2>&1
-        first_warning_count="$(
-            grep -c "$warning_pattern" "$temp_dir/$failure_label-agent.log" || true
-        )"
-        sleep 2
-        docker compose -p "$project_name" -f "$compose_file" logs --no-color agent >"$temp_dir/$failure_label-agent-later.log" 2>&1
-        later_warning_count="$(
-            grep -c "$warning_pattern" "$temp_dir/$failure_label-agent-later.log" || true
-        )"
-        if (( first_warning_count == 0 || first_warning_count != later_warning_count )); then
-            printf 'Warning suppression failed for HTTP %s: first=%s later=%s\n' \
-                "$status" "$first_warning_count" "$later_warning_count" >&2
-            return 1
-        fi
+        warning_baseline="$(agent_log_count "$warning_pattern" "$temp_dir/$failure_label-agent-before.log")"
+    fi
+    trigger_phase "$phase"
+    wait_for_uniform_policy "$temp_dir/state-$failure_label/requests.ndjson" initial
+
+    if [[ "$policy" == "retry" && -n "$warning_pattern" ]]; then
+        assert_warning_suppressed "$failure_label-http-$status" "$warning_pattern" "$warning_baseline"
     fi
 
-    recover_phase "$phase" "$phase-recovery"
+    if [[ "$policy" == "drop" ]]; then
+        assert_uniform_policy "$temp_dir/state-$failure_label/requests.ndjson" drop
+        docker compose -p "$project_name" -f "$compose_file" stop receiver >/dev/null
+    else
+        wait_for_uniform_policy "$temp_dir/state-$failure_label/requests.ndjson" retry
+        recover_phase "$phase" "$phase-recovery"
+    fi
 }
 
 start_receiver online online
 start_agent
 wait_for_deployments
+wait_for_deployment_activation
 trigger_phase online
 wait_for_outputs "$temp_dir/state-online" online
 sleep 2
@@ -303,30 +421,19 @@ docker compose -p "$project_name" -f "$compose_file" stop receiver >/dev/null
 # Connection refusal: warnings are emitted once per continuous outage and the
 # payload remains available for recovery.
 connection_warning='Connection Failure while trying to send data'
+connection_warning_baseline="$(agent_log_count "$connection_warning" "$temp_dir/connection-agent-before.log")"
 trigger_phase connection
-sleep 4
-docker compose -p "$project_name" -f "$compose_file" logs --no-color agent >"$temp_dir/connection-agent.log" 2>&1
-first_connection_warnings="$(
-    grep -c "$connection_warning" "$temp_dir/connection-agent.log" || true
-)"
-sleep 2
-docker compose -p "$project_name" -f "$compose_file" logs --no-color agent >"$temp_dir/connection-agent-later.log" 2>&1
-later_connection_warnings="$(
-    grep -c "$connection_warning" "$temp_dir/connection-agent-later.log" || true
-)"
-if (( first_connection_warnings == 0
-      || first_connection_warnings != later_connection_warnings )); then
-    printf 'Connection warning suppression failed: first=%s later=%s\n' \
-        "$first_connection_warnings" "$later_connection_warnings" >&2
-    exit 1
-fi
+assert_warning_suppressed connection "$connection_warning" "$connection_warning_baseline"
 recover_phase connection connection-recovery
 
-test_status_policy status-400 400 '400 error while trying to send data'
-test_status_policy status-401 401 '401 error while trying to send data'
-test_status_policy status-404 404 '402-499 error while trying to send data'
-test_status_policy status-500 500
-test_status_policy status-302 302
+# 400-498 responses are terminal: every sender drops its payload.  The sender
+# itself owns this path, so these statuses do not traverse the workflow-level
+# warning handler.  Other non-2xx responses are retried and must recover.
+test_status_policy status-400 400 '' drop
+test_status_policy status-401 401 '' drop
+test_status_policy status-404 404 '' drop
+test_status_policy status-500 500 '' retry
+test_status_policy status-302 302 '' retry
 
 # A receiver that accepts requests but waits beyond the agent's 10-second HTTP
 # timeout must leave the payload available for later delivery.
