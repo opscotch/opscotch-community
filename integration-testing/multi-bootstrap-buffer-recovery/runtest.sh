@@ -56,10 +56,9 @@ cleanup() {
 trap cleanup EXIT INT TERM
 
 read -ra reserved_ports <<<"$(
-    python3 "$SCENARIO_DIR/reserve_ports.py" "$((DEPLOYMENT_COUNT + 1))"
+    python3 "$SCENARIO_DIR/reserve_ports.py" "$DEPLOYMENT_COUNT"
 )"
-receiver_port="${reserved_ports[0]}"
-agent_ports=("${reserved_ports[@]:1}")
+agent_ports=("${reserved_ports[@]}")
 agent_ports_csv="$(IFS=,; printf '%s' "${agent_ports[*]}")"
 
 mkdir -p "$temp_dir/fixtures" "$temp_dir/persistence"
@@ -70,7 +69,8 @@ for deployment_number in $(seq 1 "$DEPLOYMENT_COUNT"); do
 done
 
 python3 "$SCENARIO_DIR/generate_fixtures.py" \
-    --receiver-port "$receiver_port" \
+    --receiver-host receiver \
+    --receiver-port 8080 \
     --agent-ports "$agent_ports_csv" \
     --output-directory "$temp_dir/fixtures"
 

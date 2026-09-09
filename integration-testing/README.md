@@ -142,6 +142,11 @@ Then apply these rules:
   its reservation socket closes, so bind the service promptly.
 - Use `--network host` when the container must reach a receiver bound to
   `127.0.0.1`, and use read-only mounts for fixtures where possible.
+- In Docker Compose scenarios, each service has its own loopback interface.
+  Generate agent output URLs with the receiver service DNS name and its
+  container port (for example, `http://receiver:8080/metrics`), not
+  `127.0.0.1` or a host-reserved port. Loopback remains appropriate only for
+  checks executed inside the receiver container itself.
 - Make agent images configurable with `OPSCOTCH_AGENT_IMAGE`.
 - Put all generated fixtures, receiver state, logs, and persistence below one
   `mktemp -d` directory.
