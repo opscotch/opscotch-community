@@ -512,6 +512,31 @@ doc
             dispatched_actions: dispatched,
             errors_count: aggregatedErrors.length
         });
+
+        var watchEntityForMetric = "issue";
+        for (var wg = 0; wg < pollGroups.length; wg += 1) {
+            var we = String((pollGroups[wg] || {}).watchEntity || "").toLowerCase().trim();
+            if (we === "issue" || we === "pr") {
+                watchEntityForMetric = we;
+                break;
+            }
+        }
+        function emitPollMetric(name, value, extra) {
+            var meta = { watch_entity: watchEntityForMetric };
+            Object.keys(extra || {}).forEach(function(key) {
+                if (extra[key] === undefined || extra[key] === null) return;
+                meta[key] = String(extra[key]);
+            });
+            context.sendMetric(context.getTimestamp(), name, value, meta);
+        }
+        emitPollMetric(aggregatedErrors.length > 0 ? "github.poll.failure" : "github.poll.success", 1.0, {
+            scanned: scanned,
+            dispatched: dispatched,
+            errors: aggregatedErrors.length
+        });
+        emitPollMetric("github.poll.items_found", scanned, {});
+        emitPollMetric("github.poll.items_routed", dispatched, {});
+
         context.setBody(JSON.stringify({
             status: aggregatedErrors.length > 0 ? "ok_with_errors" : "ok",
             scanned_issues: scanned,

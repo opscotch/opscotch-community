@@ -104,6 +104,10 @@ doc
             return;
         }
 
+        context.sendMetric(context.getTimestamp(), "github.actions.watch.started", 1.0, {
+            criteria_count: String(criteriaList.length)
+        });
+
         var existing = JSON.parse(context.getPersistedItem(persistKey) || "null") || { criteria: {} };
         if (!existing.criteria) {
             existing.criteria = {};
@@ -218,6 +222,16 @@ doc
         }
 
         context.setPersistedItem(persistKey, JSON.stringify(existing));
+        context.sendMetric(context.getTimestamp(), "github.actions.watch.notify", notified.length, {
+            criteria_count: String(criteriaList.length),
+            errors: String(criteriaErrors.length)
+        });
+        if (criteriaErrors.length > 0) {
+            context.sendMetric(context.getTimestamp(), "github.actions.watch.failure", 1.0, {
+                criteria_count: String(criteriaList.length),
+                errors: String(criteriaErrors.length)
+            });
+        }
         context.setBody(JSON.stringify({
             watched: true,
             criteria_count: criteriaList.length,

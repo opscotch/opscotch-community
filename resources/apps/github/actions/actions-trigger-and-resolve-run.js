@@ -130,6 +130,11 @@ doc
     // callers can report the actual GitHub failure instead of a misleading
     // run-resolution timeout after polling.
     if (triggerResult.status === "error" || triggerResult.status_code >= 400 || triggerResult.errors) {
+      context.sendMetric(context.getTimestamp(), "github.actions.trigger.failure", 1.0, {
+        repo: String(repo),
+        workflow_id: String(workflowId),
+        status_code: String(triggerResult.status_code || "")
+      });
       context.setBody(JSON.stringify({
         status: "error",
         operation: "trigger-and-resolve-workflow-run",
@@ -152,8 +157,20 @@ doc
     }
 
     if (!resolved) {
+      context.sendMetric(context.getTimestamp(), "github.actions.trigger.failure", 1.0, {
+        repo: String(repo),
+        workflow_id: String(workflowId),
+        error_code: "run_not_found"
+      });
       throw new Error("workflow dispatched but no new run appeared after " + String(maxPolls) + " polls");
     }
+
+    context.sendMetric(context.getTimestamp(), "github.actions.trigger.success", 1.0, {
+      repo: String(repo),
+      workflow_id: String(workflowId),
+      run_id: String(resolved.id),
+      polls_used: String(polls)
+    });
 
     context.setBody(JSON.stringify({
       status: "ok",

@@ -187,9 +187,21 @@ doc
       updated_at: eventPayload.updated_at
     };
 
+    function emitHandoffMetric(outcome) {
+      context.sendMetric(context.getTimestamp(), "github.handoff." + outcome, 1.0, {
+        watch_entity: "pr",
+        repo: String(repo || ""),
+        matched_label: String(matchedLabel || ""),
+        action_deployment_id: String(actionDeploymentId || ""),
+        action_step_id: String(actionStepId || ""),
+        issue_or_pr: String(pullNumber)
+      });
+    }
+
     var actionResponse = sendAction(actionDeploymentId, actionStepId, payload);
     var actionBody = actionResponse ? JSON.parse(actionResponse.getBody()) : null;
     if (!isDispatchAcknowledged(actionBody)) {
+      emitHandoffMetric("failure");
       context.setBody(JSON.stringify({
         routed: false,
         action_deployment_id: actionDeploymentId,
@@ -204,6 +216,7 @@ doc
       return;
     }
 
+    emitHandoffMetric("success");
     context.setBody(JSON.stringify({
       routed: true,
       action_deployment_id: actionDeploymentId,

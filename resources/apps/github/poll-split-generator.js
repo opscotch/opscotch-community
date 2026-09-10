@@ -178,6 +178,11 @@ doc
             throw new Error(groupsKey + " must contain at least one repo group");
         }
 
+        context.sendMetric(context.getTimestamp(), "github.poll.started", 1.0, {
+            watch_entity: watchEntity,
+            group_count: String(groups.length)
+        });
+
         for (var i = 0; i < groups.length; i += 1) {
             var normalized = normalizeGroup(groups[i], i);
             normalized.watchEntity = watchEntity;
