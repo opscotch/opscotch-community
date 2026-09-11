@@ -62,7 +62,7 @@ doc
                             created_at: { type: "string" },
                             html_url: { type: "string" },
                             title: { type: "string" },
-                            body: { type: "string" }
+                            body: { type: ["string", "null"], description: "GitHub returns null when the issue/PR description is empty" }
                         }
                     }
                 },
@@ -167,6 +167,28 @@ doc
             ].forEach((key) => copyIfPresent(key, key === "error" ? 180 : undefined));
 
             return out;
+        }
+
+        function emitMetric(name, value, metadata) {
+            try {
+                var safe = {};
+                var source = metadata && typeof metadata === "object" ? metadata : {};
+                Object.keys(source).forEach(function(key) {
+                    if (source[key] === undefined || source[key] === null || source[key] === "") {
+                        return;
+                    }
+                    safe[key] = String(source[key]);
+                });
+                if (String(name).indexOf("error") >= 0) {
+                    if (safe.error && safe.error !== "true" && !safe.error_code) {
+                        safe.error_code = safe.error;
+                    }
+                    safe.error = "true";
+                }
+                context.sendMetric(name, value, safe);
+            } catch (metricError) {
+                /* telemetry is best effort */
+            }
         }
 
         function logDecision(enabled, eventName, details) {
@@ -468,6 +490,12 @@ doc
                     routeResponse = context.sendToStep("route-ticket-action", JSON.stringify(eventPayload));
                     routeBody = parseJson(routeResponse ? routeResponse.getBody() : "", {});
                 } catch (dispatchErr) {
+                    emitMetric("github.poll.dispatch_errors", 1, {
+                        repo: repo,
+                        watch_entity: watchEntity,
+                        issue: issueNumber,
+                        error: "dispatch-failed"
+                    });
                     logDecision(decisionLoggingEnabled, "dispatch-failed", {
                         repo: repo,
                         issue: issueNumber,
@@ -477,6 +505,12 @@ doc
                 }
 
                 if (!routeBody || routeBody.routed !== true || routeBody.error || routeBody.status === "error" || routeBody.queued === false) {
+                    emitMetric("github.poll.dispatch_errors", 1, {
+                        repo: repo,
+                        watch_entity: watchEntity,
+                        issue: issueNumber,
+                        error: routeBody && routeBody.error ? routeBody.error : "dispatch-not-acknowledged"
+                    });
                     logDecision(decisionLoggingEnabled, "dispatch-not-acknowledged", {
                         repo: repo,
                         issue: issueNumber,
@@ -507,6 +541,18 @@ doc
         }
 
         context.setPersistedItem("issueUpdatedAtByNumber", JSON.stringify(issueWatermarks));
+        if (scanned > 0) {
+            emitMetric("github.poll.scanned", scanned, { watch_entity: pollGroups[0] && pollGroups[0].watchEntity });
+        }
+        if (dispatched > 0) {
+            emitMetric("github.poll.dispatched", dispatched, { watch_entity: pollGroups[0] && pollGroups[0].watchEntity });
+        }
+        if (aggregatedErrors.length > 0) {
+            emitMetric("github.poll.handled_errors", aggregatedErrors.length, {
+                watch_entity: pollGroups[0] && pollGroups[0].watchEntity,
+                status_code: aggregatedErrors[0].status_code
+            });
+        }
         logDecision(decisionLoggingEnabled, "poll-summary", {
             scanned_issues: scanned,
             dispatched_actions: dispatched,

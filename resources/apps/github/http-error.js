@@ -83,6 +83,33 @@ doc
             httpErrorKind: kind
         }];
 
+        var metricGroup = "http";
+        if (kind === "github-poll") {
+            metricGroup = "poll";
+        } else if (kind === "github-update") {
+            metricGroup = "update";
+        } else if (kind === "github-actions") {
+            metricGroup = "actions";
+        } else if (kind === "github-fetch-comments") {
+            metricGroup = "comments";
+        }
+        var metadata = {
+            error: "true",
+            kind: kind,
+            status_code: statusCode
+        };
+        if (pollGroup && pollGroup.repo) {
+            metadata.repo = String(pollGroup.repo);
+        }
+        if (pollGroup && pollGroup.watchEntity) {
+            metadata.watch_entity = String(pollGroup.watchEntity);
+        }
+        try {
+            context.sendMetric("github." + metricGroup + ".errors", 1, metadata);
+        } catch (metricError) {
+            /* telemetry is best effort */
+        }
+
         context.addSystemError(result.systemError);
         context.setBody(JSON.stringify(result.body));
     });

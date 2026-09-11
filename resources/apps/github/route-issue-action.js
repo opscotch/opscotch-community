@@ -142,6 +142,17 @@ doc
         ["ok", "accepted", "queued"].includes(String(actionBody.status).toLowerCase()));
 
     if (!isAcknowledged) {
+        try {
+            context.sendMetric("github.handoff.errors", 1, {
+                error: "true",
+                repo: String(repo || ""),
+                issue: String(issueNumber),
+                watch_entity: "issue",
+                error_code: isFailure ? "downstream-dispatch-failed" : "downstream-dispatch-not-acknowledged"
+            });
+        } catch (metricError) {
+            /* telemetry is best effort */
+        }
         context.setBody(JSON.stringify({
             routed: false,
             action_deployment_id: actionDeploymentId,

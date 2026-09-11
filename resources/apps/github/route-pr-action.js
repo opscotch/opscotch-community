@@ -190,6 +190,17 @@ doc
     var actionResponse = sendAction(actionDeploymentId, actionStepId, payload);
     var actionBody = actionResponse ? JSON.parse(actionResponse.getBody()) : null;
     if (!isDispatchAcknowledged(actionBody)) {
+      try {
+        context.sendMetric("github.handoff.errors", 1, {
+          error: "true",
+          repo: String(repo || ""),
+          issue: String(issueNumber),
+          watch_entity: "pr",
+          error_code: isDispatchFailure(actionBody) ? "downstream-dispatch-failed" : "downstream-dispatch-not-acknowledged"
+        });
+      } catch (metricError) {
+        /* telemetry is best effort */
+      }
       context.setBody(JSON.stringify({
         routed: false,
         action_deployment_id: actionDeploymentId,
