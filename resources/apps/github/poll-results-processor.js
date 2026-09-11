@@ -171,14 +171,7 @@ doc
 
         function metricDouble(value) {
             var n = Number(value);
-            if (!isFinite(n)) {
-                n = 0;
-            }
-            // Whole JS numbers are boxed as Integer and miss sendMetric(double) overloads.
-            if (typeof Java !== "undefined" && Java && typeof Java.type === "function") {
-                return Java.type("java.lang.Double").parseDouble(String(n));
-            }
-            return n;
+            return isFinite(n) ? n : 0;
         }
 
         function emitMetric(name, value, metadata) {
