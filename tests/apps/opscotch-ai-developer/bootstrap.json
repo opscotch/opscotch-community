@@ -1,0 +1,140 @@
+{
+  "errorHandling": {
+    "enableLocalLogging": true
+  },
+  "allowHttpServerAccess": [
+    {
+      "id": "api",
+      "port": 11000
+    }
+  ],
+  "allowExternalHostAccess": [
+    {
+      "id": "cli-sidecar-local-gateway",
+      "host": "http://mockserver",
+      "httpTimeout": 5000,
+      "allowList": [
+        {
+          "method": "POST",
+          "uriPattern": "/agents/.+/invoke"
+        },
+        {
+          "method": "POST",
+          "uriPattern": "/log_fetch"
+        }
+      ]
+    }
+  ],
+  "allowDeploymentAccess": [
+    {
+      "id": "github-issue-updater-callers",
+      "access": "call",
+      "deploymentIds": [
+        "${testDeploymentId}"
+      ]
+    },
+    {
+      "id": "github-issue-updater-callers",
+      "access": "receive",
+      "deploymentIds": [
+        "${testDeploymentId}"
+      ]
+    },
+    {
+      "id": "github-issue-updater-callers-pr",
+      "access": "call",
+      "deploymentIds": [
+        "${testDeploymentId}"
+      ]
+    },
+    {
+      "id": "github-issue-updater-callers-pr",
+      "access": "receive",
+      "deploymentIds": [
+        "${testDeploymentId}"
+      ]
+    }
+  ],
+  "data": {
+    "workflowName": "implementation-planning",
+    "cliSidecarGatewayHostId": "cli-sidecar-local-gateway",
+    "cliSidecarReviewerAgent": "bmad",
+    "cliSidecarDeveloperAgent": "bmad",
+    "cliSidecarDeveloperCallbackUrl": "http://127.0.0.1:11000/callbacks/cli-sidecar/develop",
+    "cliSidecarDeveloperCallbackToken": "test-callback-token",
+    "cliSidecarReviewerCallbackUrl": "http://127.0.0.1:11000/callbacks/cli-sidecar/refine",
+    "cliSidecarReviewerCallbackToken": "test-callback-token",
+    "cliSidecarDeveloperBaseBranch": "main",
+    "cliSidecarReviewerBaseBranch": "main",
+    "cliSidecarDeveloperCommitMode": "single",
+    "cliSidecarDeveloperPush": true,
+    "issueUpdaterDeploymentAccessId": "github-issue-updater-callers",
+    "issueUpdaterStepId": "github-issue-updater",
+    "issueUpdaterAddCommentStepId": "github-issue-add-comment",
+    "issueUpdaterUpdateIssueStepId": "github-issue-update",
+    "issueUpdaterDeleteCommentStepId": "github-issue-delete-comment",
+    "developWorkflow": "implementation-planning",
+    "developWorkBranchPrefix": "cli-sidecar/issue-",
+    "issueStepLoggingEnabled": false,
+    "omitCommentUsers": [],
+    "sidecarRepositoriesByRepo": {
+      "opscotch/hopscotch": [
+        {
+          "repo": "opscotch/hopscotch",
+          "path": "/tmp/opscotch-hopscotch",
+          "branchFrom": "base_branch",
+          "writable": true,
+          "primary": true
+        }
+      ]
+    },
+    "actionInstructionsByRepoLabel": {
+      "opscotch/hopscotch": {
+        "triage": {
+          "instructions": [
+            "Triage the ticket into an implementation-ready brief."
+          ],
+          "ai": {
+            "provider": "minimax",
+            "model": "minimax",
+            "reasoningEffort": "low",
+            "verbosity": "low"
+          }
+        },
+        "dev review": {
+          "instructions": [
+            "Turn the triage brief into an implementation plan."
+          ],
+          "ai": {
+            "provider": "minimax",
+            "model": "minimax",
+            "reasoningEffort": "low",
+            "verbosity": "low"
+          }
+        },
+        "ready for dev": {
+          "instructions": [
+            "Implement the ticket from the provided plan."
+          ],
+          "ai": {
+            "provider": "codex",
+            "model": "gpt-5.4-mini",
+            "reasoningEffort": "medium",
+            "verbosity": "low"
+          }
+        },
+        "question": {
+          "instructions": [
+            "Answer the latest PR question without changing code."
+          ],
+          "ai": {
+            "provider": "codex",
+            "model": "gpt-5.4-mini",
+            "reasoningEffort": "medium",
+            "verbosity": "low"
+          }
+        }
+      }
+    }
+  }
+}

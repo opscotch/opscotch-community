@@ -1,0 +1,371 @@
+{
+  "comment": "CLI sidecar action workflow for GitHub ticket events routed from the issue watcher deployment.",
+  "data": {
+    "workflowName": "quick-spec",
+    "cliSidecarGatewayHostId": "cli-sidecar-local-gateway"
+  },
+  "defaultStepProperties": {
+    "type": "scripted"
+  },
+  "workflows": [
+    {
+      "name": "cli-sidecar ticket actions",
+      "steps": [
+        {
+          "stepId": "extract-base-branch",
+          "resultsProcessor": {
+            "resource": "/extract-base-branch.js"
+          }
+        },
+        {
+          "stepId": "consume-ai-action-trigger",
+          "resultsProcessor": {
+            "resource": "/consume-ai-action-trigger.js"
+          }
+        },
+        {
+          "stepId": "dispatch-bmad-refine-triage",
+          "httpTimeout": 0,
+          "data": {
+            "_stepTimeoutMs": "600000",
+            "refineWorkflow": "quick-spec"
+          },
+          "trigger": {
+            "deploymentAccess": {
+              "ids": [
+                "github-issue-watcher"
+              ]
+            }
+          },
+          "resultsProcessor": {
+            "resource": "/dispatch-bmad-refine.js"
+          }
+        },
+        {
+          "stepId": "dispatch-bmad-refine-dev-review",
+          "httpTimeout": 0,
+          "data": {
+            "_stepTimeoutMs": "600000",
+            "refineWorkflow": "implementation-planning"
+          },
+          "trigger": {
+            "deploymentAccess": {
+              "ids": [
+                "github-issue-watcher",
+                "cli-sidecar-ticket-actions-callers"
+              ]
+            }
+          },
+          "resultsProcessor": {
+            "resource": "/dispatch-bmad-refine.js"
+          }
+        },
+        {
+          "stepId": "dispatch-bmad-refine-invoke",
+          "httpTimeout": 0,
+          "data": {
+            "_stepTimeoutMs": "600000"
+          },
+          "resultsProcessor": {
+            "resource": "/dispatch-bmad-refine-invoke.js"
+          },
+          "persistenceFile": "dispatch-bmad-refine-callback"
+        },
+        {
+          "stepId": "invoke-cli-sidecar-reviewer",
+          "data": {
+            "_stepTimeoutMs": "600000"
+          },
+          "resultsProcessor": {
+            "resource": "/originalise-forwarder.js",
+            "data": {
+              "forwardStepId": "invoke-cli-sidecar-reviewer-http",
+              "requestProperty": "issue_body",
+              "responseProperty": "output.updated_issue_body_markdown"
+            }
+          }
+        },
+        {
+          "stepId": "invoke-cli-sidecar-reviewer-http",
+          "urlGenerator": {
+            "resource": "/cli-sidecar-reviewer-url-generator.js"
+          },
+          "payloadGenerator": {
+            "resource": "/cli-sidecar-reviewer-payload-generator.js"
+          },
+          "resultsProcessor": {
+            "resource": "/cli-sidecar-reviewer-results-processor.js"
+          },
+          "httpConnectFailedProcessor": {
+            "resource": "/cli-sidecar-invoke-http-error.js",
+            "data": {
+              "httpErrorKind": "cli-sidecar-reviewer"
+            }
+          },
+          "httpStatusHandling": {
+            "300-599": {
+              "resource": "/cli-sidecar-invoke-http-error.js",
+              "data": {
+                "httpErrorKind": "cli-sidecar-reviewer"
+              }
+            }
+          },
+          "httpTimeout": 0
+        },
+        {
+          "stepId": "dispatch-bmad-refine-callback",
+          "httpTimeout": 0,
+          "data": {
+            "_stepTimeoutMs": "600000"
+          },
+          "trigger": {
+            "http": {
+              "server": "api",
+              "method": "POST",
+              "path": "/callbacks/cli-sidecar/refine"
+            }
+          },
+          "resultsProcessor": {
+            "processors": [
+              {
+                "script": "context.setBody(JSON.parse(context.getBody()).body)"
+              },
+              {
+                "resource": "/dispatch-bmad-refine-callback-receiver.js"
+              },
+              {
+                "resource": "/httpserver/clear-headers.js"
+              }
+            ]
+          }
+        },
+        {
+          "stepId": "dispatch-bmad-refine-callback-worker",
+          "httpTimeout": 0,
+          "data": {
+            "_stepTimeoutMs": "600000"
+          },
+          "resultsProcessor": {
+            "processors": [
+              {
+                "script": "context.setBody(JSON.parse(context.getBody()).body)"
+              },
+              {
+                "resource": "/dispatch-bmad-refine-callback.js"
+              }
+            ]
+          },
+          "persistenceFile": "dispatch-bmad-refine-callback"
+        },
+        {
+          "stepId": "dispatch-bmad-develop",
+          "httpTimeout": 0,
+          "data": {
+            "_stepTimeoutMs": "600000"
+          },
+          "trigger": {
+            "deploymentAccess": {
+              "ids": [
+                "github-issue-watcher"
+              ]
+            }
+          },
+          "resultsProcessor": {
+            "resource": "/dispatch-bmad-develop-queue.js"
+          },
+          "persistenceFile": "dispatch-bmad-develop"
+        },
+        {
+          "stepId": "invoke-cli-sidecar-developer",
+          "urlGenerator": {
+            "resource": "/cli-sidecar-developer-url-generator.js"
+          },
+          "payloadGenerator": {
+            "resource": "/cli-sidecar-developer-payload-generator.js"
+          },
+          "resultsProcessor": {
+            "resource": "/cli-sidecar-developer-results-processor.js"
+          },
+          "httpConnectFailedProcessor": {
+            "resource": "/cli-sidecar-invoke-http-error.js",
+            "data": {
+              "httpErrorKind": "cli-sidecar-developer"
+            }
+          },
+          "httpStatusHandling": {
+            "300-599": {
+              "resource": "/cli-sidecar-invoke-http-error.js",
+              "data": {
+                "httpErrorKind": "cli-sidecar-developer"
+              }
+            }
+          },
+          "httpTimeout": 0
+        },
+        {
+          "stepId": "dispatch-non-triage",
+          "trigger": {
+            "deploymentAccess": {
+              "ids": [
+                "github-issue-watcher"
+              ]
+            }
+          },
+          "resultsProcessor": {
+            "resource": "/dispatch-non-triage.js"
+          }
+        },
+        {
+          "stepId": "dispatch-bmad-develop-worker",
+          "httpTimeout": 0,
+          "data": {
+            "_stepTimeoutMs": "600000",
+            "issueUpdaterDeploymentAccessId": "github-issue-updater-callers",
+            "issueUpdaterStepId": "github-issue-updater"
+          },
+          "resultsProcessor": {
+            "resource": "/dispatch-bmad-develop.js"
+          }
+        },
+        {
+          "stepId": "dispatch-bmad-develop-prepare",
+          "httpTimeout": 0,
+          "data": {
+            "_stepTimeoutMs": "600000",
+            "developWorkflow": "implementation-planning",
+            "developWorkBranchPrefix": "cli-sidecar/issue-"
+          },
+          "resultsProcessor": {
+            "resource": "/dispatch-bmad-develop-prepare.js"
+          }
+        },
+        {
+          "stepId": "dispatch-bmad-develop-start-comment",
+          "httpTimeout": 0,
+          "data": {
+            "_stepTimeoutMs": "600000"
+          },
+          "resultsProcessor": {
+            "resource": "/dispatch-bmad-develop-start-comment.js"
+          }
+        },
+        {
+          "stepId": "dispatch-bmad-develop-invoke",
+          "httpTimeout": 0,
+          "data": {
+            "_stepTimeoutMs": "600000"
+          },
+          "resultsProcessor": {
+            "resource": "/dispatch-bmad-develop-invoke.js"
+          },
+          "persistenceFile": "dispatch-bmad-develop-callback"
+        },
+        {
+          "stepId": "dispatch-bmad-develop-callback",
+          "httpTimeout": 0,
+          "data": {
+            "_stepTimeoutMs": "600000"
+          },
+          "trigger": {
+            "http": {
+              "server": "api",
+              "method": "POST",
+              "path": "/callbacks/cli-sidecar/develop"
+            }
+          },
+          "resultsProcessor": {
+            "processors": [
+              {
+                "script": "context.setBody(JSON.parse(context.getBody()).body)"
+              },
+              {
+                "resource": "/dispatch-bmad-develop-callback-receiver.js"
+              },
+              {
+                "resource": "/httpserver/clear-headers.js"
+              }
+            ]
+          }
+        },
+        {
+          "stepId": "dispatch-bmad-develop-callback-worker",
+          "httpTimeout": 0,
+          "data": {
+            "_stepTimeoutMs": "600000"
+          },
+          "resultsProcessor": {
+            "processors": [
+              {
+                "script": "context.setBody(JSON.parse(context.getBody()).body)"
+              },
+              {
+                "resource": "/dispatch-bmad-develop-callback.js"
+              }
+            ]
+          },
+          "persistenceFile": "dispatch-bmad-develop-callback"
+        },
+        {
+          "stepId": "dispatch-bmad-develop-finalize",
+          "httpTimeout": 0,
+          "data": {
+            "_stepTimeoutMs": "600000"
+          },
+          "resultsProcessor": {
+            "resource": "/dispatch-bmad-develop-finalize.js"
+          }
+        },
+        {
+          "stepId": "map-bmad-develop-result",
+          "resultsProcessor": {
+            "resource": "/map-bmad-develop-result.js"
+          }
+        },
+        {
+          "stepId": "track-bmad-develop-status",
+          "resultsProcessor": {
+            "resource": "/track-bmad-develop-status.js"
+          },
+          "persistenceFile": "track-bmad-develop-status"
+        },
+        {
+          "stepId": "emit-ai-developer-metric",
+          "resultsProcessor": {
+            "resource": "/emit-ai-developer-metric.js"
+          }
+        },
+        {
+          "stepId": "report-bmad-develop-status",
+          "trigger": {
+            "timer": {
+              "delay": 10000,
+              "period": 30000
+            }
+          },
+          "resultsProcessor": {
+            "resource": "/report-bmad-develop-status.js"
+          },
+          "persistenceFile": "track-bmad-develop-status"
+        },
+        {
+          "stepId": "process-bmad-develop-queue",
+          "httpTimeout": 0,
+          "data": {
+            "_stepTimeoutMs": "600000"
+          },
+          "singleThreaded": "return",
+          "trigger": {
+            "timer": {
+              "delay": 1000,
+              "period": 30000
+            }
+          },
+          "resultsProcessor": {
+            "resource": "/process-bmad-develop-queue.js"
+          },
+          "persistenceFile": "process-bmad-develop-queue"
+        }
+      ]
+    }
+  ]
+}

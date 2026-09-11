@@ -1,0 +1,165 @@
+{
+  "fromDirectory": "",
+  "useThisTestBootstrapFile": "bootstrap.json",
+  "useThisTestConfigFile": "../../../apps/opscotch-ai-developer/opscotch/workflow-cli-sidecar-pr-actions.json",
+  "testThisStep": "testTrigger",
+  "secondsToWaitForCompletion": 25,
+  "theseLogsShouldHaveBeenSent": [
+    "run-build-accepted",
+    "github-labels bug,in progress"
+  ],
+  "manifest": {
+    "customizations": [
+      {
+        "op": "value",
+        "sourcePath": "$.workflows[0].steps[18]",
+        "sourceValue": {
+          "stepId": "github-pr-get-details",
+          "resultsProcessor": {
+            "script": "console.log('github-pr-get-details');context.setBody(JSON.stringify({status:'ok',title:'PR',body:'Closes #345',raw:{base:{ref:'main'},head:{ref:'feature/402'},title:'PR',body:'Closes #345'},base_branch:'main',head_branch:'feature/402'}));"
+          }
+        }
+      },
+      {
+        "op": "value",
+        "sourcePath": "$.workflows[0].steps[19]",
+        "sourceValue": {
+          "stepId": "fetch-linked-pr-comments",
+          "resultsProcessor": {
+            "script": "console.log('fetch-linked-pr-comments');context.setBody(JSON.stringify({status:'ok',comments:[]}));"
+          }
+        }
+      },
+      {
+        "op": "delete",
+        "sourcePath": "$.workflows[0].steps[0].trigger"
+      },
+      {
+        "op": "delete",
+        "sourcePath": "$.workflows[0].steps[1].trigger"
+      },
+      {
+        "op": "delete",
+        "sourcePath": "$.workflows[0].steps[2].trigger"
+      },
+      {
+        "op": "delete",
+        "sourcePath": "$.workflows[0].steps[3].trigger"
+      },
+      {
+        "op": "delete",
+        "sourcePath": "$.workflows[0].steps[4].trigger"
+      },
+      {
+        "op": "delete",
+        "sourcePath": "$.workflows[0].steps[5].trigger"
+      },
+      {
+        "op": "delete",
+        "sourcePath": "$.workflows[0].steps[6].trigger"
+      },
+      {
+        "op": "delete",
+        "sourcePath": "$.workflows[0].steps[10].trigger"
+      },
+      {
+        "op": "delete",
+        "sourcePath": "$.workflows[0].steps[17].trigger"
+      },
+      {
+        "op": "delete",
+        "sourcePath": "$.workflows[0].steps[21].trigger"
+      },
+      {
+        "op": "value",
+        "sourcePath": "$.workflows[0].steps[18].resultsProcessor",
+        "sourceValue": {
+          "script": "console.log('github-pr-get-details-run-build');context.setBody(JSON.stringify({status:'ok',head_branch:'feature/402',body:'app: sample-app\nversion: 1.15\nvisibility: public',raw:{head:{ref:'feature/402'}}}));"
+        }
+      },
+      {
+        "op": "add",
+        "sourcePath": "$.workflows[0].steps[1].data.githubActionRunnerDeploymentAccessId",
+        "sourceValue": "github-issue-updater-callers"
+      },
+      {
+        "op": "add",
+        "sourcePath": "$.workflows[0].steps[1].data.githubActionTriggerStepId",
+        "sourceValue": "github-action-trigger"
+      },
+      {
+        "op": "add",
+        "sourcePath": "$.workflows[0].steps[6].data.githubActionRunnerDeploymentAccessId",
+        "sourceValue": "github-issue-updater-callers"
+      },
+      {
+        "op": "add",
+        "sourcePath": "$.workflows[0].steps[6].data.githubActionGetRunStepId",
+        "sourceValue": "github-action-get-run"
+      },
+      {
+        "op": "add",
+        "sourcePath": "$.workflows[0].steps[6].data.githubActionGetFailingStepStepId",
+        "sourceValue": "github-action-get-failing-step"
+      },
+      {
+        "op": "add",
+        "sourcePath": "$.workflows[0].steps[6].data.githubActionGetFailingStepLogsStepId",
+        "sourceValue": "github-action-get-failing-step-logs"
+      },
+      {
+        "op": "add",
+        "sourcePath": "$.workflows[0].steps[21].data",
+        "sourceValue": {
+          "githubActionRunnerDeploymentAccessId": "github-issue-updater-callers",
+          "githubActionGetFailingStepStepId": "github-action-get-failing-step",
+          "githubActionGetJobLogsStepId": "github-action-get-job-logs"
+        }
+      },
+      {
+        "op": "add",
+        "sourcePath": "$.workflows[0].steps[22]",
+        "sourceValue": {
+          "stepId": "testTrigger",
+          "resultsProcessor": {
+            "script": "console.log('test-trigger-start');var payload={  repo:'opscotch/opscotch-apps-source',pull_number:402,matched_label:'run build',  issue_context:{user:{login:'machinoal2-cell'},labels:[{name:'run build'},{name:'bug'}]},  comments:[{body:'app: sample-app\nversion: 1.15\nvisibility: public',user:{login:'reviewer1'}}]};var response=context.sendToStep('dispatch-run-build',JSON.stringify(payload));if(response.isErrored()){throw new Error(String(response.getAllErrors()[0]));}var body=JSON.parse(response.getBody()||'{}');if(body.queued!==true||body.status!=='ok'){throw new Error('unexpected run-build body: '+JSON.stringify(body));}console.log('run-build-accepted');context.setBody(JSON.stringify(body));"
+          }
+        }
+      },
+      {
+        "op": "add",
+        "sourcePath": "$.workflows[0].steps[23]",
+        "sourceValue": {
+          "stepId": "github-issue-updater",
+          "trigger": {
+            "deploymentAccess": {
+              "ids": [
+                "github-issue-updater-callers"
+              ]
+            }
+          },
+          "resultsProcessor": {
+            "script": "var p={};try{p=JSON.parse(context.getBody()||'{}');}catch(e){p={};}var operation=String(p.operation||(p.comment?'add-comment':(Array.isArray(p.labels)?'update-issue':'')));var labels=Array.isArray(p.labels)?p.labels:[];console.log('github-issue-updater '+JSON.stringify({operation:operation,repo:p.repo,issue:p.issue,labels:labels}));console.log('github-labels '+labels.join(','));var fail=p.fail===true||labels.indexOf('__fail__')>=0;var needle=\"\";var failOperation=\"\";if(needle){for(var i=0;i<labels.length;i++){if(String(labels[i]).toLowerCase()===needle.toLowerCase())fail=true;}}if(failOperation&&operation===failOperation)fail=true;if(fail){console.log('forced updater failure');context.setBody(JSON.stringify({status:'error',operation:operation,message:'forced updater failure'}));}else{var response=operation==='get-open-pr-by-head'?[]:{number:42,html_url:'https://github.com/opscotch/hopscotch/pull/42',user:{login:'bot'}};context.setBody(JSON.stringify({status:'ok',operation:operation,response:response}));}"
+          }
+        }
+      },
+      {
+        "op": "add",
+        "sourcePath": "$.workflows[0].steps[24]",
+        "sourceValue": {
+          "stepId": "github-action-trigger",
+          "trigger": {
+            "deploymentAccess": {
+              "ids": [
+                "github-issue-updater-callers"
+              ]
+            }
+          },
+          "resultsProcessor": {
+            "script": "console.log('github-action-trigger ok');context.setBody(JSON.stringify({status:'ok',operation:'trigger-and-resolve-workflow-run',run_id:778899,html_url:'https://github.com/opscotch/builder/actions/runs/778899'}));"
+          }
+        }
+      }
+    ]
+  }
+}

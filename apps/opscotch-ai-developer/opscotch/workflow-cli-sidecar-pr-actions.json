@@ -1,0 +1,417 @@
+{
+  "comment": "CLI sidecar action workflow for GitHub pull request events.",
+  "defaultStepProperties": {
+    "type": "scripted"
+  },
+  "workflows": [
+    {
+      "name": "cli-sidecar pr actions",
+      "steps": [
+        {
+          "stepId": "consume-ai-action-trigger",
+          "resultsProcessor": {
+            "resource": "/consume-ai-action-trigger.js"
+          }
+        },
+        {
+          "stepId": "dispatch-bmad-pr-adversarial-review",
+          "httpTimeout": 0,
+          "data": { "_stepTimeoutMs": "600000" },
+          "trigger": {
+            "deploymentAccess": { "ids": ["github-pr-watcher"] }
+          },
+          "resultsProcessor": {
+            "resource": "/dispatch-bmad-pr-adversarial-review.js"
+          }
+        },
+        {
+          "stepId": "dispatch-bmad-pr-develop",
+          "httpTimeout": 0,
+          "data": {
+            "_stepTimeoutMs": "600000"
+          },
+          "trigger": {
+            "deploymentAccess": {
+              "ids": [
+                "github-pr-watcher"
+              ]
+            }
+          },
+          "resultsProcessor": {
+            "resource": "/dispatch-bmad-pr-develop-queue.js"
+          },
+          "persistenceFile": "dispatch-bmad-pr-develop"
+        },
+        {
+          "stepId": "dispatch-run-build",
+          "httpTimeout": 0,
+          "data": {
+            "_stepTimeoutMs": "600000",
+            "issueUpdaterDeploymentAccessId": "github-issue-updater-callers-pr",
+            "issueUpdaterStepId": "github-issue-updater"
+          },
+          "trigger": {
+            "deploymentAccess": {
+              "ids": [
+                "github-pr-watcher"
+              ]
+            }
+          },
+          "resultsProcessor": {
+            "resource": "/dispatch-run-build.js"
+          },
+          "persistenceFile": "dispatch-run-build"
+        },
+        {
+          "stepId": "handle-builder-run-state-change",
+          "httpTimeout": 0,
+          "data": {
+            "_stepTimeoutMs": "600000"
+          },
+          "trigger": {
+            "deploymentAccess": {
+              "ids": [
+                "cli-sidecar-pr-actions-build-state"
+              ]
+            }
+          },
+          "resultsProcessor": {
+            "resource": "/handle-builder-run-state-change.js"
+          }
+        },
+        {
+          "stepId": "debug-fetch-failing-step-from-run",
+          "httpTimeout": 0,
+          "data": {
+            "_stepTimeoutMs": "600000",
+            "githubActionRunnerDeploymentAccessId": "github-action-runner-callers",
+            "githubActionGetFailingStepStepId": "github-action-get-failing-step"
+          },
+          "trigger": {
+            "http": {
+              "server": "api",
+              "method": "POST",
+              "path": "/debug/failing-step-from-run"
+            }
+          },
+          "resultsProcessor": {
+            "processors": [
+              {
+                "script": "context.setBody(JSON.parse(context.getBody()).body)"
+              },
+              {
+                "resource": "/httpserver/clear-headers.js"
+              },
+              {
+                "resource": "/fetch-failing-step-from-run.js"
+              }
+            ]
+          }
+        },
+        {
+          "stepId": "debug-fetch-run-log-content",
+          "httpTimeout": 0,
+          "data": {
+            "_stepTimeoutMs": "600000"
+          },
+          "trigger": {
+            "http": {
+              "server": "api",
+              "method": "POST",
+              "path": "/debug/fetch-run-log-content"
+            }
+          },
+          "resultsProcessor": {
+            "processors": [
+              {
+                "script": "context.setBody(JSON.parse(context.getBody()).body)"
+              },
+              {
+                "resource": "/httpserver/clear-headers.js"
+              },
+              {
+                "script": "var req = JSON.parse(context.getBody()); var response = context.sendToStep(\"github-action-runner-callers\", \"github-action-get-failing-step-logs\", JSON.stringify({ repo: req.repo, run_id: req.run_id, log_fetch_deployment_access_id: \"cli-sidecar-pr-actions-build-state\", log_fetch_step_id: \"fetch-run-log-content\" })); context.removeHeader(\"Content-Length\"); context.removeHeader(\"Host\"); context.removeHeader(\"User-Agent\"); context.removeHeader(\"Accept\"); context.removeHeader(\"Connection\"); context.removeHeader(\"Content-Type\"); context.setHeader(\"Content-Type\", \"application/json\"); context.setBody(response.getBody());"
+              }
+            ]
+          }
+        },
+        {
+          "stepId": "process-bmad-pr-develop-queue",
+          "httpTimeout": 0,
+          "data": {
+            "_stepTimeoutMs": "600000"
+          },
+          "singleThreaded": "return",
+          "trigger": {
+            "timer": {
+              "delay": 1000,
+              "period": 30000
+            }
+          },
+          "resultsProcessor": {
+            "resource": "/process-bmad-pr-develop-queue.js"
+          },
+          "persistenceFile": "process-bmad-pr-develop-queue"
+        },
+        {
+          "stepId": "process-run-build-tracking-queue",
+          "httpTimeout": 0,
+          "data": {
+            "_stepTimeoutMs": "600000",
+            "issueUpdaterDeploymentAccessId": "github-issue-updater-callers-pr",
+            "issueUpdaterStepId": "github-issue-updater"
+          },
+          "singleThreaded": "return",
+          "trigger": {
+            "timer": {
+              "delay": 5000,
+              "period": 60000
+            }
+          },
+          "resultsProcessor": {
+            "resource": "/process-run-build-tracking-queue.js"
+          },
+          "persistenceFile": "process-run-build-tracking-queue"
+        },
+        {
+          "stepId": "dispatch-bmad-pr-develop-worker",
+          "httpTimeout": 0,
+          "data": {
+            "_stepTimeoutMs": "600000",
+            "issueUpdaterDeploymentAccessId": "github-issue-updater-callers-pr",
+            "issueUpdaterStepId": "github-issue-updater"
+          },
+          "resultsProcessor": {
+            "resource": "/dispatch-bmad-pr-develop.js"
+          }
+        },
+        {
+          "stepId": "dispatch-bmad-pr-develop-invoke",
+          "httpTimeout": 0,
+          "data": {
+            "_stepTimeoutMs": "600000"
+          },
+          "resultsProcessor": {
+            "resource": "/dispatch-bmad-develop-invoke.js"
+          },
+          "persistenceFile": "dispatch-bmad-pr-develop-callback"
+        },
+        {
+          "stepId": "invoke-cli-sidecar-developer",
+          "urlGenerator": {
+            "resource": "/cli-sidecar-developer-url-generator.js"
+          },
+          "payloadGenerator": {
+            "resource": "/cli-sidecar-developer-payload-generator.js"
+          },
+          "resultsProcessor": {
+            "resource": "/cli-sidecar-developer-results-processor.js"
+          },
+          "httpConnectFailedProcessor": {
+            "resource": "/cli-sidecar-invoke-http-error.js",
+            "data": {
+              "httpErrorKind": "cli-sidecar-pr-developer"
+            }
+          },
+          "httpStatusHandling": {
+            "300-599": {
+              "resource": "/cli-sidecar-invoke-http-error.js",
+              "data": {
+                "httpErrorKind": "cli-sidecar-pr-developer"
+              }
+            }
+          },
+          "httpTimeout": 0
+        },
+        {
+          "stepId": "dispatch-bmad-pr-callback",
+          "httpTimeout": 0,
+          "data": {
+            "_stepTimeoutMs": "600000"
+          },
+          "trigger": {
+            "http": {
+              "server": "api",
+              "method": "POST",
+              "path": "/callbacks/cli-sidecar/pr"
+            }
+          },
+          "resultsProcessor": {
+            "processors": [
+              {
+                "script": "context.setBody(JSON.parse(context.getBody()).body)"
+              },
+              {
+                "resource": "/dispatch-bmad-pr-callback-receiver.js"
+              },
+              {
+                "resource": "/httpserver/clear-headers.js"
+              }
+            ]
+          }
+        },
+        {
+          "stepId": "dispatch-bmad-pr-callback-worker",
+          "httpTimeout": 0,
+          "data": {
+            "_stepTimeoutMs": "600000"
+          },
+          "resultsProcessor": {
+            "processors": [
+              {
+                "script": "context.setBody(JSON.parse(context.getBody()).body)"
+              },
+              {
+                "resource": "/dispatch-bmad-develop-callback.js"
+              }
+            ]
+          },
+          "persistenceFile": "dispatch-bmad-pr-develop-callback"
+        },
+        {
+          "stepId": "dispatch-bmad-develop-finalize",
+          "httpTimeout": 0,
+          "data": {
+            "_stepTimeoutMs": "600000"
+          },
+          "resultsProcessor": {
+            "resource": "/dispatch-bmad-develop-finalize.js"
+          }
+        },
+        {
+          "stepId": "map-bmad-develop-result",
+          "resultsProcessor": {
+            "resource": "/map-bmad-develop-result.js"
+          }
+        },
+        {
+          "stepId": "compute-pr-labels",
+          "resultsProcessor": {
+            "resource": "/compute-pr-labels.js"
+          }
+        },
+        {
+          "stepId": "track-run-build-status",
+          "resultsProcessor": {
+            "resource": "/track-run-build-status.js"
+          },
+          "persistenceFile": "track-run-build-status"
+        },
+        {
+          "stepId": "track-bmad-develop-status",
+          "resultsProcessor": {
+            "resource": "/track-bmad-develop-status.js"
+          },
+          "persistenceFile": "track-bmad-develop-status"
+        },
+        {
+          "stepId": "emit-ai-developer-metric",
+          "resultsProcessor": {
+            "resource": "/emit-ai-developer-metric.js"
+          }
+        },
+        {
+          "stepId": "report-bmad-develop-status",
+          "trigger": {
+            "timer": {
+              "delay": 10000,
+              "period": 30000
+            }
+          },
+          "resultsProcessor": {
+            "resource": "/report-bmad-develop-status.js"
+          },
+          "persistenceFile": "track-bmad-develop-status"
+        },
+        {
+          "stepId": "github-pr-get-details",
+          "urlGenerator": {
+            "resource": "/github-pr-details-url-generator.js",
+            "data": {
+              "hostId": "github-api"
+            }
+          },
+          "authenticationProcessor": {
+            "resource": "/apps/github/github-auth-processor.js",
+            "data": {
+              "githubAuthHostId": "github-api-auth"
+            }
+          },
+          "resultsProcessor": {
+            "resource": "/github-pr-details-results-processor.js"
+          },
+          "httpStatusHandling": {
+            "300-599": {
+              "resource": "/apps/github/http-error.js",
+              "data": {
+                "httpErrorKind": "github-actions"
+              }
+            }
+          },
+          "httpTimeout": 0
+        },
+        {
+          "stepId": "fetch-linked-pr-comments",
+          "urlGenerator": {
+            "resource": "/apps/github/fetch-comments-url-generator.js",
+            "data": {
+              "hostId": "github-api"
+            }
+          },
+          "payloadGenerator": {
+            "resource": "/apps/github/fetch-comments-payload-generator.js"
+          },
+          "authenticationProcessor": {
+            "resource": "/apps/github/github-auth-processor.js",
+            "data": {
+              "githubAuthHostId": "github-api-auth"
+            }
+          },
+          "resultsProcessor": {
+            "resource": "/apps/github/fetch-comments-results-processor.js"
+          },
+          "httpStatusHandling": {
+            "300-599": {
+              "resource": "/apps/github/http-error.js",
+              "data": {
+                "httpErrorKind": "github-fetch-comments"
+              }
+            }
+          },
+          "httpTimeout": 0
+        },
+        {
+          "stepId": "fetch-run-log-content-http",
+          "urlGenerator": {
+            "resource": "/log-fetch-url-generator.js"
+          },
+          "payloadGenerator": {
+            "resource": "/log-fetch-payload-generator.js"
+          },
+          "resultsProcessor": {
+            "resource": "/log-fetch-results-processor.js"
+          },
+          "httpStatusHandling": {
+            "300-599": {
+              "resource": "/cli-sidecar-invoke-http-error.js"
+            }
+          },
+          "httpTimeout": 0
+        },
+        {
+          "stepId": "fetch-run-log-content",
+          "trigger": {
+            "deploymentAccess": {
+              "ids": [
+                "cli-sidecar-pr-actions-build-state"
+              ]
+            }
+          },
+          "resultsProcessor": {
+            "resource": "/fetch-run-log-content.js"
+          }
+        }
+      ]
+    }
+  ]
+}
