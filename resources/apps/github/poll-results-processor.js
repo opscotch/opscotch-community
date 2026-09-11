@@ -169,6 +169,18 @@ doc
             return out;
         }
 
+        function metricDouble(value) {
+            var n = Number(value);
+            if (!isFinite(n)) {
+                n = 0;
+            }
+            // Whole JS numbers are boxed as Integer and miss sendMetric(double) overloads.
+            if (typeof Java !== "undefined" && Java && typeof Java.type === "function") {
+                return Java.type("java.lang.Double").parseDouble(String(n));
+            }
+            return n;
+        }
+
         function emitMetric(name, value, metadata) {
             var safe = {};
             var source = metadata && typeof metadata === "object" ? metadata : {};
@@ -178,13 +190,13 @@ doc
                 }
                 safe[key] = String(source[key]);
             });
-            if (String(name).indexOf("error") >= 0) {
+            if (String(name).indexOf("error") >= 0 || String(name).indexOf("failure") >= 0) {
                 if (safe.error && safe.error !== "true" && !safe.error_code) {
                     safe.error_code = safe.error;
                 }
                 safe.error = "true";
             }
-            context.sendMetric(name, value, safe);
+            context.sendMetric(context.getTimestamp(), name, metricDouble(value), safe);
         }
 
         function logDecision(enabled, eventName, details) {
@@ -572,7 +584,7 @@ doc
             if (String(name).indexOf("failure") >= 0 || String(name).indexOf("error") >= 0) {
                 meta.error = "true";
             }
-            context.sendMetric(context.getTimestamp(), name, value, meta);
+            context.sendMetric(context.getTimestamp(), name, metricDouble(value), meta);
         }
         emitPollMetric(aggregatedErrors.length > 0 ? "github.poll.failure" : "github.poll.success", 1.0, {
             scanned: scanned,

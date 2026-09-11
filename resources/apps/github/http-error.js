@@ -109,7 +109,7 @@ doc
             meta.watch_entity = String(pollGroup.watchEntity);
         }
         context.sendMetric(context.getTimestamp(), "github.http.error", 1.0, meta);
-        context.sendMetric("github." + metricGroup + ".errors", 1, meta);
+        context.sendMetric(context.getTimestamp(), "github." + metricGroup + ".errors", 1.0, meta);
         if (kind === "github-poll") {
             context.sendMetric(context.getTimestamp(), "github.poll.failure", 1.0, meta);
         } else if (kind === "github-update") {
