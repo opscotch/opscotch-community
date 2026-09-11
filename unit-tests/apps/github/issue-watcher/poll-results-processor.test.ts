@@ -220,6 +220,16 @@ describe('poll-results-processor', () => {
         }],
       },
       { args: ['github.poll.scanned', 1, { watch_entity: 'issue' }] },
+      {
+        args: [expect.any(Number), 'github.poll.success', 1, {
+          dispatched: '0',
+          errors: '0',
+          scanned: '1',
+          watch_entity: 'issue',
+        }],
+      },
+      { args: [expect.any(Number), 'github.poll.items_found', 1, { watch_entity: 'issue' }] },
+      { args: [expect.any(Number), 'github.poll.items_routed', 0, { watch_entity: 'issue' }] },
     ]);
   });
 

@@ -46,20 +46,24 @@ doc
             result.systemError = "GitHub issue comments request failed with status " + statusCode + (responseSnippet ? ": " + responseSnippet : "");
             result.body.comments = [];
             result.body.comments_count = 0;
-        } else if (kind === "openclaw-reviewer") {
-            result.systemError = "OpenClaw reviewer invoke failed with status " + statusCode + (responseSnippet ? ": " + responseSnippet : "");
+        } else if (kind === "openclaw-reviewer" || kind === "cli-sidecar-reviewer") {
+            var reviewerName = kind === "cli-sidecar-reviewer" ? "CLI sidecar reviewer" : "OpenClaw reviewer";
+            var reviewerCode = kind === "cli-sidecar-reviewer" ? "cli_sidecar_invoke_failed" : "openclaw_invoke_failed";
+            result.systemError = reviewerName + " invoke failed with status " + statusCode + (responseSnippet ? ": " + responseSnippet : "");
             result.body = {
                 queued: false,
+                status: "error",
                 status_code: statusCode,
-                response: responseBody
+                response: responseBody,
+                error: {
+                    code: reviewerCode,
+                    message: result.systemError,
+                    retryable: true
+                }
             };
             if (typeof context.diagnosticLog === "function") {
-                context.diagnosticLog("openclaw invoke error response: " + JSON.stringify({
-                    status_code: statusCode,
-                    response: responseBody
-                }));
-            } else {
-                console.log("openclaw invoke error response: " + JSON.stringify({
+                context.diagnosticLog("reviewer invoke error response: " + JSON.stringify({
+                    kind: kind,
                     status_code: statusCode,
                     response: responseBody
                 }));
@@ -93,19 +97,29 @@ doc
         } else if (kind === "github-fetch-comments") {
             metricGroup = "comments";
         }
-        var metadata = {
+        var meta = {
             error: "true",
             kind: kind,
             status_code: statusCode
         };
         if (pollGroup && pollGroup.repo) {
-            metadata.repo = String(pollGroup.repo);
+            meta.repo = String(pollGroup.repo);
         }
         if (pollGroup && pollGroup.watchEntity) {
-            metadata.watch_entity = String(pollGroup.watchEntity);
+            meta.watch_entity = String(pollGroup.watchEntity);
         }
         try {
-            context.sendMetric("github." + metricGroup + ".errors", 1, metadata);
+            context.sendMetric(context.getTimestamp(), "github.http.error", 1.0, meta);
+            context.sendMetric("github." + metricGroup + ".errors", 1, meta);
+            if (kind === "github-poll") {
+                context.sendMetric(context.getTimestamp(), "github.poll.failure", 1.0, meta);
+            } else if (kind === "github-update") {
+                context.sendMetric(context.getTimestamp(), "github.update.failure", 1.0, meta);
+            } else if (kind === "github-actions") {
+                context.sendMetric(context.getTimestamp(), "github.actions.failure", 1.0, meta);
+            } else if (kind === "github-fetch-comments") {
+                context.sendMetric(context.getTimestamp(), "github.comments.failure", 1.0, meta);
+            }
         } catch (metricError) {
             /* telemetry is best effort */
         }

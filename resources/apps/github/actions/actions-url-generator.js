@@ -24,13 +24,6 @@ doc
         }
     })
     .run(() => {
-        function debugLog(event, payload) {
-            try {
-                console.log("[actions-url-generator] " + event + " " + JSON.stringify(payload || {}));
-            } catch (ignoreDebugLogFailure) {
-            }
-        }
-
         function parseJson(value, fallback) {
             if (value === null || value === undefined || value === "") {
                 return fallback;
@@ -54,13 +47,6 @@ doc
         var repo = normalizeRepo(input.repo);
         var method;
         var path;
-        debugLog("request", {
-            operation: operation,
-            repo: repo,
-            host_id: hostId,
-            input_keys: Object.keys(input || {})
-        });
-
         if (operation === "trigger-workflow") {
             var workflowId = input.workflow_id;
             var ref = input.ref;
@@ -124,13 +110,5 @@ doc
 
         context.setProperty("gh_action_operation", operation);
         context.setProperty("gh_action_repo", repo);
-        debugLog("resolved", {
-            operation: operation,
-            method: method,
-            path: path,
-            host_id: hostId,
-            accept: "application/vnd.github+json",
-            run_id: context.getProperty("gh_action_run_id") || null,
-            job_id: context.getProperty("gh_action_job_id") || null
-        });
+
     });
