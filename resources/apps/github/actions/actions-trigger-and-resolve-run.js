@@ -131,6 +131,7 @@ doc
     // run-resolution timeout after polling.
     if (triggerResult.status === "error" || triggerResult.status_code >= 400 || triggerResult.errors) {
       context.sendMetric(context.getTimestamp(), "github.actions.trigger.failure", 1.0, {
+        error: "true",
         repo: String(repo),
         workflow_id: String(workflowId),
         status_code: String(triggerResult.status_code || "")
@@ -158,6 +159,7 @@ doc
 
     if (!resolved) {
       context.sendMetric(context.getTimestamp(), "github.actions.trigger.failure", 1.0, {
+        error: "true",
         repo: String(repo),
         workflow_id: String(workflowId),
         error_code: "run_not_found"

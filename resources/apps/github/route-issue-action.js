@@ -141,19 +141,32 @@ doc
     var isAcknowledged = !isFailure && (actionBody.queued === true || actionBody.routed === true ||
         ["ok", "accepted", "queued"].includes(String(actionBody.status).toLowerCase()));
 
-    function emitHandoffMetric(outcome) {
-      context.sendMetric(context.getTimestamp(), "github.handoff." + outcome, 1.0, {
+    function emitHandoffMetric(outcome, errorCode) {
+      var meta = {
         watch_entity: String(entityType || "issue"),
         repo: String(repo || ""),
         matched_label: String(matchedLabel || ""),
         action_deployment_id: String(actionDeploymentId || ""),
         action_step_id: String(actionStepId || ""),
         issue_or_pr: String(issueNumber)
-      });
+      };
+      if (outcome === "failure") {
+        meta.error = "true";
+        if (errorCode) meta.error_code = String(errorCode);
+      }
+      context.sendMetric(context.getTimestamp(), "github.handoff." + outcome, 1.0, meta);
     }
 
     if (!isAcknowledged) {
-        emitHandoffMetric("failure");
+        var handoffErrorCode = isFailure ? "downstream-dispatch-failed" : "downstream-dispatch-not-acknowledged";
+        emitHandoffMetric("failure", handoffErrorCode);
+        context.sendMetric("github.handoff.errors", 1, {
+            error: "true",
+            repo: String(repo || ""),
+            issue: String(issueNumber),
+            watch_entity: "issue",
+            error_code: handoffErrorCode
+        });
         context.setBody(JSON.stringify({
             routed: false,
             action_deployment_id: actionDeploymentId,

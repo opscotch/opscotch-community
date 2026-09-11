@@ -44,5 +44,21 @@ describe('poll-http-error', () => {
         httpErrorKind: 'github-poll',
       }],
     });
+    const expected = {
+      error: 'true',
+      kind: 'github-poll',
+      status_code: '403',
+      repo: 'opscotch/hopscotch',
+      watch_entity: 'pr',
+    };
+    const metrics = context.__metrics.map((metric) => {
+      const nameIndex = metric.args.findIndex((arg) => typeof arg === 'string' && arg.startsWith('github.'));
+      return { name: metric.args[nameIndex], value: metric.args[nameIndex + 1], metadata: metric.args[nameIndex + 2] };
+    });
+    expect(metrics).toEqual([
+      { name: 'github.http.error', value: 1, metadata: expected },
+      { name: 'github.poll.errors', value: 1, metadata: expected },
+      { name: 'github.poll.failure', value: 1, metadata: expected },
+    ]);
   });
 });

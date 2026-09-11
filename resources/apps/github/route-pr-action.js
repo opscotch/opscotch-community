@@ -187,21 +187,34 @@ doc
       updated_at: eventPayload.updated_at
     };
 
-    function emitHandoffMetric(outcome) {
-      context.sendMetric(context.getTimestamp(), "github.handoff." + outcome, 1.0, {
+    function emitHandoffMetric(outcome, errorCode) {
+      var meta = {
         watch_entity: "pr",
         repo: String(repo || ""),
         matched_label: String(matchedLabel || ""),
         action_deployment_id: String(actionDeploymentId || ""),
         action_step_id: String(actionStepId || ""),
         issue_or_pr: String(pullNumber)
-      });
+      };
+      if (outcome === "failure") {
+        meta.error = "true";
+        if (errorCode) meta.error_code = String(errorCode);
+      }
+      context.sendMetric(context.getTimestamp(), "github.handoff." + outcome, 1.0, meta);
     }
 
     var actionResponse = sendAction(actionDeploymentId, actionStepId, payload);
     var actionBody = actionResponse ? JSON.parse(actionResponse.getBody()) : null;
     if (!isDispatchAcknowledged(actionBody)) {
-      emitHandoffMetric("failure");
+      var handoffErrorCode = isDispatchFailure(actionBody) ? "downstream-dispatch-failed" : "downstream-dispatch-not-acknowledged";
+      emitHandoffMetric("failure", handoffErrorCode);
+      context.sendMetric("github.handoff.errors", 1, {
+        error: "true",
+        repo: String(repo || ""),
+        issue: String(issueNumber),
+        watch_entity: "pr",
+        error_code: handoffErrorCode
+      });
       context.setBody(JSON.stringify({
         routed: false,
         action_deployment_id: actionDeploymentId,

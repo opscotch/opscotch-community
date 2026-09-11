@@ -228,6 +228,7 @@ doc
         });
         if (criteriaErrors.length > 0) {
             context.sendMetric(context.getTimestamp(), "github.actions.watch.failure", 1.0, {
+                error: "true",
                 criteria_count: String(criteriaList.length),
                 errors: String(criteriaErrors.length)
             });

@@ -87,7 +87,18 @@ doc
             httpErrorKind: kind
         }];
 
+        var metricGroup = "http";
+        if (kind === "github-poll") {
+            metricGroup = "poll";
+        } else if (kind === "github-update") {
+            metricGroup = "update";
+        } else if (kind === "github-actions") {
+            metricGroup = "actions";
+        } else if (kind === "github-fetch-comments") {
+            metricGroup = "comments";
+        }
         var meta = {
+            error: "true",
             kind: kind,
             status_code: statusCode
         };
@@ -98,12 +109,15 @@ doc
             meta.watch_entity = String(pollGroup.watchEntity);
         }
         context.sendMetric(context.getTimestamp(), "github.http.error", 1.0, meta);
+        context.sendMetric("github." + metricGroup + ".errors", 1, meta);
         if (kind === "github-poll") {
             context.sendMetric(context.getTimestamp(), "github.poll.failure", 1.0, meta);
         } else if (kind === "github-update") {
             context.sendMetric(context.getTimestamp(), "github.update.failure", 1.0, meta);
         } else if (kind === "github-actions") {
             context.sendMetric(context.getTimestamp(), "github.actions.failure", 1.0, meta);
+        } else if (kind === "github-fetch-comments") {
+            context.sendMetric(context.getTimestamp(), "github.comments.failure", 1.0, meta);
         }
 
         context.addSystemError(result.systemError);
