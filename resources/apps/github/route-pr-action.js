@@ -207,18 +207,14 @@ doc
     var actionBody = actionResponse ? JSON.parse(actionResponse.getBody()) : null;
     if (!isDispatchAcknowledged(actionBody)) {
       var handoffErrorCode = isDispatchFailure(actionBody) ? "downstream-dispatch-failed" : "downstream-dispatch-not-acknowledged";
-      try {
-        emitHandoffMetric("failure", handoffErrorCode);
-        context.sendMetric("github.handoff.errors", 1, {
-          error: "true",
-          repo: String(repo || ""),
-          issue: String(issueNumber),
-          watch_entity: "pr",
-          error_code: handoffErrorCode
-        });
-      } catch (metricError) {
-        /* telemetry is best effort */
-      }
+      emitHandoffMetric("failure", handoffErrorCode);
+      context.sendMetric("github.handoff.errors", 1, {
+        error: "true",
+        repo: String(repo || ""),
+        issue: String(issueNumber),
+        watch_entity: "pr",
+        error_code: handoffErrorCode
+      });
       context.setBody(JSON.stringify({
         routed: false,
         action_deployment_id: actionDeploymentId,

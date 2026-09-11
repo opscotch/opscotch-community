@@ -170,25 +170,21 @@ doc
         }
 
         function emitMetric(name, value, metadata) {
-            try {
-                var safe = {};
-                var source = metadata && typeof metadata === "object" ? metadata : {};
-                Object.keys(source).forEach(function(key) {
-                    if (source[key] === undefined || source[key] === null || source[key] === "") {
-                        return;
-                    }
-                    safe[key] = String(source[key]);
-                });
-                if (String(name).indexOf("error") >= 0) {
-                    if (safe.error && safe.error !== "true" && !safe.error_code) {
-                        safe.error_code = safe.error;
-                    }
-                    safe.error = "true";
+            var safe = {};
+            var source = metadata && typeof metadata === "object" ? metadata : {};
+            Object.keys(source).forEach(function(key) {
+                if (source[key] === undefined || source[key] === null || source[key] === "") {
+                    return;
                 }
-                context.sendMetric(name, value, safe);
-            } catch (metricError) {
-                /* telemetry is best effort */
+                safe[key] = String(source[key]);
+            });
+            if (String(name).indexOf("error") >= 0) {
+                if (safe.error && safe.error !== "true" && !safe.error_code) {
+                    safe.error_code = safe.error;
+                }
+                safe.error = "true";
             }
+            context.sendMetric(name, value, safe);
         }
 
         function logDecision(enabled, eventName, details) {
