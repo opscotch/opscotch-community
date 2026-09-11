@@ -223,11 +223,7 @@ doc
 
         context.setPersistedItem(persistKey, JSON.stringify(existing));
         var notifyCount = Number(notified.length);
-        if (!isFinite(notifyCount)) notifyCount = 0;
-        if (typeof Java !== "undefined" && Java && typeof Java.type === "function") {
-            notifyCount = Java.type("java.lang.Double").parseDouble(String(notifyCount));
-        }
-        context.sendMetric(context.getTimestamp(), "github.actions.watch.notify", notifyCount, {
+        context.sendMetric(context.getTimestamp(), "github.actions.watch.notify", isFinite(notifyCount) ? notifyCount : 0, {
             criteria_count: String(criteriaList.length),
             errors: String(criteriaErrors.length)
         });
