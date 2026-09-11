@@ -160,7 +160,7 @@ doc
     if (!isAcknowledged) {
         var handoffErrorCode = isFailure ? "downstream-dispatch-failed" : "downstream-dispatch-not-acknowledged";
         emitHandoffMetric("failure", handoffErrorCode);
-        context.sendMetric("github.handoff.errors", 1, {
+        context.sendMetric(context.getTimestamp(), "github.handoff.errors", 1.0, {
             error: "true",
             repo: String(repo || ""),
             issue: String(issueNumber),

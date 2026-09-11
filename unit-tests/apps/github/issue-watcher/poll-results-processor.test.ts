@@ -211,7 +211,7 @@ describe('poll-results-processor', () => {
     });
     expect(context.__metrics).toEqual([
       {
-        args: ['github.poll.dispatch_errors', 1, {
+        args: [expect.any(Number), 'github.poll.dispatch_errors', 1, {
           error: 'true',
           repo: 'opscotch/hopscotch',
           watch_entity: 'issue',
@@ -219,7 +219,7 @@ describe('poll-results-processor', () => {
           error_code: 'dispatch-not-acknowledged',
         }],
       },
-      { args: ['github.poll.scanned', 1, { watch_entity: 'issue' }] },
+      { args: [expect.any(Number), 'github.poll.scanned', 1, { watch_entity: 'issue' }] },
       {
         args: [expect.any(Number), 'github.poll.success', 1, {
           dispatched: '0',
