@@ -23,7 +23,7 @@ BATCH_ITEMS = 2500
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--receiver-host", default="127.0.0.1")
+    parser.add_argument("--receiver-host", default="receiver")
     parser.add_argument("--receiver-port", type=int, required=True)
     parser.add_argument("--agent-ports", required=True)
     parser.add_argument("--output-directory", type=Path, required=True)
