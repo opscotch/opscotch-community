@@ -1,4 +1,4 @@
-import { addObservations, buildSubscribeMessage, HISTORY_LIMIT, parseLiveFrame, requestMetricsStoreTicket } from './liveMetrics';
+import { addObservations, buildSubscribeMessage, HISTORY_LIMIT, metricSeriesName, parseLiveFrame, requestMetricsStoreTicket } from './liveMetrics';
 
 test('constructs subscriptions with optional filters', () => {
   expect(buildSubscribeMessage({})).toEqual({ action: 'subscribe' });
@@ -6,8 +6,18 @@ test('constructs subscriptions with optional filters', () => {
 });
 test('parses a metric batch and retains the complete latest metric body', () => {
   const metric = { timestamp: '2026-01-01T00:00:00Z', name: 'cpu', value: 2, dimensions: { host: 'api-1' }, trace: { requestId: 'abc' } };
-  expect(parseLiveFrame(JSON.stringify({ metrics: [metric, { name: 'bad', value: 1 }] })).observations).toEqual([{ timestamp: '2026-01-01T00:00:00.000Z', metricName: 'cpu', value: 2, dimensions: { host: 'api-1' }, raw: metric }]);
+  expect(parseLiveFrame(JSON.stringify({ metrics: [metric, { name: 'bad', value: 1 }] })).observations).toEqual([{ timestamp: '2026-01-01T00:00:00.000Z', metricName: 'cpu', sourceMetricName: 'cpu', value: 2, dimensions: { host: 'api-1' }, raw: metric }]);
   expect(parseLiveFrame('{').error).toMatch(/invalid/i);
+});
+test('uses deploymentId to keep same-named metric streams separate', () => {
+  expect(metricSeriesName('cpu', { dimensionMap: { deploymentId: 'blue' } })).toBe('cpu [deploymentId=blue]');
+  expect(metricSeriesName('cpu', { dimensions: { deploymentId: 'ignored' } })).toBe('cpu');
+  expect(metricSeriesName('cpu', { deploymentId: 'ignored' })).toBe('cpu');
+  const observations = parseLiveFrame({ metrics: [
+    { timestamp: '2026-01-01T00:00:00Z', name: 'cpu', value: 1, dimensionMap: { deploymentId: 'blue' } },
+    { timestamp: '2026-01-01T00:00:00Z', name: 'cpu', value: 2, dimensionMap: { deploymentId: 'green' } },
+  ] }).observations;
+  expect(Object.keys(addObservations({}, observations))).toEqual(['cpu [deploymentId=blue]', 'cpu [deploymentId=green]']);
 });
 test('deduplicates timestamps and bounds metric history', () => {
   const records = Array.from({ length: HISTORY_LIMIT + 2 }, (_, index) => ({ metricName: 'cpu', timestamp: new Date(1000 * index).toISOString(), value: index }));

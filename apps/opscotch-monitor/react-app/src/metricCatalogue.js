@@ -46,7 +46,9 @@ export class MetricCatalogue {
     const fields = this.metricFields.get(metricName);
     const textMatches = !loweredQuery || metricName.toLocaleLowerCase().includes(loweredQuery) || [...(fields?.entries() || [])].some(([path, values]) => path.toLocaleLowerCase().includes(loweredQuery) || [...values.values()].some(value => value.toLocaleLowerCase().includes(loweredQuery)));
     if (!textMatches) return false;
-    return criteria.every(({ field, key, operator }) => {
+    return criteria.every(({ field, key, value, operator }) => {
+      if (operator === 'contains') return [...(fields?.get(field)?.values() || [])].some(candidate => candidate.toLocaleLowerCase().includes(String(value).toLocaleLowerCase()));
+      if (key?.startsWith('manual:')) return [...(fields?.get(field)?.values() || [])].some(candidate => candidate === String(value));
       const hasValue = this.fieldIndex.get(field)?.get(key)?.has(metricName) || false;
       return operator === 'notEquals' ? !hasValue : hasValue;
     });

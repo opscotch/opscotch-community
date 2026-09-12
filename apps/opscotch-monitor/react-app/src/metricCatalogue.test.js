@@ -14,6 +14,16 @@ test('filters by composable field criteria and provides compact summaries', () =
   expect(catalogue.matches('requests', '', [{ field: 'dimensions.host', key: api1.key, operator: 'equals' }])).toBe(true);
   expect(catalogue.matches('errors', '', [{ field: 'dimensions.host', key: api1.key, operator: 'equals' }])).toBe(false);
   expect(catalogue.matches('errors', '', [{ field: 'dimensions.host', key: api1.key, operator: 'notEquals' }])).toBe(true);
+  expect(catalogue.matches('requests', '', [{ field: 'dimensions.host', value: 'api', operator: 'contains' }])).toBe(true);
   expect(catalogue.summary('requests')).toEqual(expect.arrayContaining([{ path: 'dimensions.host', value: 'api-1' }]));
   expect(catalogue.bytes).toBeGreaterThan(0);
+});
+
+test('matches a typed criterion value after that value first appears', () => {
+  const catalogue = new MetricCatalogue();
+  catalogue.add('requests', { dimensions: { region: 'west' } });
+  const criterion = [{ field: 'dimensions.error', value: 'true', key: 'manual:true', operator: 'equals' }];
+  expect(catalogue.matches('requests', '', criterion)).toBe(false);
+  catalogue.add('requests', { dimensions: { error: true } });
+  expect(catalogue.matches('requests', '', criterion)).toBe(true);
 });

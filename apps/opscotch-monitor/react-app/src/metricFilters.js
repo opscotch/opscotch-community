@@ -14,3 +14,8 @@ export function matchesValueCriteria(value, criteria) {
     return true;
   });
 }
+
+export function matchesNameCriteria(name, criteria) {
+  const loweredName = name.toLocaleLowerCase();
+  return criteria.every(({ operator, value }) => operator !== 'contains' || loweredName.includes(String(value).toLocaleLowerCase()));
+}
