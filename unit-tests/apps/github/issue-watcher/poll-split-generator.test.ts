@@ -134,20 +134,4 @@ describe('poll-split-generator', () => {
       { assignee: 'secondary-ai-developer', watchEntity: 'pr' },
     ]);
   });
-
-  it('rejects an empty or malformed group assignment', async () => {
-    const context = createJavascriptContext({
-      data: {
-        githubIssueWatcherRepos: [
-          {
-            repo: 'opscotch/hopscotch',
-            assignees: [''],
-            criteria: [{ label: 'triage', deploymentId: 'ticket-actions', stepId: 'dispatch-triage' }],
-          },
-        ],
-      },
-    });
-
-    await expect(suite.run("resource", { context })).rejects.toThrow('assignee entries must not be empty');
-  });
 });

@@ -33,6 +33,10 @@ doc
                     type: "object",
                     additionalProperties: true,
                     required: ["repo", "criteria"],
+                    anyOf: [
+                        { required: ["assignee"] },
+                        { required: ["assignees"] }
+                    ],
                     properties: {
                         repo: {
                             description: "GitHub repository in owner/repo format.",
@@ -43,7 +47,8 @@ doc
                         assignee: {
                             description: "Optional direct GitHub assignee login to poll. May be combined with assignees.",
                             type: "string",
-                            minLength: 1
+                            minLength: 1,
+                            pattern: ".*\\S.*"
                         },
                         assignees: {
                             description: "Optional group-derived GitHub assignee logins to poll.",
@@ -51,7 +56,8 @@ doc
                             minItems: 1,
                             items: {
                                 type: "string",
-                                minLength: 1
+                                minLength: 1,
+                                pattern: ".*\\S.*"
                             }
                         },
                         criteria: {
@@ -92,6 +98,10 @@ doc
                     type: "object",
                     additionalProperties: true,
                     required: ["repo", "criteria"],
+                    anyOf: [
+                        { required: ["assignee"] },
+                        { required: ["assignees"] }
+                    ],
                     properties: {
                         repo: {
                             description: "GitHub repository in owner/repo format.",
@@ -102,7 +112,8 @@ doc
                         assignee: {
                             description: "Optional direct GitHub assignee login to poll. May be combined with assignees.",
                             type: "string",
-                            minLength: 1
+                            minLength: 1,
+                            pattern: ".*\\S.*"
                         },
                         assignees: {
                             description: "Optional group-derived GitHub assignee logins to poll.",
@@ -110,7 +121,8 @@ doc
                             minItems: 1,
                             items: {
                                 type: "string",
-                                minLength: 1
+                                minLength: 1,
+                                pattern: ".*\\S.*"
                             }
                         },
                         criteria: {
@@ -164,39 +176,24 @@ doc
             };
         }
 
-        function normalizeAssignees(group, index) {
+        function normalizeAssignees(group) {
             var values = [];
             if ((group || {}).assignee !== undefined) {
-                if (typeof group.assignee !== "string") {
-                    throw new Error("watcher repo group " + index + " assignee must be a string");
-                }
                 values.push(group.assignee);
             }
             if ((group || {}).assignees !== undefined) {
-                if (!Array.isArray(group.assignees)) {
-                    throw new Error("watcher repo group " + index + " assignees must be an array");
-                }
                 values = values.concat(group.assignees);
             }
 
             var assignees = [];
             var seen = {};
             for (var i = 0; i < values.length; i += 1) {
-                if (typeof values[i] !== "string") {
-                    throw new Error("watcher repo group " + index + " assignee entries must be strings");
-                }
                 var login = values[i].trim();
-                if (!login) {
-                    throw new Error("watcher repo group " + index + " assignee entries must not be empty");
-                }
                 var key = login.toLowerCase();
                 if (!seen[key]) {
                     seen[key] = true;
                     assignees.push(login);
                 }
-            }
-            if (assignees.length === 0) {
-                throw new Error("watcher repo group " + index + " requires assignee or assignees");
             }
             return assignees;
         }
@@ -212,7 +209,7 @@ doc
             }
             return {
                 repo: repo,
-                assignees: normalizeAssignees(group, index),
+                assignees: normalizeAssignees(group),
                 criteria: criteria.map(normalizeCriterion)
             };
         }
