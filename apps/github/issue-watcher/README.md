@@ -64,9 +64,12 @@ Reusable Opscotch app that polls GitHub issues and routes matched issues to down
 - `githubIssueWatcherRepos` (array, required): repo/assignee polling groups.
 
 Each `githubIssueWatcherRepos[]` item requires:
-- `assignee` (string)
+- `assignee` (string, optional direct login)
+- `assignees` (array of strings, optional group-derived logins)
 - `repo` (string, `owner/repo`)
 - `criteria` (array)
+
+At least one of `assignee` or `assignees` is required. The watcher polls once per distinct login (case-insensitive), so a group assignment can expand to its effective GitHub users without sending a group name to GitHub.
 
 Each `criteria[]` item requires:
 - `label` (string)

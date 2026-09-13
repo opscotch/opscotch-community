@@ -32,7 +32,11 @@ doc
                 items: {
                     type: "object",
                     additionalProperties: true,
-                    required: ["repo", "assignee", "criteria"],
+                    required: ["repo", "criteria"],
+                    anyOf: [
+                        { required: ["assignee"] },
+                        { required: ["assignees"] }
+                    ],
                     properties: {
                         repo: {
                             description: "GitHub repository in owner/repo format.",
@@ -41,9 +45,20 @@ doc
                             pattern: "^[^/]+\\/[^/]+$"
                         },
                         assignee: {
-                            description: "GitHub assignee login to poll.",
+                            description: "Optional direct GitHub assignee login to poll. May be combined with assignees.",
                             type: "string",
-                            minLength: 1
+                            minLength: 1,
+                            pattern: ".*\\S.*"
+                        },
+                        assignees: {
+                            description: "Optional group-derived GitHub assignee logins to poll.",
+                            type: "array",
+                            minItems: 1,
+                            items: {
+                                type: "string",
+                                minLength: 1,
+                                pattern: ".*\\S.*"
+                            }
                         },
                         criteria: {
                             description: "Routing criteria for this repo and assignee poll group.",
@@ -82,7 +97,11 @@ doc
                 items: {
                     type: "object",
                     additionalProperties: true,
-                    required: ["repo", "assignee", "criteria"],
+                    required: ["repo", "criteria"],
+                    anyOf: [
+                        { required: ["assignee"] },
+                        { required: ["assignees"] }
+                    ],
                     properties: {
                         repo: {
                             description: "GitHub repository in owner/repo format.",
@@ -91,9 +110,20 @@ doc
                             pattern: "^[^/]+\\/[^/]+$"
                         },
                         assignee: {
-                            description: "GitHub assignee login to poll.",
+                            description: "Optional direct GitHub assignee login to poll. May be combined with assignees.",
                             type: "string",
-                            minLength: 1
+                            minLength: 1,
+                            pattern: ".*\\S.*"
+                        },
+                        assignees: {
+                            description: "Optional group-derived GitHub assignee logins to poll.",
+                            type: "array",
+                            minItems: 1,
+                            items: {
+                                type: "string",
+                                minLength: 1,
+                                pattern: ".*\\S.*"
+                            }
                         },
                         criteria: {
                             description: "Routing criteria for this repo and assignee poll group.",
@@ -146,22 +176,40 @@ doc
             };
         }
 
+        function normalizeAssignees(group) {
+            var values = [];
+            if ((group || {}).assignee !== undefined) {
+                values.push(group.assignee);
+            }
+            if ((group || {}).assignees !== undefined) {
+                values = values.concat(group.assignees);
+            }
+
+            var assignees = [];
+            var seen = {};
+            for (var i = 0; i < values.length; i += 1) {
+                var login = values[i].trim();
+                var key = login.toLowerCase();
+                if (!seen[key]) {
+                    seen[key] = true;
+                    assignees.push(login);
+                }
+            }
+            return assignees;
+        }
+
         function normalizeGroup(group, index) {
             var repo = String((group || {}).repo || "").trim();
-            var assignee = String((group || {}).assignee || "").trim();
             var criteria = (group || {}).criteria;
             if (!repo || repo.indexOf("/") < 1) {
                 throw new Error("watcher repo group " + index + " requires repo in owner/repo format");
-            }
-            if (!assignee) {
-                throw new Error("watcher repo group " + index + " requires assignee");
             }
             if (!Array.isArray(criteria) || criteria.length === 0) {
                 throw new Error("watcher repo group " + index + " requires at least one criterion");
             }
             return {
                 repo: repo,
-                assignee: assignee,
+                assignees: normalizeAssignees(group),
                 criteria: criteria.map(normalizeCriterion)
             };
         }
@@ -185,7 +233,13 @@ doc
 
         for (var i = 0; i < groups.length; i += 1) {
             var normalized = normalizeGroup(groups[i], i);
-            normalized.watchEntity = watchEntity;
-            context.addSplitReturnItem(JSON.stringify(normalized));
+            for (var j = 0; j < normalized.assignees.length; j += 1) {
+                context.addSplitReturnItem(JSON.stringify({
+                    repo: normalized.repo,
+                    assignee: normalized.assignees[j],
+                    criteria: normalized.criteria,
+                    watchEntity: watchEntity
+                }));
+            }
         }
     });
