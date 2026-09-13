@@ -76,12 +76,32 @@ doc
 
         var response = parseJson(context.getBody(), []);
         var items = Array.isArray(response) ? response : (Array.isArray(response.items) ? response.items : []);
+        var normalizedItems = [];
+        for (var i = 0; i < items.length; i += 1) {
+            var item = items[i];
+            if (!item || typeof item !== "object" || Array.isArray(item)) {
+                normalizedItems.push(item);
+                continue;
+            }
+            if (item.body === null) {
+                var copy = {};
+                for (var key in item) {
+                    if (Object.prototype.hasOwnProperty.call(item, key)) {
+                        copy[key] = item[key];
+                    }
+                }
+                copy.body = "";
+                normalizedItems.push(copy);
+                continue;
+            }
+            normalizedItems.push(item);
+        }
 
         context.setBody(JSON.stringify({
             repo: group.repo,
             assignee: group.assignee,
             watchEntity: group.watchEntity,
             criteria: group.criteria,
-            items: items
+            items: normalizedItems
         }));
     });

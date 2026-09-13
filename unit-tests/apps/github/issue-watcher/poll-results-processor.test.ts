@@ -34,6 +34,39 @@ function pollGroup(items: unknown[], options: {
 }
 
 describe('poll-results-processor', () => {
+  it('records poll failures from the aggregate error envelope', async () => {
+    const context = createJavascriptContext({
+      body: JSON.stringify([
+        {
+          repo: 'opscotch/hopscotch',
+          assignee: 'machinoal2-cell',
+          watchEntity: 'pr',
+          criteria: [{ label: 'triage', deploymentId: 'ticket-actions', stepId: 'dispatch-triage' }],
+          items: [],
+          errors: [{
+            systemError: 'GitHub polling request failed with status 403: forbidden',
+            status_code: '403',
+            response: 'forbidden',
+            httpErrorKind: 'github-poll',
+          }],
+        },
+      ]),
+      data: {},
+    });
+
+    await suite.run("resource", { context });
+
+    expect(context.hasSystemErrors()).toBe(true);
+    expect(context.getSystemErrors()).toContain('GitHub polling request failed with status 403: forbidden');
+    expect(context.__logs.join('\n')).toContain('github-watcher handled poll failure(s)');
+    expect(JSON.parse(context.getBody() || '{}')).toEqual({
+      status: 'ok_with_errors',
+      scanned_issues: 0,
+      dispatched_actions: 0,
+      handled_errors_count: 1,
+    });
+  });
+
   it('dispatches matching issue and updates watermark', async () => {
     const issues = [
       {
@@ -91,6 +124,7 @@ describe('poll-results-processor', () => {
       status: 'ok',
       scanned_issues: 2,
       dispatched_actions: 1,
+      handled_errors_count: 0,
     });
   });
 
@@ -119,6 +153,7 @@ describe('poll-results-processor', () => {
       status: 'ok',
       scanned_issues: 1,
       dispatched_actions: 0,
+      handled_errors_count: 0,
     });
   });
 
@@ -172,7 +207,30 @@ describe('poll-results-processor', () => {
       status: 'ok',
       scanned_issues: 1,
       dispatched_actions: 0,
+      handled_errors_count: 0,
     });
+    expect(context.__metrics).toEqual([
+      {
+        args: [expect.any(Number), 'github.poll.dispatch_errors', 1, {
+          error: 'true',
+          repo: 'opscotch/hopscotch',
+          watch_entity: 'issue',
+          issue: '317',
+          error_code: 'dispatch-not-acknowledged',
+        }],
+      },
+      { args: [expect.any(Number), 'github.poll.scanned', 1, { watch_entity: 'issue' }] },
+      {
+        args: [expect.any(Number), 'github.poll.success', 1, {
+          dispatched: '0',
+          errors: '0',
+          scanned: '1',
+          watch_entity: 'issue',
+        }],
+      },
+      { args: [expect.any(Number), 'github.poll.items_found', 1, { watch_entity: 'issue' }] },
+      { args: [expect.any(Number), 'github.poll.items_routed', 0, { watch_entity: 'issue' }] },
+    ]);
   });
 
   it('does not watermark when route response is marked routed but also contains an error', async () => {
@@ -212,6 +270,7 @@ describe('poll-results-processor', () => {
       status: 'ok',
       scanned_issues: 1,
       dispatched_actions: 0,
+      handled_errors_count: 0,
     });
   });
 
@@ -244,6 +303,7 @@ describe('poll-results-processor', () => {
       status: 'ok',
       scanned_issues: 1,
       dispatched_actions: 0,
+      handled_errors_count: 0,
     });
   });
 
@@ -302,6 +362,56 @@ describe('poll-results-processor', () => {
     });
     expect(JSON.parse(context.getPersistedItem('issueUpdatedAtByNumber') || '{}')).toMatchObject({
       'pr:opscotch/hopscotch:402': '2026-04-23T00:06:00Z',
+    });
+  });
+
+  it('accepts null PR body from GitHub and dispatches with empty issue_body', async () => {
+    const prs = [
+      {
+        number: 402,
+        pull_request: {
+          html_url: 'https://github.com/opscotch/hopscotch/pull/402',
+        },
+        body: null,
+        labels: [{ name: 'ready for dev' }],
+        assignees: [{ login: 'machinoal2-cell' }],
+        updated_at: '2026-04-23T00:06:00Z',
+        html_url: 'https://github.com/opscotch/hopscotch/pull/402',
+        title: 'Empty description PR',
+      },
+    ];
+
+    const context = createJavascriptContext({
+      body: JSON.stringify(pollGroup(prs, {
+        watchEntity: 'pr',
+        label: 'ready for dev',
+        deploymentId: 'openclaw-pr-actions',
+        stepId: 'dispatch-bmad-pr-develop',
+      })),
+      data: {},
+      sendToStep: (call) => {
+        if (call.stepName === 'route-ticket-action') {
+          return { body: JSON.stringify({ routed: true }) };
+        }
+        return { body: '{}' };
+      },
+    });
+
+    await suite.run("resource", { context });
+
+    expect(context.__sendToStepCalls).toHaveLength(1);
+    const sent = JSON.parse(context.__sendToStepCalls[0].body || '{}');
+    expect(sent).toMatchObject({
+      entity_type: 'pr',
+      issue_number: 402,
+      issue_body: '',
+      matched_label: 'ready for dev',
+    });
+    expect(JSON.parse(context.getBody() || '{}')).toEqual({
+      status: 'ok',
+      scanned_issues: 1,
+      dispatched_actions: 1,
+      handled_errors_count: 0,
     });
   });
 });

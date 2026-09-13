@@ -1,0 +1,41 @@
+{
+  "enabled": true,
+  "fromDirectory": "/general/",
+  "useThisTestBootstrapFile": "same-slot-cross-deployment.bootstrap.json",
+  "useThisTestConfigFile": "same-slot-cross-deployment.config.json",
+  "testThisStep": "testTrigger",
+  "secondsToWaitForCompletion": 20,
+  "manifest": {
+    "customizations": [
+      {
+        "op": "add",
+        "sourcePath": "$.workflows[0].steps[2]",
+        "sourceValue": {
+          "stepId": "testTrigger",
+          "resultsProcessor": {
+            "script": "console.log('test-trigger-start');var response=context.sendToStep('same-slot-caller','{}');if(response.isErrored()){throw new Error(String(response.getAllErrors()[0]));}var body=JSON.parse(response.getBody()||'{}');if(body.pong!==true){throw new Error('caller did not echo: '+JSON.stringify(body));}console.log('test-trigger-ok');context.sendMetric('test-trigger-ok', 1.0);context.setBody(JSON.stringify(body));"
+          }
+        }
+      }
+    ]
+  },
+  "theseLogsShouldHaveBeenSent": [
+    "echo-stub-hit",
+    "same-slot-sendtostep-ok",
+    "test-trigger-ok"
+  ],
+  "theseMetricsShouldHaveBeenSent": [
+    {
+      "key": "echo-stub-hit",
+      "value": 1.0
+    },
+    {
+      "key": "same-slot-sendtostep-ok",
+      "value": 1.0
+    },
+    {
+      "key": "test-trigger-ok",
+      "value": 1.0
+    }
+  ]
+}

@@ -111,8 +111,8 @@ doc
             return JSON.parse(value);
         }
 
-        function normalizeList(value, fieldName) {
-            if (!Array.isArray(value) || value.length === 0) {
+        function normalizeList(value, fieldName, allowEmpty) {
+            if (!Array.isArray(value) || (!allowEmpty && value.length === 0)) {
                 throw new Error(fieldName + " must be a non-empty array");
             }
             var out = [];
@@ -123,7 +123,7 @@ doc
                 }
                 out.push(item);
             }
-            if (out.length === 0) {
+            if (out.length === 0 && !allowEmpty) {
                 throw new Error(fieldName + " must include at least one non-empty value");
             }
             return out;
@@ -149,7 +149,8 @@ doc
                 payload.labels = normalizeList(input.labels, "labels");
             }
             if (input.assignees !== undefined) {
-                payload.assignees = normalizeList(input.assignees, "assignees");
+                // GitHub uses an empty assignees list to clear all assignees.
+                payload.assignees = normalizeList(input.assignees, "assignees", true);
             }
             if (input.milestone !== undefined) {
                 var milestone = parseInt(String(input.milestone), 10);

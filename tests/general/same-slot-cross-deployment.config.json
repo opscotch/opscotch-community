@@ -1,0 +1,32 @@
+{
+  "comment": "Testrunner example for cross-deployment calls in one slot. Matching call/receive permitters live on the test bootstrap overlay and use ${testDeploymentId} so the runner can rewrite them to the live slot id. The receiver uses trigger.deploymentAccess; the caller uses sendToStep(accessId, stepId, body). This is the same-slot stand-in for a two-deployment call/receive pair (see integration-testing/deployment-access-group-multimember-routing for a real multi-bootstrap case).",
+  "defaultStepProperties": {
+    "type": "scripted"
+  },
+  "workflows": [
+    {
+      "name": "same-slot deployment access",
+      "steps": [
+        {
+          "stepId": "echo-stub",
+          "trigger": {
+            "deploymentAccess": {
+              "ids": [
+                "same-slot-callers"
+              ]
+            }
+          },
+          "resultsProcessor": {
+            "script": "console.log('echo-stub-hit');context.sendMetric('echo-stub-hit', 1.0);context.setBody(JSON.stringify({pong:true}));"
+          }
+        },
+        {
+          "stepId": "same-slot-caller",
+          "resultsProcessor": {
+            "script": "var response=context.sendToStep('same-slot-callers','echo-stub',JSON.stringify({ping:true}));if(response.isErrored()){throw new Error(String(response.getAllErrors()[0]));}var body=JSON.parse(response.getBody()||'{}');if(body.pong!==true){throw new Error('unexpected echo body: '+JSON.stringify(body));}console.log('same-slot-sendtostep-ok');context.sendMetric('same-slot-sendtostep-ok', 1.0);context.setBody(JSON.stringify(body));"
+          }
+        }
+      ]
+    }
+  ]
+}

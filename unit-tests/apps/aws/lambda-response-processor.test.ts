@@ -26,12 +26,12 @@ describe('apps/aws/lambda-response-processor', () => {
         'Lambda-Runtime-Aws-Request-Id': '["req-123"]',
       },
       data: {
-        eventRouting: JSON.stringify({
+        eventRouting: {
           'apigw-v2': {
             deploymentAccessId: '_test_',
             stepId: 'bridge-step',
           },
-        }),
+        },
       },
       sendToStep(call) {
         if (call.stepName === 'bridge-step') {
@@ -78,12 +78,12 @@ describe('apps/aws/lambda-response-processor', () => {
         'Lambda-Runtime-Aws-Request-Id': '["req-456"]',
       },
       data: {
-        eventRouting: JSON.stringify({
+        eventRouting: {
           'apigw-v2': {
             deploymentAccessId: '_test_',
             stepId: 'bridge-step',
           },
-        }),
+        },
       },
       sendToStep(call) {
         if (call.stepName === 'bridge-step') {

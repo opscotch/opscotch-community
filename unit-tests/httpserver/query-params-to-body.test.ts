@@ -13,7 +13,7 @@ describe('httpserver/query-params-to-body', () => {
     const context = createJavascriptContext({
       body: JSON.stringify({ query: '?purpose=box&extra=ignored' }),
       data: {
-        extract: JSON.stringify(['purpose']),
+        extract: ['purpose'],
       },
     });
 

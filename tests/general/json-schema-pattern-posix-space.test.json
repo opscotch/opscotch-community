@@ -1,0 +1,12 @@
+{
+  "enabled": true,
+  "fromDirectory": "/general/",
+  "testThisStep": "testTrigger",
+  "useThisTestConfigFile": "json-schema-pattern-posix-space.config.json",
+  "theseMetricsShouldHaveBeenSent": [
+    {
+      "key": "json-schema-pattern-posix-space-pass",
+      "value": 1.0
+    }
+  ]
+}

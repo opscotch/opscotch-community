@@ -1,0 +1,26 @@
+{
+  "workflows": [
+    {
+      "name": "json schema pattern posix space",
+      "steps": [
+        {
+          "stepId": "json-schema-pattern-posix-space",
+          "type": "scripted",
+          "resultsProcessor": {
+            "resource": "/general/json-schema-pattern-posix-space.js"
+          }
+        },
+        {
+          "stepId": "testTrigger",
+          "type": "scripted",
+          "trigger": {
+            "runOnce": true
+          },
+          "resultsProcessor": {
+            "script": "context.sendToStep('json-schema-pattern-posix-space', JSON.stringify({ fromEmail: 'jane@example.com' }));"
+          }
+        }
+      ]
+    }
+  ]
+}

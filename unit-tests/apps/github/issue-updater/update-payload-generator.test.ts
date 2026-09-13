@@ -48,6 +48,21 @@ describe('github/issue-updater update-payload-generator', () => {
     await expect(suite.run("resource", { context })).rejects.toThrow('at least one mutable field');
   });
 
+  it('allows an empty assignee list to clear all issue assignees', async () => {
+    const context = createJavascriptContext({
+      body: JSON.stringify({
+        operation: 'update-issue',
+        repo: 'opscotch/hopscotch',
+        issue: 477,
+        assignees: [],
+      }),
+    });
+
+    await suite.run("resource", { context });
+
+    expect(JSON.parse(context.getBody() || '{}')).toEqual({ assignees: [] });
+  });
+
   it('sets empty payload for delete-comment', async () => {
     const context = createJavascriptContext({
       body: JSON.stringify({

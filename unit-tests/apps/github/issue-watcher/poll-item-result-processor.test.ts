@@ -54,4 +54,25 @@ describe('poll-item-result-processor', () => {
       items: [{ number: 402, title: 'PR' }],
     });
   });
+
+  it('normalizes null GitHub body fields to empty strings', async () => {
+    const context = createJavascriptContext({
+      body: JSON.stringify([{ number: 402, title: 'Empty description PR', body: null }]),
+      properties: {
+        gh_poll_group: JSON.stringify({
+          repo: 'opscotch/hopscotch',
+          assignee: 'machinoal2-cell',
+          watchEntity: 'pr',
+          criteria: [{ label: 'ready for dev', deploymentId: 'pr-actions', stepId: 'dispatch-pr' }],
+        }),
+      },
+    });
+
+    await suite.run("resource", { context });
+
+    expect(JSON.parse(context.getBody())).toMatchObject({
+      watchEntity: 'pr',
+      items: [{ number: 402, title: 'Empty description PR', body: '' }],
+    });
+  });
 });

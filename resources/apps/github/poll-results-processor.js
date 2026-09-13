@@ -62,7 +62,21 @@ doc
                             created_at: { type: "string" },
                             html_url: { type: "string" },
                             title: { type: "string" },
-                            body: { type: "string" }
+                            body: { type: ["string", "null"], description: "GitHub returns null when the issue/PR description is empty" }
+                        }
+                    }
+                },
+                errors: {
+                    type: "array",
+                    items: {
+                        type: "object",
+                        additionalProperties: true,
+                        required: ["systemError"],
+                        properties: {
+                            systemError: { type: "string" },
+                            status_code: { type: "string" },
+                            response: {},
+                            httpErrorKind: { type: "string" }
                         }
                     }
                 }
@@ -155,6 +169,29 @@ doc
             return out;
         }
 
+        function metricDouble(value) {
+            var n = Number(value);
+            return isFinite(n) ? n : 0;
+        }
+
+        function emitMetric(name, value, metadata) {
+            var safe = {};
+            var source = metadata && typeof metadata === "object" ? metadata : {};
+            Object.keys(source).forEach(function(key) {
+                if (source[key] === undefined || source[key] === null || source[key] === "") {
+                    return;
+                }
+                safe[key] = String(source[key]);
+            });
+            if (String(name).indexOf("error") >= 0 || String(name).indexOf("failure") >= 0) {
+                if (safe.error && safe.error !== "true" && !safe.error_code) {
+                    safe.error_code = safe.error;
+                }
+                safe.error = "true";
+            }
+            context.sendMetric(context.getTimestamp(), name, metricDouble(value), safe);
+        }
+
         function logDecision(enabled, eventName, details) {
             if (!enabled) {
                 return;
@@ -238,12 +275,44 @@ doc
         var pollGroups = JSON.parse(context.getBody());
 
         var totalItems = 0;
+        var aggregatedErrors = [];
         for (var gCount = 0; gCount < pollGroups.length; gCount += 1) {
             totalItems += Array.isArray((pollGroups[gCount] || {}).items) ? pollGroups[gCount].items.length : 0;
+            var groupErrors = Array.isArray((pollGroups[gCount] || {}).errors) ? pollGroups[gCount].errors : [];
+            for (var e = 0; e < groupErrors.length; e += 1) {
+                var error = groupErrors[e] || {};
+                var systemError = String(error.systemError || "").trim();
+                if (!systemError) {
+                    continue;
+                }
+                aggregatedErrors.push({
+                    systemError: systemError,
+                    status_code: String(error.status_code || "").trim(),
+                    httpErrorKind: String(error.httpErrorKind || "").trim(),
+                    response: String(error.response || "").trim()
+                });
+                context.addSystemError(systemError);
+            }
         }
+
+        if (aggregatedErrors.length > 0) {
+            var handledFailureSummary = {
+                poll_group_count: pollGroups.length,
+                handled_errors_count: aggregatedErrors.length,
+                handled_errors: aggregatedErrors
+            };
+            var handledFailureMessage = "github-watcher handled poll failure(s): " + JSON.stringify(handledFailureSummary);
+            if (typeof context.diagnosticLog === "function") {
+                context.diagnosticLog(handledFailureMessage);
+            } else {
+                console.log(handledFailureMessage);
+            }
+        }
+
         logDecision(decisionLoggingEnabled, "poll-result", {
             poll_group_count: pollGroups.length,
             polled_items: totalItems,
+            errors_count: aggregatedErrors.length,
             handoff_delay_seconds: issueHandoffDelaySeconds
         });
 
@@ -422,6 +491,12 @@ doc
                     routeResponse = context.sendToStep("route-ticket-action", JSON.stringify(eventPayload));
                     routeBody = parseJson(routeResponse ? routeResponse.getBody() : "", {});
                 } catch (dispatchErr) {
+                    emitMetric("github.poll.dispatch_errors", 1, {
+                        repo: repo,
+                        watch_entity: watchEntity,
+                        issue: issueNumber,
+                        error: "dispatch-failed"
+                    });
                     logDecision(decisionLoggingEnabled, "dispatch-failed", {
                         repo: repo,
                         issue: issueNumber,
@@ -431,6 +506,12 @@ doc
                 }
 
                 if (!routeBody || routeBody.routed !== true || routeBody.error || routeBody.status === "error" || routeBody.queued === false) {
+                    emitMetric("github.poll.dispatch_errors", 1, {
+                        repo: repo,
+                        watch_entity: watchEntity,
+                        issue: issueNumber,
+                        error: routeBody && routeBody.error ? routeBody.error : "dispatch-not-acknowledged"
+                    });
                     logDecision(decisionLoggingEnabled, "dispatch-not-acknowledged", {
                         repo: repo,
                         issue: issueNumber,
@@ -461,13 +542,55 @@ doc
         }
 
         context.setPersistedItem("issueUpdatedAtByNumber", JSON.stringify(issueWatermarks));
+        if (scanned > 0) {
+            emitMetric("github.poll.scanned", scanned, { watch_entity: pollGroups[0] && pollGroups[0].watchEntity });
+        }
+        if (dispatched > 0) {
+            emitMetric("github.poll.dispatched", dispatched, { watch_entity: pollGroups[0] && pollGroups[0].watchEntity });
+        }
+        if (aggregatedErrors.length > 0) {
+            emitMetric("github.poll.handled_errors", aggregatedErrors.length, {
+                watch_entity: pollGroups[0] && pollGroups[0].watchEntity,
+                status_code: aggregatedErrors[0].status_code
+            });
+        }
         logDecision(decisionLoggingEnabled, "poll-summary", {
             scanned_issues: scanned,
-            dispatched_actions: dispatched
+            dispatched_actions: dispatched,
+            errors_count: aggregatedErrors.length
         });
+
+        var watchEntityForMetric = "issue";
+        for (var wg = 0; wg < pollGroups.length; wg += 1) {
+            var we = String((pollGroups[wg] || {}).watchEntity || "").toLowerCase().trim();
+            if (we === "issue" || we === "pr") {
+                watchEntityForMetric = we;
+                break;
+            }
+        }
+        function emitPollMetric(name, value, extra) {
+            var meta = { watch_entity: watchEntityForMetric };
+            Object.keys(extra || {}).forEach(function(key) {
+                if (extra[key] === undefined || extra[key] === null) return;
+                meta[key] = String(extra[key]);
+            });
+            if (String(name).indexOf("failure") >= 0 || String(name).indexOf("error") >= 0) {
+                meta.error = "true";
+            }
+            context.sendMetric(context.getTimestamp(), name, metricDouble(value), meta);
+        }
+        emitPollMetric(aggregatedErrors.length > 0 ? "github.poll.failure" : "github.poll.success", 1.0, {
+            scanned: scanned,
+            dispatched: dispatched,
+            errors: aggregatedErrors.length
+        });
+        emitPollMetric("github.poll.items_found", scanned, {});
+        emitPollMetric("github.poll.items_routed", dispatched, {});
+
         context.setBody(JSON.stringify({
-            status: "ok",
+            status: aggregatedErrors.length > 0 ? "ok_with_errors" : "ok",
             scanned_issues: scanned,
-            dispatched_actions: dispatched
+            dispatched_actions: dispatched,
+            handled_errors_count: aggregatedErrors.length
         }));
     });

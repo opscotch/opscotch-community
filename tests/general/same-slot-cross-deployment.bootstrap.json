@@ -1,0 +1,21 @@
+{
+  "errorHandling": {
+    "enableLocalLogging": true
+  },
+  "allowDeploymentAccess": [
+    {
+      "id": "same-slot-callers",
+      "access": "call",
+      "deploymentIds": [
+        "${testDeploymentId}"
+      ]
+    },
+    {
+      "id": "same-slot-callers",
+      "access": "receive",
+      "deploymentIds": [
+        "${testDeploymentId}"
+      ]
+    }
+  ]
+}

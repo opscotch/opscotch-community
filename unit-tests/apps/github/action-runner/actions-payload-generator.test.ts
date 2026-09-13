@@ -28,6 +28,7 @@ describe('github/action-runner actions-payload-generator', () => {
 
   it('builds trigger workflow payload with ref in data', async () => {
     const context = createJavascriptContext({
+      body: JSON.stringify({ ref: 'develop' }),
       data: { ref: 'main' },
     });
 
@@ -38,10 +39,10 @@ describe('github/action-runner actions-payload-generator', () => {
 
   it('requires ref - throws error when missing', async () => {
     const context = createJavascriptContext({
-      data: {},
+      body: JSON.stringify({}),
     });
 
-    await expect(suite.run("resource", { context })).rejects.toThrow('ref is required');
+    await expect(suite.run("resource", { context })).rejects.toThrow(/ref is required/);
   });
 
   it('data ref takes precedence over body input', async () => {
