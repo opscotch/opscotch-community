@@ -84,4 +84,70 @@ describe('poll-split-generator', () => {
       criteria: [{ label: 'run build' }],
     });
   });
+
+  it('fans out group-derived assignees while preserving a direct assignee once', async () => {
+    const context = createJavascriptContext({
+      data: {
+        githubIssueWatcherRepos: [
+          {
+            repo: 'opscotch/hopscotch',
+            assignee: 'AI-Developer',
+            assignees: ['ai-developer', 'secondary-ai-developer'],
+            criteria: [
+              {
+                label: 'ready for dev',
+                deploymentId: 'ticket-actions',
+                stepId: 'dispatch-dev',
+              },
+            ],
+          },
+        ],
+      },
+    });
+
+    await suite.run("resource", { context });
+
+    expect(context.__splitReturnItems.map((item) => JSON.parse(item).assignee)).toEqual([
+      'AI-Developer',
+      'secondary-ai-developer',
+    ]);
+  });
+
+  it('fans out group-derived assignees for PR polling', async () => {
+    const context = createJavascriptContext({
+      data: {
+        watchEntity: 'pr',
+        githubPrWatcherRepos: [
+          {
+            repo: 'opscotch/hopscotch',
+            assignees: ['primary-ai-developer', 'secondary-ai-developer'],
+            criteria: [{ label: 'run build', deploymentId: 'pr-actions', stepId: 'dispatch-run-build' }],
+          },
+        ],
+      },
+    });
+
+    await suite.run("resource", { context });
+
+    expect(context.__splitReturnItems.map((item) => JSON.parse(item))).toMatchObject([
+      { assignee: 'primary-ai-developer', watchEntity: 'pr' },
+      { assignee: 'secondary-ai-developer', watchEntity: 'pr' },
+    ]);
+  });
+
+  it('rejects an empty or malformed group assignment', async () => {
+    const context = createJavascriptContext({
+      data: {
+        githubIssueWatcherRepos: [
+          {
+            repo: 'opscotch/hopscotch',
+            assignees: [''],
+            criteria: [{ label: 'triage', deploymentId: 'ticket-actions', stepId: 'dispatch-triage' }],
+          },
+        ],
+      },
+    });
+
+    await expect(suite.run("resource", { context })).rejects.toThrow('assignee entries must not be empty');
+  });
 });
