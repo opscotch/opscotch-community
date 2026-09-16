@@ -2,15 +2,68 @@ import path from 'node:path';
 import { createJavascriptContext, createResourceSuite } from '@opscotch/resource-testkit';
 import { describe, expect, it } from 'vitest';
 
-const resourcesRoot = path.resolve(import.meta.dirname, '../../../../opscotch-apps-source/opscotch-ai-developer/opscotch/resources');
+const appsRoot = process.env.OPSCOTCH_APPS_REPO_ROOT
+  ?? path.resolve(import.meta.dirname, '../../../../../codex_repos/opscotch-apps-source');
+const resourcesRoot = path.join(appsRoot, 'opscotch-ai-developer/opscotch/resources');
 const flowResource = path.join(resourcesRoot, 'dispatch-bmad-develop.js');
 const invokeResource = path.join(resourcesRoot, 'dispatch-bmad-develop-invoke.js');
+const prepareResource = path.join(resourcesRoot, 'dispatch-bmad-develop-prepare.js');
 
 const suite = createResourceSuite({
   resources: [
     { id: 'flow', resource: flowResource },
     { id: 'invoke', resource: invokeResource },
+    { id: 'prepare', resource: prepareResource },
   ],
+});
+
+describe('github-ticket-poller/dispatch-bmad-develop-prepare', () => {
+  it('forwards issue labels and both branch settings to normalization', async () => {
+    const context = createJavascriptContext({
+      timestamp: Date.parse('2026-05-07T00:00:00.000Z'),
+      body: JSON.stringify({
+        repo: 'opscotch/hopscotch',
+        issue: 328,
+        updated_at: '2026-05-07T00:00:00Z',
+        title: 'Issue title',
+        issue_body: 'Issue body',
+        comments: [],
+        issue_context: { labels: [{ name: 'base_branch_3.1.4' }, { name: 'community_branch_3.1.8' }] },
+        matched_label: 'ready for dev',
+        base_branch: '3.1.4',
+      }),
+      data: {
+        issueUpdaterDeploymentAccessId: 'github-issue-updater',
+        issueUpdaterStepId: 'github-issue-update',
+        developWorkflow: 'implementation-planning',
+        developWorkBranchPrefix: 'opscotch/issue-',
+        actionInstructionsByRepoLabel: {
+          'opscotch/hopscotch': {
+            'ready for dev': {
+              instructions: ['Implement the issue'],
+              ai: { provider: 'codex', model: 'gpt-5.4-mini', reasoningEffort: 'medium', verbosity: 'low' },
+            },
+          },
+        },
+        sidecarRepositoriesByRepo: {
+          'opscotch/hopscotch': [
+            { repo: 'opscotch/hopscotch', branchFrom: 'base_branch', primary: true },
+          ],
+        },
+      },
+    });
+
+    await suite.run('prepare', { context });
+
+    expect(JSON.parse(context.__sendToStepCalls[0].body || '{}')).toMatchObject({
+      issue_context: { labels: [{ name: 'base_branch_3.1.4' }, { name: 'community_branch_3.1.8' }] },
+      base_branch: '3.1.4',
+      community_branch: '',
+    });
+    expect(JSON.parse(context.getBody() || '{}').repositories).toEqual([
+      expect.objectContaining({ repo: 'opscotch/hopscotch', branch: '3.1.4', primary: true }),
+    ]);
+  });
 });
 
 describe('github-ticket-poller/dispatch-bmad-develop', () => {
@@ -56,11 +109,11 @@ describe('github-ticket-poller/dispatch-bmad-develop', () => {
 
     expect(context.__sendToStepCalls.map((call) => call.stepName)).toEqual([
       'dispatch-bmad-develop-prepare',
-      'dispatch-bmad-develop-start-comment',
       'dispatch-bmad-develop-invoke',
+      'dispatch-bmad-develop-start-comment',
     ]);
     expect(JSON.parse(context.__sendToStepCalls[1].body || '{}')).toEqual(prepared);
-    expect(JSON.parse(context.__sendToStepCalls[2].body || '{}')).toEqual(started);
+    expect(JSON.parse(context.__sendToStepCalls[2].body || '{}')).toEqual(prepared);
     expect(JSON.parse(context.getBody() || '{}')).toEqual(accepted);
   });
 });
