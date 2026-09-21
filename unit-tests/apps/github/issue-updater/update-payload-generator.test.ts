@@ -128,6 +128,16 @@ describe('github/issue-updater update-payload-generator', () => {
     expect(context.getBody()).toBe('');
   });
 
+  it('sets empty payload for finalization evidence reads', async () => {
+    const comments = createJavascriptContext({ body: JSON.stringify({ operation: 'list-comments', repo: 'opscotch/hopscotch', issue: 317 }) });
+    await suite.run("resource", { context: comments });
+    expect(comments.getBody()).toBe('');
+
+    const branch = createJavascriptContext({ body: JSON.stringify({ operation: 'get-branch', repo: 'opscotch/hopscotch', issue: 317, branch: 'opscotch/issue-317-develop' }) });
+    await suite.run("resource", { context: branch });
+    expect(branch.getBody()).toBe('');
+  });
+
   it('builds request-reviewers payload', async () => {
     const context = createJavascriptContext({
       body: JSON.stringify({
