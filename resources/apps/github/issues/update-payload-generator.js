@@ -69,6 +69,10 @@ doc
                 description: "Head branch for pull request operations.",
                 type: "string"
             },
+            branch: {
+                description: "Branch name for get-branch operation.",
+                type: "string"
+            },
             base: {
                 description: "Base branch for pull request operations.",
                 type: "string"
@@ -191,6 +195,12 @@ doc
             if (!head) {
                 throw new Error("head is required for get-open-pr-by-head");
             }
+            payload = null;
+        } else if (operation === "list-comments") {
+            payload = null;
+        } else if (operation === "get-branch") {
+            var branch = String(input.branch || "").trim();
+            if (!branch) throw new Error("branch is required for get-branch");
             payload = null;
         } else if (operation === "create-pr") {
             var prTitle = String(input.title || "").trim();

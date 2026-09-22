@@ -125,6 +125,16 @@ doc
             }
             method = "DELETE";
             path = "/repos/" + repo + "/issues/comments/" + commentId;
+        } else if (operation === "list-comments") {
+            method = "GET";
+            path = "/repos/" + repo + "/issues/" + issue + "/comments?per_page=100";
+        } else if (operation === "get-branch") {
+            var branch = String(input.branch || "").trim();
+            if (!branch) {
+                throw new Error("branch is required for get-branch operation");
+            }
+            method = "GET";
+            path = "/repos/" + repo + "/branches/" + encodeURIComponent(branch);
         } else if (operation === "get-open-pr-by-head") {
             var head = String(input.head || "").trim();
             if (!head) {

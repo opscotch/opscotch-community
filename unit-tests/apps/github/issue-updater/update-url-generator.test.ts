@@ -60,6 +60,18 @@ describe('github/issue-updater update-url-generator', () => {
     expect(context.__url?.path).toBe('/repos/opscotch/hopscotch/pulls?state=open&head=opscotch%3Aopscotch%2Fissue-317-develop');
   });
 
+  it('builds read URLs for comments and work branches', async () => {
+    const comments = createJavascriptContext({ data: { hostId: 'github-api' }, body: JSON.stringify({ operation: 'list-comments', repo: 'opscotch/hopscotch', issue: 317 }) });
+    await suite.run("resource", { context: comments });
+    expect(comments.__method).toBe('GET');
+    expect(comments.__url?.path).toBe('/repos/opscotch/hopscotch/issues/317/comments?per_page=100');
+
+    const branch = createJavascriptContext({ data: { hostId: 'github-api' }, body: JSON.stringify({ operation: 'get-branch', repo: 'opscotch/hopscotch', issue: 317, branch: 'opscotch/issue-317-develop' }) });
+    await suite.run("resource", { context: branch });
+    expect(branch.__method).toBe('GET');
+    expect(branch.__url?.path).toBe('/repos/opscotch/hopscotch/branches/opscotch%2Fissue-317-develop');
+  });
+
   it('builds reviewer request URL', async () => {
     const context = createJavascriptContext({
       data: { hostId: 'github-api' },
