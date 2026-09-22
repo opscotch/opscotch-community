@@ -1,0 +1,9 @@
+services:
+  agent:
+    image: ${AGENT_IMAGE}
+    environment:
+      BOOTSTRAP_FILE: /fixtures/bootstrap.json
+      OPSCOTCH_LEGAL_ACCEPTED: ${OPSCOTCH_LEGAL_ACCEPTED}
+      OPSCOTCH_OPTS: --accept-legal=yes
+    volumes:
+      - ${FIXTURE_DIR}:/fixtures:ro
