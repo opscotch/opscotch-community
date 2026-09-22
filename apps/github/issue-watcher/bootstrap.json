@@ -14,7 +14,7 @@
       {
         "id": "github-api",
         "host": "https://api.github.com",
-        "httpTimeout": 15000,
+        "httpTimeout": 30000,
         "allowList": [
           {
             "method": "GET",
