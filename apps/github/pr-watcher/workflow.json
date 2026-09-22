@@ -13,8 +13,8 @@
           "singleThreaded": "return",
           "trigger": {
             "timer": {
-              "delay": 10000,
-              "period": 10000
+              "delay": 60000,
+              "period": 60000
             }
           },
           "splitGenerator": {
