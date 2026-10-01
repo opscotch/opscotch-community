@@ -28,28 +28,13 @@ doc
             context.sendToStep("lambda-listener-response", responseBody);
         }
 
-        var raw = context.getData("post-process");
-        if (!raw) {
+        var postProcessConfig = context.getData("post-process");
+        if (postProcessConfig == null) {
             continueToResponse();
             return;
         }
 
-        var postProcess;
-        try {
-            postProcess = typeof raw === "string" ? JSON.parse(raw) : raw;
-        } catch (e) {
-            context.diagnosticLog("post-process config is malformed JSON; continuing to lambda response");
-            context.addSystemError("post-process config is malformed JSON");
-            continueToResponse();
-            return;
-        }
-
-        if (!postProcess || typeof postProcess !== "object" || !postProcess.stepId) {
-            context.diagnosticLog("post-process config missing stepId; continuing to lambda response");
-            context.addSystemError("post-process config missing stepId");
-            continueToResponse();
-            return;
-        }
+        var postProcess = JSON.parse(postProcessConfig);
 
         var completed;
         try {
