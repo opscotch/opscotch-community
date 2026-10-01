@@ -125,7 +125,7 @@ doc
         
         if (!eventRouting[eventKey]) {
             context.setProperty("responseType", "error");
-            context.sendToStep("lambda-listener-response", JSON.stringify(
+            context.sendToStep("lambda-listener-post-process", JSON.stringify(
                 {
                     errorMessage : `event key is not defined for payload type ${eventKey}`,
                     errorType : "Exception"
@@ -150,7 +150,7 @@ doc
 
         if (responseErrors.length > 0) {
             context.setProperty("responseType", "error");
-            context.sendToStep("lambda-listener-response", JSON.stringify(
+            context.sendToStep("lambda-listener-post-process", JSON.stringify(
                 {
                     errorMessage : responseErrors[0],
                     errorType : "Exception"
@@ -163,10 +163,10 @@ doc
                 context.setProperty("responseType", "response");
                 context.diagnosticLog(`response to lambda ${response.getBody()}`);
                 context.setBody(response.getBody());
-                context.sendToStep("lambda-listener-response", response.getBody());
+                context.sendToStep("lambda-listener-post-process", response.getBody());
             } else {
                 context.setProperty("responseType", "response");
-                context.sendToStep("lambda-listener-response", "{}");
+                context.sendToStep("lambda-listener-post-process", "{}");
             }
         }
     });

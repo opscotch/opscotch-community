@@ -57,7 +57,7 @@ describe('apps/aws/lambda-response-processor', () => {
         headers: undefined,
       },
       {
-        stepName: 'lambda-listener-response',
+        stepName: 'lambda-listener-post-process',
         body: '{"statusCode":200,"headers":{"content-type":"application/json"},"body":"ok"}',
         headers: undefined,
       },
@@ -106,7 +106,7 @@ describe('apps/aws/lambda-response-processor', () => {
         headers: undefined,
       },
       {
-        stepName: 'lambda-listener-response',
+        stepName: 'lambda-listener-post-process',
         body: '{"errorMessage":"it failed","errorType":"Exception"}',
         headers: undefined,
       },

@@ -44,6 +44,14 @@
                     }
                 },
                 {
+                    "type" : "scripted",
+                    "stepId" : "lambda-listener-post-process",
+                    "comment" : "Optional bounded sync hook via data.post-process { stepId, deploymentId } before Runtime API response",
+                    "resultsProcessor" : {
+                        "resource" : "apps/aws/lambda-post-process-processor.js"
+                    }
+                },
+                {
                     "stepId" : "lambda-listener-response",
                     "type" : "scripted",
                     "urlGenerator" : {
