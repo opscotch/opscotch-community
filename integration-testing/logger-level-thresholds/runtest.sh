@@ -96,16 +96,18 @@ def forbid(text, source, name):
     if text in source:
         raise SystemExit(f"Unexpected {name}: {text}")
 
-# The control deployment demonstrates the unconfigured default in both local
-# and remote observers.  The two configured deployments prove that levels are
-# instance-scoped and resolved with bootstrap-over-workflow precedence.
+# DiagnosticLogger ships to both local and remote observers. FlowLogger step
+# starts are local-only (HTTP remote shipping attaches Audit/Diagnostic/Public;
+# FlowLogger goes to OTEL). StepId is deploymentId-versionId-stepId, so flow
+# assertions use the deployment id prefix rather than the workflow name.
 for source, name in ((agent, "agent log"), (remote, "remote log")):
     require("logger-levels-control-diagnostic-info", source, name)
-    require("logger-levels-control-runonce", source, name)
     forbid("logger-levels-bootstrap-wins-diagnostic-info", source, name)
     forbid("logger-levels-workflow-fallback-diagnostic-info", source, name)
-    forbid("logger-levels-bootstrap-wins-runonce", source, name)
-    forbid("logger-levels-workflow-fallback-runonce", source, name)
+
+require("Starting: logger-levels-control-", agent, "agent log")
+forbid("Starting: logger-levels-bootstrap-wins-", agent, "agent log")
+forbid("Starting: logger-levels-workflow-fallback-", agent, "agent log")
 
 require("Opscotch Legal Terms Accepted", agent, "AlwaysLogLogger startup record")
 PY
