@@ -245,6 +245,6 @@ run_phase() {
 }
 
 run_phase "phase-1" 25 35 "no" 1 0
-run_phase "phase-2" 1 10 "yes" 1 0
+run_phase "phase-2" 1 10 "yes" 0 1
 
 printf 'Verified shutdown-drain timeout behavior across 2 phases\n'
