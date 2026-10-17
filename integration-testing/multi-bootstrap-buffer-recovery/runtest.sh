@@ -426,12 +426,12 @@ trigger_phase connection
 assert_warning_suppressed connection "$connection_warning" "$connection_warning_baseline"
 recover_phase connection connection-recovery
 
-# 400-498 responses are terminal: every sender drops its payload.  The sender
-# itself owns this path, so these statuses do not traverse the workflow-level
-# warning handler.  Other non-2xx responses are retried and must recover.
-test_status_policy status-400 400 '' drop
-test_status_policy status-401 401 '' drop
-test_status_policy status-404 404 '' drop
+# 400, 401, and 402-499 keep the persisted payload and retry. Each of those
+# statuses warns once, then stays quiet until a 2xx clears the payload and the
+# warning flags. 500 and 302 have no status handler; they also retry and recover.
+test_status_policy status-400 400 '400 error while trying to send data' retry
+test_status_policy status-401 401 '401 error while trying to send data' retry
+test_status_policy status-404 404 '402-499 error while trying to send data' retry
 test_status_policy status-500 500 '' retry
 test_status_policy status-302 302 '' retry
 
