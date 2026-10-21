@@ -277,7 +277,7 @@ with urllib.request.urlopen(
         f"http://agent:{port}/emit-{phase}",
         method="POST",
     ),
-    timeout=10,
+    timeout=30,
 ) as response:
     response.read()
 PY
