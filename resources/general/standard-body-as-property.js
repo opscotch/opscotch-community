@@ -1,6 +1,12 @@
-/**
- * Saves the current body as a property.
- * Expects:
- * - propertyName: name of property to set the body as
- */
-context.setProperty(context.getData("propertyName"), context.getMessageBodyAsString());
+doc
+    .description("Saves the current message body into the workflow property named by step data propertyName.")
+    .dataSchema({
+        type: "object",
+        required: ["propertyName"],
+        properties: {
+            propertyName: { type: "string" }
+        }
+    })
+    .run(() => {
+        context.setProperty(context.getData("propertyName"), context.getMessageBodyAsString());
+    });
