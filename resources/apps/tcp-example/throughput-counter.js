@@ -1,27 +1,37 @@
-var c = context;
-if (c.getStream() != null && c.getStream().available() > 0) {
+doc
+    .description("Counts TCP stream line throughput against ingest timestamp, or logs the average on a timer.")
+    .inPropertySchema({
+        type: "object",
+        properties: {
+            ts: { type: ["string", "number"] }
+        }
+    })
+    .run(() => {
+        var c = context;
+        if (c.getStream() != null && c.getStream().available() > 0) {
 
-    let bytes = c.bytes();
-    let metrics = bytes.split(c.getStream().readAll(), bytes.createFromString("\n"), 0);
+            let bytes = c.bytes();
+            let metrics = bytes.split(c.getStream().readAll(), bytes.createFromString("\n"), 0);
 
-    let opscotch_ingest_ts = parseInt(c.getProperty("ts"));
-    let opscotch_js_ingest_ts = c.getTimestamp();
-    let opscotch_ingest_to_js_ts = opscotch_js_ingest_ts -  opscotch_ingest_ts;
+            let opscotch_ingest_ts = parseInt(c.getProperty("ts"));
+            let opscotch_js_ingest_ts = c.getTimestamp();
+            let opscotch_ingest_to_js_ts = opscotch_js_ingest_ts - opscotch_ingest_ts;
 
-    let data = {
-        opscotch_ingest_ts : `${opscotch_ingest_ts}`,
-        opscotch_js_ingest_ts : `${opscotch_js_ingest_ts}`,
-        opscotch_ingest_to_js_ts : `${opscotch_ingest_to_js_ts}`
-    }
+            let data = {
+                opscotch_ingest_ts: `${opscotch_ingest_ts}`,
+                opscotch_js_ingest_ts: `${opscotch_js_ingest_ts}`,
+                opscotch_ingest_to_js_ts: `${opscotch_ingest_to_js_ts}`
+            }
 
-    c.counter("time", c.getTimestamp() - opscotch_ingest_ts);
-    const total = c.counter("count", metrics.length);
+            c.counter("time", c.getTimestamp() - opscotch_ingest_ts);
+            const total = c.counter("count", metrics.length);
 
-    if (total > 100000) {
-        c.setCounter("time", 0);
-        c.setCounter("count", 0);
-    }
-} else {
-    // timer
-    console.log(c.counter("time", 0) / c.counter("count", 0));
-}
+            if (total > 100000) {
+                c.setCounter("time", 0);
+                c.setCounter("count", 0);
+            }
+        } else {
+            // timer
+            console.log(c.counter("time", 0) / c.counter("count", 0));
+        }
+    });
