@@ -1,36 +1,50 @@
-/*
-Expects results from an elastic query. Will extract the min and max timestamp from the results,
-to use for the next query.
+doc
+    .description("Persists min/max timestamps from Elasticsearch hits and forwards hits.hits to processroute.")
+    .dataSchema({
+        type: "object",
+        required: ["processroute", "idProperty"],
+        properties: {
+            processroute: { type: "string" },
+            idProperty: { type: "string" },
+            timestampField: { type: "string" }
+        }
+    })
+    .inSchema({
+        type: "object",
+        required: ["hits"],
+        properties: {
+            hits: {
+                type: "object",
+                required: ["hits"],
+                properties: {
+                    hits: { type: "array" }
+                }
+            }
+        }
+    })
+    .run(() => {
+        const body = context.getMessageBodyAsString();
+        const response = JSON.parse(body);
+        const id = context.getProperty(context.getData("idProperty"));
 
-Expects:
-- timestampField data property to have been set which refers to the timestamp field in the results
-- idProperty data property to have been set which refers the the property that holds the "query id"
-- processroute data property to have been set to send results to
+        let minTimestamp = null;
+        let maxTimestamp = null;
+        const timestampField = context.getData("timestampField")
 
-Will persist the minTimestamp and maxTimestamp for the results for use in the query next time
-*/
+        if (timestampField) {
+            const persistence = context.getTimestampManager();
+            response.hits.hits.forEach(hit => {
+                const timestamp = hit._source[timestampField];
+                minTimestamp = Math.min(minTimestamp, timestamp);
+                maxTimestamp = Math.max(maxTimestamp, timestamp);
+            });
 
-body = context.getMessageBodyAsString();
-response = JSON.parse(body);
-id = context.getProperty(context.getData("idProperty"));
+            if (maxTimestamp) {
+                persistence.set(id + "maxTimestamp", "" + maxTimestamp);
+                persistence.set(id + "minTimestamp", "" + minTimestamp);
+            }
 
-minTimestamp = null;
-maxTimestamp = null;
-timestampField = context.getData("timestampField")
+        }
 
-if(timestampField) {
-    persistence = context.getTimestampManager();
-    response.hits.hits.forEach(hit => {
-        timestamp = hit._source[timestampField];
-        minTimestamp = Math.min(minTimestamp, timestamp);
-        maxTimestamp = Math.max(maxTimestamp, timestamp);
+        context.sendToStep(context.getData("processroute"), JSON.stringify(response.hits.hits));
     });
-
-    if(maxTimestamp) {
-        persistence.set(id+"maxTimestamp", ""+maxTimestamp);
-        persistence.set(id+"minTimestamp", ""+minTimestamp);
-    }
-    
-}
-
-context.sendToStep(context.getData("processroute"), JSON.stringify(response.hits.hits));
