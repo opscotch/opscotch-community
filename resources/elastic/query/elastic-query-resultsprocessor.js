@@ -1,12 +1,27 @@
-/*
-Expects results from an elastic query.
-
-Expects the following data properties:
-- processroute : step to forward to
-
-Will forward the hits.hits result
-*/
-
-body = context.getMessageBodyAsString();
-response = JSON.parse(body);
-context.sendToStep(context.getData("processroute"), JSON.stringify(response.hits.hits));
+doc
+    .description("Forwards Elasticsearch hits.hits from a query response to the step named by processroute.")
+    .dataSchema({
+        type: "object",
+        required: ["processroute"],
+        properties: {
+            processroute: { type: "string" }
+        }
+    })
+    .inSchema({
+        type: "object",
+        required: ["hits"],
+        properties: {
+            hits: {
+                type: "object",
+                required: ["hits"],
+                properties: {
+                    hits: { type: "array" }
+                }
+            }
+        }
+    })
+    .run(() => {
+        const body = context.getMessageBodyAsString();
+        const response = JSON.parse(body);
+        context.sendToStep(context.getData("processroute"), JSON.stringify(response.hits.hits));
+    });

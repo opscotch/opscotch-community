@@ -1,13 +1,23 @@
-/*
-Expecting an input body as per below containing a key value
-
-{
-    "key": "ABC-12345"
-}
-
-*/
-data = JSON.parse(context.getData());
-body = context.getMessageBodyAsString();
-response = JSON.parse(body);
-// Replace placeholder "{key}" in the path with value from the body
-context.setUrl(data["host-ref"], data["path"].replace("{key}", response.key));
+doc
+    .description("Sets the request URL by substituting {key} in the path with the Jira key from the body.")
+    .dataSchema({
+        type: "object",
+        required: ["host-ref", "path"],
+        properties: {
+            "host-ref": { type: "string" },
+            path: { type: "string" }
+        }
+    })
+    .inSchema({
+        type: "object",
+        required: ["key"],
+        properties: {
+            key: { type: "string" }
+        }
+    })
+    .run(() => {
+        const data = JSON.parse(context.getData());
+        const body = context.getMessageBodyAsString();
+        const response = JSON.parse(body);
+        context.setUrl(data["host-ref"], data["path"].replace("{key}", response.key));
+    });

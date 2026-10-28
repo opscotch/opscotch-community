@@ -1,16 +1,13 @@
-/**
- * Verify body is in JSON format by trying to parse it
- * 
- * If not valid, then send an empty object, onus is on results processor to check the object contains required fields.
- * Otherwise rely on default passing of body
- */
+doc
+    .description("Validates the body is JSON; on parse failure replaces it with {} and logs the error.")
+    .run(() => {
+        const body = context.getMessageBodyAsString();
 
-body = context.getMessageBodyAsString();
-
-try {
-    JSON.parse(body);
-}
-catch (error) {
-    context.setMessage("{}");
-    context.diagnosticLog ("Failed to parse Body as JSON: " + error.toString());
-}
+        try {
+            JSON.parse(body);
+        }
+        catch (error) {
+            context.setMessage("{}");
+            context.diagnosticLog("Failed to parse Body as JSON: " + error.toString());
+        }
+    });
