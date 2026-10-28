@@ -5,6 +5,8 @@ const resource = path.resolve(import.meta.dirname, '../../../resources/general/a
 
 const suite = createResourceSuite({
   resources: [{ id: "resource", resource }],
+  // authStep is invoked via sendToStep mock, not a registered sibling resource
+  strictSiblings: false,
 });
 
 type AuthContext = ReturnType<typeof createAuthenticationJavascriptContext> & {
