@@ -1,33 +1,21 @@
-/*
-Given a key to some data, and a restricted host, sets the data as a message header
-
-{
-    "data" : {
-        "fromHost" : "theHost",
-        "keyOfValue" : "myBody",
-        "headerName" : "myHeader"
-    }
-}
-...
-
-Bootstrap data:
-{
-    "data" : {
-        "hosts" : {
-            "theHost" : {
-                "myBody" : "this is the body",
-            }
+doc
+    .description("Sets a message header from a restricted-host data value named by keyOfValue.")
+    .dataSchema({
+        type: "object",
+        required: ["fromHost", "keyOfValue", "headerName"],
+        properties: {
+            fromHost: { type: "string" },
+            keyOfValue: { type: "string" },
+            headerName: { type: "string" }
         }
-    }
-}
+    })
+    .run(() => {
+        const restictedData = JSON.parse(context.getRestrictedDataFromHost(context.getData("fromHost")))
+        const key = context.getData("keyOfValue");
 
-*/
+        if (!restictedData.hasOwnProperty(key)) {
+            throw key + " not found in restictedData";
+        }
 
-restictedData = JSON.parse(context.getRestrictedDataFromHost(context.getData("fromHost")))
-key = context.getData("keyOfValue");
-
-if (!restictedData.hasOwnProperty(key)) {
-    throw key + " not found in restictedData";
-}
-
-context.setHeader(context.getData("headerName"), restictedData[key]);
+        context.setHeader(context.getData("headerName"), restictedData[key]);
+    });
