@@ -1,22 +1,33 @@
-/*
-Expects:
-    - the body to be the response from /_cat/nodes?h=name,role&format=JSON
+doc
+    .description("Counts master-eligible Elasticsearch nodes from a /_cat/nodes JSON response and forwards the count.")
+    .dataSchema({
+        type: "object",
+        required: ["processroute"],
+        properties: {
+            processroute: { type: "string" }
+        }
+    })
+    .inSchema({
+        type: "array",
+        items: {
+            type: "object",
+            properties: {
+                role: { type: "string" }
+            }
+        }
+    })
+    .run(() => {
+        const body = context.getMessageBodyAsString();
+        const nodeList = JSON.parse(body);
 
-*/
+        let masterEligibleNodes = 0;
+        nodeList.forEach(obj => {
+            const role = obj["role"];
+            if (role.includes("m")) {
+                masterEligibleNodes++;
+            }
+        });
+        const item = { "master-eligible-nodes": masterEligibleNodes };
 
-body = context.getMessageBodyAsString();
-nodeList = JSON.parse(body);
-
-/* Getting the nodes names and roles r*/
-masterEligibleNodes = 0;
-nodeList.forEach(obj => {
-    role = obj["role"];
-    /* considering only the nodes with role m  */
-    if (role.includes("m")) {
-        masterEligibleNodes++;
-    }
-});
-/* The number of master eligible nodes will send to the next step*/
-item = { "master-eligible-nodes": masterEligibleNodes };
-
-context.sendToStep(context.getData("processroute"), JSON.stringify(item))
+        context.sendToStep(context.getData("processroute"), JSON.stringify(item))
+    });

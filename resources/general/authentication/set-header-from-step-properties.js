@@ -1,36 +1,47 @@
-/*
-This processor expects that when the step referred to by the "authStep" data property is called,
-it will place an object on the step properties referred to by the "propertiesFromStep" data property, 
-with the key referred to by the "propertyName" property. The object should contain properties of headers to be set.
+doc
+    .description("Applies authentication headers from step properties, invoking authStep synchronously when they are missing.")
+    .dataSchema({
+        type: "object",
+        required: ["propertiesStoredOnStep"],
+        properties: {
+            propertiesStoredOnStep: { type: "string" },
+            propertyName: { type: "string" },
+            authStep: { type: "string" },
+            passToAuthData: {}
+        }
+    })
+    .inPropertySchema({
+        type: "object",
+        properties: {
+            OPSCOTCH_AUTH_DATA: { type: "string" },
+            authPropertyName: { type: "string" }
+        }
+    })
+    .run(() => {
+        const passedData = context.getProperty("OPSCOTCH_AUTH_DATA");
+        const propertiesFromStep = context.getData("propertiesStoredOnStep");
+        let propertyName = context.getProperty("authPropertyName");
+        if (!propertyName) {
+            propertyName = context.getData("propertyName");
+        }
 
-"propertyName" property can either be set via a data property or by a context.getProperty("authPropertyName")
+        console.log(`auth property name = ${propertyName}`)
 
-The above object will be got, and the keys iterated, where by the key will be the header name, and the value the header value
-*/
+        let headersObjectAsJSONString = context.getAuthenticationPropertiesFromStep(propertiesFromStep, propertyName);
 
-passedData = context.getProperty("OPSCOTCH_AUTH_DATA");
-propertiesFromStep = context.getData("propertiesStoredOnStep");
-propertyName = context.getProperty("authPropertyName"); 
-if ( !propertyName ) {
-    propertyName =context.getData("propertyName");
-}
+        if (headersObjectAsJSONString == null) {
+            const authStep = context.getData("authStep");
+            context.setProperty("OPSCOTCH_AUTH_DATA", context.mergeJsonStrings(passedData, context.getData("passToAuthData")));
+            context.sendToStep(authStep, null); // this will call the step synchronously and return here when done.
+            headersObjectAsJSONString = context.getAuthenticationPropertiesFromStep(propertiesFromStep, propertyName);
+        }
 
-console.log(`auth property name = ${propertyName}`)
+        if (headersObjectAsJSONString == null) {
+            throw "Authentication has not performed as expected. The expected result from the authentication step is not present;";
+        }
 
-headersObjectAsJSONString = context.getAuthenticationPropertiesFromStep(propertiesFromStep, propertyName);
-
-if (headersObjectAsJSONString == null) {
-    authStep = context.getData("authStep");
-    context.setProperty("OPSCOTCH_AUTH_DATA", context.mergeJsonStrings(passedData, context.getData("passToAuthData")));
-    context.sendToStep(authStep, null); // this will call the step synchronously and return here when done.
-    headersObjectAsJSONString = context.getAuthenticationPropertiesFromStep(propertiesFromStep, propertyName);
-}
-
-if (headersObjectAsJSONString == null) {
-    throw "Authentication has not performed as expected. The expected result from the authentication step is not present;";
-}
-
-headersObject = JSON.parse(headersObjectAsJSONString);
-Object.keys(headersObject).forEach(headerName => {
-    context.setHeader(headerName, headersObject[headerName]);
-});
+        const headersObject = JSON.parse(headersObjectAsJSONString);
+        Object.keys(headersObject).forEach(headerName => {
+            context.setHeader(headerName, headersObject[headerName]);
+        });
+    });

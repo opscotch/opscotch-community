@@ -1,32 +1,21 @@
-/*
-Given a key to some data, and a restricted host, sets the data as the message body
-
-{
-    "data" : {
-        "fromHost" : "theHost",
-        "keyOfBody" : "myBody"
-    }
-}
-...
-
-Bootstrap data:
-{
-    "data" : {
-        "hosts" : {
-            "theHost" : {
-                "myBody" : "this is the body",
-            }
+doc
+    .description("Sets the message body from a restricted-host data value named by keyOfBody.")
+    .dataSchema({
+        type: "object",
+        required: ["fromHost", "keyOfBody"],
+        properties: {
+            fromHost: { type: "string" },
+            keyOfBody: { type: "string" }
         }
-    }
-}
+    })
+    .run(() => {
+        const data = JSON.parse(context.getData());
+        const restictedData = JSON.parse(context.getRestrictedDataFromHost(data["fromHost"]))
+        const key = data["keyOfBody"];
 
-*/
-data = JSON.parse(context.getData());
-restictedData = JSON.parse(context.getRestrictedDataFromHost(data["fromHost"]))
-key = data["keyOfBody"];
+        if (!restictedData.hasOwnProperty(key)) {
+            throw key + " not found in restictedData";
+        }
 
-if (!restictedData.hasOwnProperty(key)) {
-    throw key + " not found in restictedData";
-}
-
-context.setMessage(restictedData[key]);
+        context.setMessage(restictedData[key]);
+    });
