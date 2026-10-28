@@ -15,7 +15,7 @@ doc
         }
     })
     .inSchema({
-        type: "object"
+        type: ["object", "string"]
     })
     .run(() => {
         function fromKey(keyArray, data) {
